@@ -1,0 +1,929 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE MudletPackage>
+<MudletPackage version="1.001">
+	<ScriptPackage>
+		<ScriptGroup isActive="yes" isFolder="yes">
+			<name>Zielenie 7.0</name>
+			<packageName></packageName>
+			<script></script>
+			<eventHandlerList />
+			<Script isActive="yes" isFolder="no">
+				<name>zielenie - core</name>
+				<packageName></packageName>
+				<script>-- =============================================================================
+-- Skrypt HerbalismSystem v3.2
+-- Wersja 3.2:
+-- - Dodano szczegółowe statystyki dla cennych ziół (licznik i procenty).
+-- Wersja 3.1:
+-- - Usunięto zbędne komunikaty po wejściu do lokacji (zastąpione przez prefix).
+-- =============================================================================
+
+HerbalismSystem = HerbalismSystem or {}
+
+-- -----------------------------------------------------------------------------
+-- Konfiguracja i Dane Modulu
+-- -----------------------------------------------------------------------------
+HerbalismSystem.config = {
+    markerDataFile = getMudletHomeDir() .. "/herb_locations_v3.lua",
+    expirySeconds = 7200,
+    checkInterval = 300,
+    valuableHerbsFile = getMudletHomeDir() .. "/valuableHerbs.lua",
+    debug = false,
+    saveTimerId = nil
+}
+
+-- ZMIANA: Rozszerzono strukturę danych o liczniki cennych ziół
+HerbalismSystem.data = {
+    markerLocations = {},
+    valuableHerbs = {},
+    herbToSearch = nil,
+    currentSearch = nil,
+    tempHerbCounts = {},
+    total = { herbsCollected = 0, valuableHerbsCollected = 0 },
+    session = { herbsCollected = 0, valuableHerbsCollected = 0 }
+}
+
+HerbalismSystem.expiryCheckTimer = nil
+HerbalismSystem.locationEventHandlerId = nil
+
+-- -----------------------------------------------------------------------------
+-- Komunikaty i Logowanie
+-- -----------------------------------------------------------------------------
+function HerbalismSystem:log(level, fmt, ...)
+    local prefix = "&lt;lawn_green&gt;[ZLR]&lt;reset&gt;"
+    if level == "error" then prefix = "&lt;red:black&gt;[ZLR ERR]&lt;reset&gt;"
+    elseif level == "debug" and not self.config.debug then return
+    elseif level == "debug" then prefix = "&lt;yellow:black&gt;[ZLR DBG]&lt;reset&gt;" end
+    local message = string.format(fmt, ...); if message ~= "" then cecho(string.format("\n%s %s\n", prefix, message)) end
+end
+local function info(...) HerbalismSystem:log("info", ...) end
+local function error(...) HerbalismSystem:log("error", ...) end
+local function debug(...) HerbalismSystem:log("debug", ...) end
+
+-- -----------------------------------------------------------------------------
+-- Funkcje Pomocnicze (Ladowanie, Serializacja)
+-- -----------------------------------------------------------------------------
+function HerbalismSystem:loadValuableHerbs() local path = self.config.valuableHerbsFile; debug("Ladowanie cennych ziol z: " .. path); local func, err = loadfile(path); if func then local success, data = pcall(func); if success and type(data) == "table" then self.valuableHerbs = data; info("Wczytano %d wpisow wartosciowych ziol.", table.size(data)) else error("Nieprawidlowy format pliku valuableHerbs.lua") end elseif io.open(path, "r") then error("Nie mozna zaladowac pliku valuableHerbs.lua: %s", tostring(err)); io.close(io.open(path, "r")) else debug("Plik valuableHerbs.lua nie istnieje.") end end
+
+-- ZMIANA: Zapisywanie licznika cennych ziół
+function HerbalismSystem:saveData()
+    debug("Zapisywanie danych do: " .. self.config.markerDataFile)
+    local locationsToSave = {}
+    local now = os.time()
+    for roomID, markerInfo in pairs(self.data.markerLocations) do
+        if markerInfo.expiry &gt; now then
+            locationsToSave[roomID] = markerInfo
+        end
+    end
+    
+    local dataToSave = {
+        locations = locationsToSave,
+        herbsCollected = self.data.total.herbsCollected or 0,
+        valuableHerbsCollected = self.data.total.valuableHerbsCollected or 0 -- NOWOŚĆ
+    }
+    
+    local serializedData = "return " .. self:serialize(dataToSave)
+    local ok, err = pcall(function()
+        local file = io.open(self.config.markerDataFile, "w")
+        if file then
+            file:write(serializedData)
+            file:close()
+            debug("Dane zapisane.")
+        else
+            error("Nie mozna otworzyc pliku do zapisu: " .. self.config.markerDataFile)
+        end
+    end)
+    if not ok then error("Blad podczas zapisu danych: %s", tostring(err)) end
+end
+
+-- ZMIANA: Wczytywanie licznika cennych ziół
+function HerbalismSystem:loadData()
+    debug("Ladowanie danych z: " .. self.config.markerDataFile)
+    local file = io.open(self.config.markerDataFile, "r")
+    if file then
+        local content = file:read("*a")
+        file:close()
+        local success, result = pcall(loadstring(content))
+        if success and type(result) == "table" then
+            local now = os.time()
+            local count = 0
+            self.data.markerLocations = {}
+            local locationsToLoad = result.locations or {}
+            for roomID, markerInfo in pairs(locationsToLoad) do
+                if type(markerInfo) == "table" and markerInfo.expiry and markerInfo.expiry &gt; now then
+                    self.data.markerLocations[tostring(roomID)] = { 
+                        expiry = markerInfo.expiry,
+                        count = markerInfo.count or 0
+                    }
+                    count = count + 1
+                end
+            end
+            self.data.total.herbsCollected = result.herbsCollected or 0
+            self.data.total.valuableHerbsCollected = result.valuableHerbsCollected or 0 -- NOWOŚĆ
+            info("Wczytano %d aktywnych lokacji i %d zebranych ziol (ogolnie).", count, self.data.total.herbsCollected)
+        else
+            info("Plik danych uszkodzony. Tworze nowy.")
+            self:createDefaultData()
+            self:saveData()
+        end
+    else
+        info("Plik danych nie istnieje. Tworze nowy.")
+        self:createDefaultData()
+        self:saveData()
+    end
+end
+
+-- -----------------------------------------------------------------------------
+-- Logika oznaczania i sledzenia lokacji
+-- -----------------------------------------------------------------------------
+function HerbalismSystem:updateLocationMark(roomID, count)
+    local targetRoomID = roomID or getPlayerRoom()
+    if not targetRoomID then error("Nie mozna pobrac ID pokoju!"); return end
+    targetRoomID = tostring(targetRoomID)
+    
+    local expiry = os.time() + self.config.expirySeconds
+    self.data.markerLocations[targetRoomID] = { expiry = expiry, count = count }
+    
+    self:saveData()
+end
+
+function HerbalismSystem:markLocationAsDepleted()
+    if _G.prefix then prefix("&lt;LawnGreen&gt;[&lt;sienna&gt;!!!&lt;LawnGreen&gt;]&lt;reset&gt; ", cecho) end
+    local roomID = getPlayerRoom()
+    if not roomID then return end
+    roomID = tostring(roomID)
+    local totalFound = self.data.tempHerbCounts[roomID] or 0
+    self:updateLocationMark(roomID, totalFound)
+    info("Lokacja %s recznie oznaczona jako wyzbierana (zebrano: %d). Timer 2h wlaczony.", roomID, totalFound)
+    self.data.tempHerbCounts[roomID] = nil
+    self.data.currentSearch = nil
+end
+
+function HerbalismSystem:checkExpiredMarks() debug("Sprawdzam przeterminowane lokacje..."); local now = os.time(); local expiredIDs = {}; local changed = false; for roomID, markerInfo in pairs(self.data.markerLocations) do if markerInfo.expiry &lt;= now then table.insert(expiredIDs, roomID) end end; if #expiredIDs &gt; 0 then info("Znaleziono %d przeterminowanych lokacji.", #expiredIDs); for _, roomID in ipairs(expiredIDs) do debug("Usuwam przeterminowana lokacje: %s", roomID); self.data.markerLocations[roomID] = nil; changed = true end; if changed then self:saveData() end else debug("Brak przeterminowanych lokacji.") end; return true end
+
+-- ZMIANA: Resetowanie również licznika cennych ziół
+function HerbalismSystem:clearAllMarks() 
+    info("Usuwam wszystkie zapisane lokacje i resetuje statystyki...")
+    local count = table.size(self.data.markerLocations)
+    self.data.markerLocations = {}
+    self.data.total = { herbsCollected = 0, valuableHerbsCollected = 0 }
+    self:saveData()
+    info("Usunieto %d lokacji i zresetowano liczniki ziol.", count)
+end
+
+function HerbalismSystem:showMarkedLocations()
+    local now = os.time()
+    local activeCount = 0
+    local markersInfo = {}
+    self:checkExpiredMarks()
+    for roomID, markerInfo in pairs(self.data.markerLocations) do
+        activeCount = activeCount + 1
+        local minsLeft = math.ceil((markerInfo.expiry - now) / 60)
+        table.insert(markersInfo, { id = roomID, mins = minsLeft, count = markerInfo.count or 0 })
+    end
+    if activeCount == 0 then info("Brak zapisanych lokacji ze zebranymi ziolami."); return end
+    table.sort(markersInfo, function(a, b) return a.mins &lt; b.mins end)
+    info("Aktywne lokacje (%d):", activeCount)
+    for _, marker in ipairs(markersInfo) do
+        local countInfo = string.format(" (zebrano: &lt;gold&gt;%d&lt;reset&gt;)", marker.count)
+        if _G.gotoRoom then
+            cecho("\n  ")
+            cechoLink(marker.id, "gotoRoom(" .. marker.id .. ")", "Idz do pokoju " .. marker.id, true)
+            cecho(string.format(": &lt;lime_green&gt;%d&lt;reset&gt; min do odrosniecia%s", marker.mins, countInfo))
+        else
+            cecho(string.format("\n  Lokacja &lt;lime_green&gt;%s&lt;reset&gt;: &lt;lime_green&gt;%d&lt;reset&gt; min do odrosniecia%s", marker.id, marker.mins, countInfo))
+        end
+    end
+end
+
+-- -----------------------------------------------------------------------------
+-- Logika Zielarstwa (/ss, /z_szukaj, Trigger)
+-- -----------------------------------------------------------------------------
+function HerbalismSystem:startHerbSearch(herbName) debug("startHerbSearch: Rozpoczynam..."); local searchTarget = "ziol"; if herbName and herbName ~= "" then searchTarget = herbName elseif self.data.currentSearch and self.data.currentSearch ~= "" then searchTarget = self.data.currentSearch else searchTarget = "ziol" end; info("Szukam: %s", searchTarget); send("szukaj " .. searchTarget, false) end
+function HerbalismSystem:setSearchTarget(item) if item and item ~= "" then self.data.herbToSearch = item; self.data.currentSearch = item; info("Od teraz glowny cel szukania to: %s", item) else self.data.herbToSearch = nil; self.data.currentSearch = nil; info("Zresetowano glowny cel szukania do domyslnego.") end end
+
+function HerbalismSystem:onLocationChange()
+    local currentRoom = getPlayerRoom();
+    if self.lastRoomID and self.data.tempHerbCounts[tostring(self.lastRoomID)] then
+        self.data.tempHerbCounts[tostring(self.lastRoomID)] = nil
+        debug("Wyczyszczono tymczasowy licznik dla pokoju %s", self.lastRoomID)
+    end
+    self.lastRoomID = currentRoom
+    debug("Resetowanie celu szukania...")
+    self.data.currentSearch = self.data.herbToSearch
+end
+
+-- ZMIANA: Dodano zliczanie cennych ziół
+function HerbalismSystem:foundHerbs(foundItemName)
+    local roomID = getPlayerRoom()
+    if not roomID then return end
+    roomID = tostring(roomID)
+    
+    self.data.tempHerbCounts[roomID] = (self.data.tempHerbCounts[roomID] or 0) + 1
+    local currentCountInRoom = self.data.tempHerbCounts[roomID]
+    
+    -- Zwiększamy liczniki ogólne
+    self.data.total.herbsCollected = (self.data.total.herbsCollected or 0) + 1
+    self.data.session.herbsCollected = (self.data.session.herbsCollected or 0) + 1
+
+    self:updateLocationMark(roomID, currentCountInRoom)
+    
+    local originalText = getCurrentLine()
+    local isValuable = false
+    local herbGenitive = nil
+    for herbKey, herbData in pairs(self.valuableHerbs or {}) do
+        if foundItemName == herbKey and herbData and herbData.genitive then isValuable = true; herbGenitive = herbData.genitive; break end
+        if not isValuable and string.match(originalText, "%f[%a]" .. herbKey .. "%f[%A]") and herbData and herbData.genitive then isValuable = true; herbGenitive = herbData.genitive; break end
+    end
+    
+    local countPrefix = string.format("%d/3", currentCountInRoom)
+    if isValuable then
+        -- NOWOŚĆ: Zwiększamy liczniki cennych ziół
+        self.data.total.valuableHerbsCollected = (self.data.total.valuableHerbsCollected or 0) + 1
+        self.data.session.valuableHerbsCollected = (self.data.session.valuableHerbsCollected or 0) + 1
+
+        if herbGenitive and herbGenitive ~= "" then self.data.currentSearch = herbGenitive end
+        prefix(string.format("&lt;LawnGreen&gt;[&lt;SpringGreen&gt;%s&lt;LawnGreen&gt;]&lt;reset&gt; ", countPrefix), cecho)
+    else
+        prefix(string.format("&lt;LawnGreen&gt;[&lt;PaleGreen&gt;%s&lt;LawnGreen&gt;]&lt;reset&gt; ", countPrefix), cecho)
+    end
+end
+
+function HerbalismSystem:notFoundHerbs()
+    local originalText = getCurrentLine()
+    local roomID = getPlayerRoom()
+    if not roomID then return end
+    roomID = tostring(roomID)
+
+    if string.match(originalText, "nie znajdujesz zadnych ziol") then
+        prefix("&lt;LawnGreen&gt;[&lt;sienna&gt;XXX&lt;LawnGreen&gt;]&lt;reset&gt; ", cecho)
+        if not self.data.markerLocations[roomID] then
+            self:updateLocationMark(roomID, 0)
+            info("Stan lokacji %s nieznany. Ustawiam bezpieczny timer odnowienia (2h).", roomID)
+        end
+
+    elseif string.match(originalText, "niczego interesujacego") then
+        prefix("&lt;LawnGreen&gt;[&lt;grey&gt;---&lt;LawnGreen&gt;]&lt;reset&gt; ", cecho)
+        self.data.tempHerbCounts[roomID] = nil
+    end
+
+    debug("notFoundHerbs: Resetuje currentSearch.")
+    self.data.currentSearch = nil
+end
+
+function HerbalismSystem:displayRoomStatusPrefix()
+    local roomID = getPlayerRoom()
+    if not roomID then return end
+    roomID = tostring(roomID)
+
+    local markerInfo = self.data.markerLocations[roomID]
+    local prefixText = ""
+
+    if markerInfo and markerInfo.expiry &gt; os.time() then
+        local respawnTime = os.date("%H:%M", markerInfo.expiry)
+        prefixText = string.format("&lt;LawnGreen&gt;[ZLR: &lt;tan&gt;%s&lt;LawnGreen&gt;]&lt;reset&gt; ", respawnTime)
+    else
+        prefixText = "&lt;LawnGreen&gt;[ZLR: &lt;pale_green&gt;ready&lt;LawnGreen&gt;]&lt;reset&gt; "
+    end
+
+    if _G.prefix then
+        _G.prefix(prefixText, cecho, nil, nil, nil)
+    else
+        error("Globalna funkcja 'prefix' nie znaleziona! Używam metody awaryjnej.")
+        local originalLine = getCurrentLine()
+        deleteLine()
+        cecho(prefixText .. originalLine)
+    end
+end
+    
+-- -----------------------------------------------------------------------------
+-- Alias Handlers
+-- -----------------------------------------------------------------------------
+function HerbalismSystem:handleZiAlias() local arg = ""; local cmd = ""; if matches and type(matches) == "table" then arg = (matches[2]) or ""; cmd = arg:lower():gsub("^%s*(.-)%s*$", "%1") else error("Brak globalnej tabeli 'matches' dla aliasu /zi") end; if cmd == "mark" then self:markLocationAsDepleted() elseif cmd == "loc" then self:showMarkedLocations() elseif cmd == "clear" then self:clearAllMarks() elseif cmd == "debug" then self.config.debug = not self.config.debug; info("Tryb debug: %s", self.config.debug and "WLACZONY" or "WYLACZONY") elseif cmd == "reset" then self:reset() elseif cmd == "help" or cmd == "" then self:showHelp() else info("Nieznana komenda: /zi %s. Uzyj '/zi help'.", cmd) end end
+function HerbalismSystem:handleSsAlias() local arg = ""; if matches and type(matches) == "table" then arg = (matches[2]) or "" else error("Brak globalnej tabeli 'matches' dla aliasu /ss") end; self:setSearchTarget(arg:gsub("^%s*(.-)%s*$", "%1")) end
+function HerbalismSystem:handleZSzukajAlias() local arg = ""; if matches and type(matches) == "table" then arg = (matches[2]) or "" else error("Brak globalnej tabeli 'matches' dla aliasu /z_szukaj") end; local herbNameArgument = arg:gsub("^%s*(.-)%s*$", "%1"); self:startHerbSearch(herbNameArgument) end
+
+-- -----------------------------------------------------------------------------
+-- Funkcje Pomocy
+-- -----------------------------------------------------------------------------
+-- ZMIANA: Wyświetlanie rozbudowanych statystyk
+function HerbalismSystem:showHelp()
+    cecho("\n&lt;light_steel_blue&gt;━━━━━━━━━━━&lt;reset&gt;&lt;dodger_blue&gt; Pomoc Systemu Zielarskiego v3.2 &lt;reset&gt;&lt;light_steel_blue&gt;━━━━━━━━━━━\n")
+    -- (reszta pomocy bez zmian)
+    cecho("&lt;dodger_blue&gt;--- Zarzadzanie Lokacjami (/zi) ---\n")
+    cecho("&lt;powder_blue&gt;  /zi loc   &lt;white&gt;- Pokazuje liste lokacji na timerze wraz z iloscia zebranych ziol.\n")
+    cecho("&lt;powder_blue&gt;  /zi mark  &lt;white&gt;- Recznie oznacza biezaca lokacje jako w pelni wyzbierana.\n")
+    cecho("&lt;powder_blue&gt;  /zi clear &lt;white&gt;- Usuwa WSZYSTKIE zapisane lokacje i resetuje liczniki.\n")
+    cecho("\n&lt;dodger_blue&gt;--- Wyszukiwanie Ziol (/z_szukaj, /ss) ---\n")
+    cecho("&lt;powder_blue&gt;  /z_szukaj &lt;white&gt;- Kontynuuje szukanie poprzedniego celu lub szuka 'ziol'.\n")
+    cecho("&lt;powder_blue&gt;  /z_szukaj [nazwa]&lt;white&gt; - Szuka konkretnego ziela w tej lokacji.\n")
+    cecho("&lt;powder_blue&gt;  /ss [nazwa] &lt;white&gt;- Ustawia stale ziolo do szukania (puste pole resetuje).\n")
+    cecho("\n&lt;dodger_blue&gt;--- Ogolne ---&lt;reset&gt;\n")
+    cecho("&lt;powder_blue&gt;  /zi reset &lt;white&gt;- Resetuje wszystkie timery i procesy skryptu (przydatne po zmianach).\n")
+    cecho("&lt;powder_blue&gt;  /zi debug &lt;white&gt;- Przelacza tryb diagnostyczny (do rozwiazywania problemow).\n")
+    cecho("&lt;powder_blue&gt;  /zi help  &lt;white&gt;- Wyswietla te pomoc.\n")
+
+    -- NOWOŚĆ: Sekcja statystyk
+    cecho("\n&lt;steel_blue&gt;--- Statystyki ---\n")
+    local sTotal = self.data.session.herbsCollected or 0
+    local sValuable = self.data.session.valuableHerbsCollected or 0
+    local tTotal = self.data.total.herbsCollected or 0
+    local tValuable = self.data.total.valuableHerbsCollected or 0
+
+    local function getPercentage(valuable, total)
+        if total == 0 then return "0.0" end
+        return string.format("%.1f", (valuable / total) * 100)
+    end
+
+    local sessionPercent = getPercentage(sValuable, sTotal)
+    local totalPercent = getPercentage(tValuable, tTotal)
+    
+    cecho(string.format("&lt;powder_blue&gt;  W tej sesji: &lt;khaki&gt;%d&lt;powder_blue&gt; (w tym &lt;SpringGreen&gt;%d&lt;powder_blue&gt; cennych, &lt;SpringGreen&gt;%s%%&lt;powder_blue&gt;)\n", sTotal, sValuable, sessionPercent))
+    cecho(string.format("&lt;powder_blue&gt;  Ogółem: &lt;khaki&gt;%d&lt;powder_blue&gt; (w tym &lt;SpringGreen&gt;%d&lt;powder_blue&gt; cennych, &lt;SpringGreen&gt;%s%%&lt;powder_blue&gt;)\n", tTotal, tValuable, totalPercent))
+    cecho("&lt;light_steel_blue&gt;━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n")
+end
+
+-- -----------------------------------------------------------------------------
+-- Inicjalizacja, Reset i Sprzatanie Systemu
+-- -----------------------------------------------------------------------------
+function HerbalismSystem:shutdown() info("Zatrzymywanie procesow HerbalismSystem..."); if self.expiryCheckTimer then killTimer(self.expiryCheckTimer); self.expiryCheckTimer = nil end; if self.config.saveTimerId then killTimer(self.config.saveTimerId); self.config.saveTimerId = nil end; if self.locationEventHandlerId then killAnonymousEventHandler(self.locationEventHandlerId); self.locationEventHandlerId = nil end; debug("Procesy zatrzymane.") end
+function HerbalismSystem:reset() info("Resetowanie systemu zielarskiego..."); self:shutdown(); self:init() end
+
+-- ZMIANA: Inicjalizacja nowych liczników
+function HerbalismSystem:init()
+    if HerbalismSystem.shutdown then HerbalismSystem:shutdown() end
+    
+    info("Inicjalizacja HerbalismSystem v3.2...")
+    self:loadData()
+    self:loadValuableHerbs()
+    
+    self.data.session = { herbsCollected = 0, valuableHerbsCollected = 0 }
+    info("Zresetowano liczniki ziol dla biezacej sesji.")
+    
+    self.expiryCheckTimer = tempTimer(self.config.checkInterval, function() self:checkExpiredMarks() end)
+    local locationChangeEvent = "amapNewLocation"
+    self.locationEventHandlerId = registerAnonymousEventHandler(locationChangeEvent, function() self:onLocationChange() end)
+    debug("Zarejestrowano event '%s' do sprawdzania lokacji.", locationChangeEvent)
+    
+    self.lastRoomID = getPlayerRoom()
+    info("System Zielarski zaladowany. Uzyj '/zi help'.")
+end
+
+-- ZMIANA: Inicjalizacja nowych liczników
+function HerbalismSystem:createDefaultData()
+    self.data.markerLocations = {}
+    self.data.total = { herbsCollected = 0, valuableHerbsCollected = 0 }
+    self.data.session = { herbsCollected = 0, valuableHerbsCollected = 0 }
+end
+
+function HerbalismSystem:serialize(tbl)
+    local function serializeInternal(t, indent)
+        indent = indent or 0
+        local str = "{\n"
+        for k, v in pairs(t) do
+            local keyStr = (type(k) == "string") and string.format('["%s"]', k) or string.format('["%s"]', k)
+            local valStr
+            if type(v) == "table" then valStr = serializeInternal(v, indent + 1)
+            elseif type(v) == "string" then valStr = string.format('"%s"', v)
+            else valStr = tostring(v) end
+            str = str .. string.rep("  ", indent + 1) .. keyStr .. " = " .. valStr .. ",\n"
+        end
+        str = str .. string.rep("  ", indent) .. "}"
+        return str
+    end
+    return serializeInternal(tbl)
+end
+
+HerbalismSystem:init()</script>
+				<eventHandlerList />
+			</Script>
+		</ScriptGroup>
+	</ScriptPackage>
+	<AliasPackage>
+		<AliasGroup isActive="yes" isFolder="yes">
+			<name>zielenie 7.0</name>
+			<script></script>
+			<command></command>
+			<packageName>zielenie 7.0</packageName>
+			<regex></regex>
+			<AliasGroup isActive="yes" isFolder="yes">
+				<name>zielenie 7.0</name>
+				<script></script>
+				<command></command>
+				<packageName></packageName>
+				<regex></regex>
+				<Alias isActive="yes" isFolder="no">
+					<name>szukanie ziół</name>
+					<script>HerbalismSystem:handleZSzukajAlias()</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^/z_szukaj(?:\s*(\w*))?$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>ustawianie</name>
+					<script>HerbalismSystem:handleSsAlias()</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^/ss\s*(.*)$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>pomoc</name>
+					<script>HerbalismSystem:handleZiAlias()</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^/zi(?: (.*))?$</regex>
+				</Alias>
+				<AliasGroup isActive="yes" isFolder="yes">
+					<name>przekazywanie</name>
+					<script></script>
+					<command></command>
+					<packageName></packageName>
+					<regex></regex>
+					<Alias isActive="yes" isFolder="no">
+						<name>zioła - weź zm</name>
+						<script>local herbs = {
+"arnika",
+"bylica_pospolita",
+"lak",
+"melisa",
+"przesl",
+"podbial",
+"szczwol",
+"mieta",
+"nostrzyk",
+"kasztanowiec",
+"komosa",
+"bobotrutka",
+"lulecznica" ,
+"naparstnica",
+              }
+
+local amount = matches[2] ~= "" and matches[2] or nil
+for _, herb in ipairs(herbs) do
+    local command = "/wezz " .. herb
+    if amount then
+          command = command .. " " .. amount
+          end
+              expandAlias(command, false)
+                end</script>
+						<command></command>
+						<packageName></packageName>
+						<regex>^/z_zm\s*(\d*)$</regex>
+					</Alias>
+					<Alias isActive="yes" isFolder="no">
+						<name>zioła - weź boost</name>
+						<script>local herbs = {
+"aralia",
+"bielun",
+"krasnodrzew",
+"drath",
+"casur",
+"kulczyba",
+              }
+
+local amount = matches[2] ~= "" and matches[2] or nil
+for _, herb in ipairs(herbs) do
+    local command = "/wezz " .. herb
+    if amount then
+          command = command .. " " .. amount
+          end
+              expandAlias(command, false)
+                end</script>
+						<command></command>
+						<packageName></packageName>
+						<regex>^/z_boost\s*(\d*)$</regex>
+					</Alias>
+					<Alias isActive="yes" isFolder="no">
+						<name>zioła - weź antidotum</name>
+						<script>local herbs = {
+"chaber",
+"siezygron",
+              }
+
+local amount = matches[2] ~= "" and matches[2] or nil
+for _, herb in ipairs(herbs) do
+    local command = "/wezz " .. herb
+    if amount then
+          command = command .. " " .. amount
+          end
+              expandAlias(command, false)
+                end</script>
+						<command></command>
+						<packageName></packageName>
+						<regex>^/z_anti\s*(\d*)$</regex>
+					</Alias>
+					<Alias isActive="yes" isFolder="no">
+						<name>zioła - weź hp</name>
+						<script>local herbs = {
+"serce_kapitana",
+"uszony_ranog",
+"rojnik",
+"nagietek",
+"szczaw",
+"uszony_przelot",
+"makownik",
+"pieciornik",
+"dziurawiec",
+"ranog",
+"lawenda",
+"barwinek",
+"babka",
+"mniszek",
+"macznica",
+"uszony_szafran",
+"rdest_ptasi",
+"poslonek",
+"mieta",
+"glog",
+"komosa"
+              }
+
+local amount = matches[2] ~= "" and matches[2] or nil
+for _, herb in ipairs(herbs) do
+    local command = "/wezz " .. herb
+    if amount then
+          command = command .. " " .. amount
+          end
+              expandAlias(command, false)
+                end</script>
+						<command></command>
+						<packageName></packageName>
+						<regex>^/z_hp\s*(\d*)$</regex>
+					</Alias>
+				</AliasGroup>
+				<AliasGroup isActive="yes" isFolder="yes">
+					<name>użycie</name>
+					<script></script>
+					<command></command>
+					<packageName></packageName>
+					<regex></regex>
+					<Alias isActive="yes" isFolder="no">
+						<name>ziola - sprawdzanie</name>
+						<script>expandAlias("/ziola_pokaz")
+cecho("   &lt;lawn_green&gt;zzm&lt;reset&gt; - zmeczenie   &lt;lawn_green&gt;zhp&lt;reset&gt; - leczenie   &lt;lawn_green&gt;zboost&lt;reset&gt; - zwieksz cechy   &lt;lawn_green&gt;zanti&lt;reset&gt; - wylecz zatrucia   &lt;lawn_green&gt;zsw&lt;reset&gt; - spostrzegawczosc")</script>
+						<command></command>
+						<packageName></packageName>
+						<regex>^\?z$</regex>
+					</Alias>
+					<Alias isActive="yes" isFolder="no">
+						<name>ziola - buduj</name>
+						<script>expandAlias("/ziola_buduj")</script>
+						<command></command>
+						<packageName></packageName>
+						<regex>^\?zz$</regex>
+					</Alias>
+					<Alias isActive="yes" isFolder="no">
+						<name>zioła - skrót szukania</name>
+						<script>startHerbSearch(matches[2])</script>
+						<command></command>
+						<packageName></packageName>
+						<regex>^ss(?:\s+(\w+))?$</regex>
+					</Alias>
+					<Alias isActive="yes" isFolder="no">
+						<name>zioła - hp</name>
+						<script>send("opusc bronie", false)
+expandAlias("/z_przezuj serce_kapitana", false)
+expandAlias("/z_przezuj ususzony_ranog", false)
+expandAlias("/z_przyloz rojnik", false)
+expandAlias("/z_przyloz nagietek", false)
+expandAlias("/z_przezuj szczaw", false)
+expandAlias("/z_sproszkuj ususzony_przelot", false)
+expandAlias("/z_zjedz makownik", false)
+expandAlias("/z_rozgryz pieciornik", false)
+expandAlias("/z_rozgryz dziurawiec", false)
+expandAlias("/z_przezuj ranog", false)
+expandAlias("/z_zjedz lawenda", false)
+expandAlias("/z_przyloz barwinek", false)
+expandAlias("/z_przyloz babka", false)
+expandAlias("/z_przezuj mniszek", false)
+expandAlias("/z_rozgryz macznica", false)
+expandAlias("/z_zjedz ususzony_szafran", false)
+expandAlias("/z_przyloz rdest_ptasi", false)
+expandAlias("/z_zjedz poslonek", false)
+expandAlias("/z_przezuj mieta", false)
+expandAlias("/z_przezuj glog", false)
+expandAlias("/z_przezuj komosa", false)
+send("dobadz broni", false)</script>
+						<command></command>
+						<packageName></packageName>
+						<regex>^zhp$</regex>
+					</Alias>
+					<Alias isActive="yes" isFolder="no">
+						<name>zioła - deliona</name>
+						<script>send("opusc bronie", false)
+expandAlias("/z_zjedz deliona", false)
+send("dobadz broni", false)</script>
+						<command></command>
+						<packageName></packageName>
+						<regex>^del$</regex>
+					</Alias>
+					<Alias isActive="yes" isFolder="no">
+						<name>ziola - antidotum</name>
+						<script>send("opusc bronie", false)
+expandAlias("/z_przezuj chaber", false)
+expandAlias("/z_rozgryz siezygron", false)
+send("dobadz broni", false)</script>
+						<command></command>
+						<packageName></packageName>
+						<regex>^zanti$</regex>
+					</Alias>
+					<Alias isActive="yes" isFolder="no">
+						<name>zioła - zmęczenie</name>
+						<script>send("opusc bronie", false)
+expandAlias("/z_zjedz arnika", false)
+expandAlias("/z_przyloz bylica_pospolita", false)
+expandAlias("/z_przezuj lak", false)
+expandAlias("/z_zjedz melisa", false)
+expandAlias("/z_przezuj przesl", false)
+expandAlias("/z_powachaj podbial", false)
+expandAlias("/z_przyloz szczwol", false)
+expandAlias("/z_powachaj mieta", false)
+expandAlias("/z_przezuj nostrzyk", false)
+expandAlias("/z_przyloz kasztanowiec", false)
+expandAlias("/z_zjedz komosa", false)
+expandAlias("/z_polknij bobotrutka", false)
+expandAlias("/z_przezuj lulecznica", false)
+expandAlias("/z_zjedz naparstnica", false)
+send("dobadz broni", false)</script>
+						<command></command>
+						<packageName></packageName>
+						<regex>^zzm</regex>
+					</Alias>
+					<Alias isActive="yes" isFolder="no">
+						<name>zioła - boost</name>
+						<script>send("opusc bronie", false)
+expandAlias("/z_przezuj aralia 2", false)
+expandAlias("/z_powachaj bielun 2", false)
+expandAlias("/z_powachaj krasnodrzew 2", false)
+expandAlias("/z_przezuj drath 2", false)
+expandAlias("/z_zjedz casur 2", false)
+expandAlias("/z_przezuj kulczyba 2", false)
+send("dobadz broni", false)</script>
+						<command></command>
+						<packageName></packageName>
+						<regex>^zboost$</regex>
+					</Alias>
+					<Alias isActive="yes" isFolder="no">
+						<name>zioła - int boost</name>
+						<script>send("opusc bronie", false)
+expandAlias("/z_przezuj ususzona_mandragora 3", false)
+expandAlias("/z_rozgryz ususzony_lulek 3", false)
+send("dobadz broni", false)</script>
+						<command></command>
+						<packageName></packageName>
+						<regex>^zint$</regex>
+					</Alias>
+					<Alias isActive="yes" isFolder="no">
+						<name>zioła - mana</name>
+						<script>send("opusc bronie", false)
+expandAlias("/z_przezuj bulawinka 3", false)
+expandAlias("/z_zjedz hyzop 3", false)
+expandAlias("/z_rozkrusz ususzona_rosiczka 3", false)
+send("dobadz broni", false)</script>
+						<command></command>
+						<packageName></packageName>
+						<regex>^zmana$</regex>
+					</Alias>
+					<Alias isActive="yes" isFolder="no">
+						<name>zioła - regen many</name>
+						<script>send("opusc bronie", false)
+expandAlias("/z_zjedz ostrozen 6", false)
+send("dobadz broni", false)</script>
+						<command></command>
+						<packageName></packageName>
+						<regex>^zregen$</regex>
+					</Alias>
+					<Alias isActive="yes" isFolder="no">
+						<name>ziola - przygotuj się na wyprawę</name>
+						<script>expandAlias("/wezz deliona 10", false)
+expandAlias("/wezz chaber 4", false)
+expandAlias("/wezz siezygron 4", false)
+expandAlias("/wezz swietlik 10", false)
+expandAlias("/wezz babka 10", false)
+expandAlias("/wezz barwinek 10", false)
+expandAlias("/wezz dziurawiec 10", false)
+expandAlias("/wezz glog 10", false)
+expandAlias("/wezz komosa 10", false)
+expandAlias("/wezz rdest_ptasi 10", false)
+expandAlias("/wezz arnika 10", false)
+expandAlias("/wezz bylica_pospolita 10", false)
+expandAlias("/wezz kasztanowiec 10", false)
+expandAlias("/wezz lulecznica 10", false)
+expandAlias("/wezz bulawinka 2", false)
+expandAlias("/wezz ususzona_rosiczka 2", false)
+send("otworz przytroczone woreczki", false)
+send("wloz ziola do przytroczonego woreczka", false)
+send("wloz ziola do 2. przytroczonego woreczka", false)
+send("wloz ziola do 3. przytroczonego woreczka", false)
+send("zamknij przytroczone woreczki", false)
+send("odloz woreczki", false)</script>
+						<command></command>
+						<packageName></packageName>
+						<regex>^\/z_go</regex>
+					</Alias>
+					<Alias isActive="yes" isFolder="no">
+						<name>zioła - opróżnij przytroczone woreczki</name>
+						<script>send("ot przytroczony woreczek", false)
+send("wez ziola z niego", false) 
+send("ot 2. przytroczony woreczek", false) 
+send("wez ziola z niego", false) 
+send("ot 3. przytroczony woreczek", false)
+send("wez ziola z niego", false)
+send("zam woreczki", false)
+expandAlias("/zio1", false)</script>
+						<command></command>
+						<packageName></packageName>
+						<regex>^\/z_oproznij</regex>
+					</Alias>
+				</AliasGroup>
+			</AliasGroup>
+		</AliasGroup>
+	</AliasPackage>
+	<TriggerPackage>
+		<TriggerGroup isActive="yes" isFolder="yes" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+			<name>zielenie 7.0</name>
+			<script></script>
+			<triggerType>0</triggerType>
+			<conditonLineDelta>0</conditonLineDelta>
+			<mStayOpen>0</mStayOpen>
+			<mCommand></mCommand>
+			<packageName>zielenie 7.0</packageName>
+			<mFgColor>#ff0000</mFgColor>
+			<mBgColor>#ffff00</mBgColor>
+			<mSoundFile></mSoundFile>
+			<colorTriggerFgColor>#000000</colorTriggerFgColor>
+			<colorTriggerBgColor>#000000</colorTriggerBgColor>
+			<regexCodeList />
+			<regexCodePropertyList />
+			<TriggerGroup isActive="yes" isFolder="yes" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>zielenie 7.0</name>
+				<script></script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList />
+				<regexCodePropertyList />
+				<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+					<name>zioła brak</name>
+					<script>--prefix("&lt;LawnGreen&gt;[&lt;sienna&gt;!!!&lt;LawnGreen&gt;]&lt;reset&gt; ", cecho, nil, nil, nil)
+if HerbalismSystem and HerbalismSystem.notFoundHerbs then
+    HerbalismSystem:notFoundHerbs()
+end</script>
+					<triggerType>0</triggerType>
+					<conditonLineDelta>0</conditonLineDelta>
+					<mStayOpen>0</mStayOpen>
+					<mCommand></mCommand>
+					<packageName></packageName>
+					<mFgColor>#ff0000</mFgColor>
+					<mBgColor>#ffff00</mBgColor>
+					<mSoundFile></mSoundFile>
+					<colorTriggerFgColor>#000000</colorTriggerFgColor>
+					<colorTriggerBgColor>#000000</colorTriggerBgColor>
+					<regexCodeList>
+						<string>^Nie udalo ci sie znalezc niczego interesujacego\.$</string>
+						<string>^Nie znajdujesz zadnych ziol\.$</string>
+					</regexCodeList>
+					<regexCodePropertyList>
+						<integer>1</integer>
+						<integer>1</integer>
+					</regexCodePropertyList>
+				</Trigger>
+				<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+					<name>zioła były</name>
+					<script>if HerbalismSystem and HerbalismSystem.markLocationAsDepleted then
+    HerbalismSystem:markLocationAsDepleted()
+end</script>
+					<triggerType>0</triggerType>
+					<conditonLineDelta>0</conditonLineDelta>
+					<mStayOpen>0</mStayOpen>
+					<mCommand></mCommand>
+					<packageName></packageName>
+					<mFgColor>#ff0000</mFgColor>
+					<mBgColor>#ffff00</mBgColor>
+					<mSoundFile></mSoundFile>
+					<colorTriggerFgColor>#000000</colorTriggerFgColor>
+					<colorTriggerBgColor>#000000</colorTriggerBgColor>
+					<regexCodeList>
+						<string>^Szukasz wszedzie, ale nie znajdujesz zadnych ziol.</string>
+					</regexCodeList>
+					<regexCodePropertyList>
+						<integer>1</integer>
+					</regexCodePropertyList>
+				</Trigger>
+				<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+					<name>zioła znaleziono</name>
+					<script>if not matches[1]:match("^Znajdujesz sie") then
+    if HerbalismSystem and HerbalismSystem.foundHerbs then
+        HerbalismSystem:foundHerbs(matches[2])
+    end
+end</script>
+					<triggerType>0</triggerType>
+					<conditonLineDelta>0</conditonLineDelta>
+					<mStayOpen>0</mStayOpen>
+					<mCommand></mCommand>
+					<packageName></packageName>
+					<mFgColor>#ff0000</mFgColor>
+					<mBgColor>#ffff00</mBgColor>
+					<mSoundFile></mSoundFile>
+					<colorTriggerFgColor>#000000</colorTriggerFgColor>
+					<colorTriggerBgColor>#000000</colorTriggerBgColor>
+					<regexCodeList>
+						<string>^Znajdujesz (.+)\.$</string>
+					</regexCodeList>
+					<regexCodePropertyList>
+						<integer>1</integer>
+					</regexCodePropertyList>
+				</Trigger>
+				<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+					<name>zioła szukam</name>
+					<script>prefix("&lt;LawnGreen&gt;[&lt;YellowGreen&gt;...&lt;LawnGreen&gt;]&lt;reset&gt; ", cecho, nil, nil, nil)</script>
+					<triggerType>0</triggerType>
+					<conditonLineDelta>0</conditonLineDelta>
+					<mStayOpen>0</mStayOpen>
+					<mCommand></mCommand>
+					<packageName></packageName>
+					<mFgColor>#ff0000</mFgColor>
+					<mBgColor>#ffff00</mBgColor>
+					<mSoundFile></mSoundFile>
+					<colorTriggerFgColor>#000000</colorTriggerFgColor>
+					<colorTriggerBgColor>#000000</colorTriggerBgColor>
+					<regexCodeList>
+						<string>^Zaczynasz szukac .*[.]$</string>
+					</regexCodeList>
+					<regexCodePropertyList>
+						<integer>1</integer>
+					</regexCodePropertyList>
+				</Trigger>
+				<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+					<name>zioła przerywam szukanie</name>
+					<script>prefix("&lt;LawnGreen&gt;[&lt;grey&gt;!!!&lt;LawnGreen&gt;]&lt;reset&gt; ", cecho, nil, nil, nil)</script>
+					<triggerType>0</triggerType>
+					<conditonLineDelta>0</conditonLineDelta>
+					<mStayOpen>0</mStayOpen>
+					<mCommand></mCommand>
+					<packageName></packageName>
+					<mFgColor>#ff0000</mFgColor>
+					<mBgColor>#ffff00</mBgColor>
+					<mSoundFile></mSoundFile>
+					<colorTriggerFgColor>#000000</colorTriggerFgColor>
+					<colorTriggerBgColor>#000000</colorTriggerBgColor>
+					<regexCodeList>
+						<string>^Przestajesz szukac (.+)\.$</string>
+					</regexCodeList>
+					<regexCodePropertyList>
+						<integer>1</integer>
+					</regexCodePropertyList>
+				</Trigger>
+				<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+					<name>zioła w trakcie szukania</name>
+					<script>prefix("&lt;LawnGreen&gt;[&lt;grey&gt;!!!&lt;LawnGreen&gt;]&lt;reset&gt; ", cecho, nil, nil, nil)</script>
+					<triggerType>0</triggerType>
+					<conditonLineDelta>0</conditonLineDelta>
+					<mStayOpen>0</mStayOpen>
+					<mCommand></mCommand>
+					<packageName></packageName>
+					<mFgColor>#ff0000</mFgColor>
+					<mBgColor>#ffff00</mBgColor>
+					<mSoundFile></mSoundFile>
+					<colorTriggerFgColor>#000000</colorTriggerFgColor>
+					<colorTriggerBgColor>#000000</colorTriggerBgColor>
+					<regexCodeList>
+						<string>^Jestes teraz zajet[ay] czyms innym\. Musisz wpisac 'przestan' by moc zrobic to co chcesz\.$</string>
+					</regexCodeList>
+					<regexCodePropertyList>
+						<integer>1</integer>
+					</regexCodePropertyList>
+				</Trigger>
+				<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="yes" isColorTriggerFg="no" isColorTriggerBg="no">
+					<name>lokacje short dzien</name>
+					<script>HerbalismSystem:displayRoomStatusPrefix()</script>
+					<triggerType>0</triggerType>
+					<conditonLineDelta>0</conditonLineDelta>
+					<mStayOpen>0</mStayOpen>
+					<mCommand></mCommand>
+					<packageName></packageName>
+					<mFgColor>#ff0000</mFgColor>
+					<mBgColor>#ffff00</mBgColor>
+					<mSoundFile></mSoundFile>
+					<colorTriggerFgColor>#ffff99</colorTriggerFgColor>
+					<colorTriggerBgColor>#000000</colorTriggerBgColor>
+					<regexCodeList>
+						<string>FG229BG-2</string>
+						<string>FG67BG-2</string>
+					</regexCodeList>
+					<regexCodePropertyList>
+						<integer>6</integer>
+						<integer>6</integer>
+					</regexCodePropertyList>
+				</Trigger>
+			</TriggerGroup>
+		</TriggerGroup>
+	</TriggerPackage>
+</MudletPackage>
