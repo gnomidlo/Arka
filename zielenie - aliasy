@@ -1,0 +1,344 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE MudletPackage>
+<MudletPackage version="1.001">
+	<AliasPackage>
+		<AliasGroup isActive="yes" isFolder="yes">
+			<name>zielenie 5.0</name>
+			<script></script>
+			<command></command>
+			<packageName>zielenie 5.0</packageName>
+			<regex></regex>
+			<AliasGroup isActive="yes" isFolder="yes">
+				<name>zielenie 5.0</name>
+				<script></script>
+				<command></command>
+				<packageName></packageName>
+				<regex></regex>
+				<Alias isActive="yes" isFolder="no">
+					<name>szukanie ziół</name>
+					<script>HerbalismSystem:handleZSzukajAlias()</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^/z_szukaj(?:\s*(\w*))?$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>ustawianie</name>
+					<script>HerbalismSystem:handleSsAlias()</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^/ss\s*(.*)$</regex>
+				</Alias>
+				<Alias isActive="yes" isFolder="no">
+					<name>pomoc</name>
+					<script>HerbalismSystem:handleZiAlias()</script>
+					<command></command>
+					<packageName></packageName>
+					<regex>^/zi(?: (.*))?$</regex>
+				</Alias>
+				<AliasGroup isActive="yes" isFolder="yes">
+					<name>przekazywanie</name>
+					<script></script>
+					<command></command>
+					<packageName></packageName>
+					<regex></regex>
+					<Alias isActive="yes" isFolder="no">
+						<name>zioła - weź zm</name>
+						<script>local herbs = {
+"arnika",
+"bylica_pospolita",
+"lak",
+"melisa",
+"przesl",
+"podbial",
+"szczwol",
+"mieta",
+"nostrzyk",
+"kasztanowiec",
+"komosa",
+"bobotrutka",
+"lulecznica" ,
+"naparstnica",
+              }
+
+local amount = matches[2] ~= "" and matches[2] or nil
+for _, herb in ipairs(herbs) do
+    local command = "/wezz " .. herb
+    if amount then
+          command = command .. " " .. amount
+          end
+              expandAlias(command, false)
+                end</script>
+						<command></command>
+						<packageName></packageName>
+						<regex>^/z_zm\s*(\d*)$</regex>
+					</Alias>
+					<Alias isActive="yes" isFolder="no">
+						<name>zioła - weź boost</name>
+						<script>local herbs = {
+"aralia",
+"bielun",
+"krasnodrzew",
+"drath",
+"casur",
+"kulczyba",
+              }
+
+local amount = matches[2] ~= "" and matches[2] or nil
+for _, herb in ipairs(herbs) do
+    local command = "/wezz " .. herb
+    if amount then
+          command = command .. " " .. amount
+          end
+              expandAlias(command, false)
+                end</script>
+						<command></command>
+						<packageName></packageName>
+						<regex>^/z_boost\s*(\d*)$</regex>
+					</Alias>
+					<Alias isActive="yes" isFolder="no">
+						<name>zioła - weź antidotum</name>
+						<script>local herbs = {
+"chaber",
+"siezygron",
+              }
+
+local amount = matches[2] ~= "" and matches[2] or nil
+for _, herb in ipairs(herbs) do
+    local command = "/wezz " .. herb
+    if amount then
+          command = command .. " " .. amount
+          end
+              expandAlias(command, false)
+                end</script>
+						<command></command>
+						<packageName></packageName>
+						<regex>^/z_anti\s*(\d*)$</regex>
+					</Alias>
+					<Alias isActive="yes" isFolder="no">
+						<name>zioła - weź hp</name>
+						<script>local herbs = {
+"serce_kapitana",
+"uszony_ranog",
+"rojnik",
+"nagietek",
+"szczaw",
+"uszony_przelot",
+"makownik",
+"pieciornik",
+"dziurawiec",
+"ranog",
+"lawenda",
+"barwinek",
+"babka",
+"mniszek",
+"macznica",
+"uszony_szafran",
+"rdest_ptasi",
+"poslonek",
+"mieta",
+"glog",
+"komosa"
+              }
+
+local amount = matches[2] ~= "" and matches[2] or nil
+for _, herb in ipairs(herbs) do
+    local command = "/wezz " .. herb
+    if amount then
+          command = command .. " " .. amount
+          end
+              expandAlias(command, false)
+                end</script>
+						<command></command>
+						<packageName></packageName>
+						<regex>^/z_hp\s*(\d*)$</regex>
+					</Alias>
+				</AliasGroup>
+				<AliasGroup isActive="yes" isFolder="yes">
+					<name>użycie</name>
+					<script></script>
+					<command></command>
+					<packageName></packageName>
+					<regex></regex>
+					<Alias isActive="yes" isFolder="no">
+						<name>ziola - sprawdzanie</name>
+						<script>expandAlias("/ziola_pokaz")
+cecho("   &lt;lawn_green&gt;zzm&lt;reset&gt; - zmeczenie   &lt;lawn_green&gt;zhp&lt;reset&gt; - leczenie   &lt;lawn_green&gt;zboost&lt;reset&gt; - zwieksz cechy   &lt;lawn_green&gt;zanti&lt;reset&gt; - wylecz zatrucia   &lt;lawn_green&gt;zsw&lt;reset&gt; - spostrzegawczosc")</script>
+						<command></command>
+						<packageName></packageName>
+						<regex>^\?z$</regex>
+					</Alias>
+					<Alias isActive="yes" isFolder="no">
+						<name>ziola - buduj</name>
+						<script>expandAlias("/ziola_buduj")</script>
+						<command></command>
+						<packageName></packageName>
+						<regex>^\?zz$</regex>
+					</Alias>
+					<Alias isActive="yes" isFolder="no">
+						<name>zioła - skrót szukania</name>
+						<script>startHerbSearch(matches[2])</script>
+						<command></command>
+						<packageName></packageName>
+						<regex>^ss(?:\s+(\w+))?$</regex>
+					</Alias>
+					<Alias isActive="yes" isFolder="no">
+						<name>zioła - hp</name>
+						<script>send("opusc bronie", false)
+expandAlias("/z_przezuj serce_kapitana", false)
+expandAlias("/z_przezuj ususzony_ranog", false)
+expandAlias("/z_przyloz rojnik", false)
+expandAlias("/z_przyloz nagietek", false)
+expandAlias("/z_przezuj szczaw", false)
+expandAlias("/z_sproszkuj ususzony_przelot", false)
+expandAlias("/z_zjedz makownik", false)
+expandAlias("/z_rozgryz pieciornik", false)
+expandAlias("/z_rozgryz dziurawiec", false)
+expandAlias("/z_przezuj ranog", false)
+expandAlias("/z_zjedz lawenda", false)
+expandAlias("/z_przyloz barwinek", false)
+expandAlias("/z_przyloz babka", false)
+expandAlias("/z_przezuj mniszek", false)
+expandAlias("/z_rozgryz macznica", false)
+expandAlias("/z_zjedz ususzony_szafran", false)
+expandAlias("/z_przyloz rdest_ptasi", false)
+expandAlias("/z_zjedz poslonek", false)
+expandAlias("/z_przezuj mieta", false)
+expandAlias("/z_przezuj glog", false)
+expandAlias("/z_przezuj komosa", false)
+send("dobadz broni", false)</script>
+						<command></command>
+						<packageName></packageName>
+						<regex>^zhp$</regex>
+					</Alias>
+					<Alias isActive="yes" isFolder="no">
+						<name>zioła - deliona</name>
+						<script>send("opusc bronie", false)
+expandAlias("/z_zjedz deliona", false)
+send("dobadz broni", false)</script>
+						<command></command>
+						<packageName></packageName>
+						<regex>^del$</regex>
+					</Alias>
+					<Alias isActive="yes" isFolder="no">
+						<name>ziola - antidotum</name>
+						<script>send("opusc bronie", false)
+expandAlias("/z_przezuj chaber", false)
+expandAlias("/z_rozgryz siezygron", false)
+send("dobadz broni", false)</script>
+						<command></command>
+						<packageName></packageName>
+						<regex>^zanti$</regex>
+					</Alias>
+					<Alias isActive="yes" isFolder="no">
+						<name>zioła - zmęczenie</name>
+						<script>send("opusc bronie", false)
+expandAlias("/z_zjedz arnika", false)
+expandAlias("/z_przyloz bylica_pospolita", false)
+expandAlias("/z_przezuj lak", false)
+expandAlias("/z_zjedz melisa", false)
+expandAlias("/z_przezuj przesl", false)
+expandAlias("/z_powachaj podbial", false)
+expandAlias("/z_przyloz szczwol", false)
+expandAlias("/z_powachaj mieta", false)
+expandAlias("/z_przezuj nostrzyk", false)
+expandAlias("/z_przyloz kasztanowiec", false)
+expandAlias("/z_zjedz komosa", false)
+expandAlias("/z_polknij bobotrutka", false)
+expandAlias("/z_przezuj lulecznica", false)
+expandAlias("/z_zjedz naparstnica", false)
+send("dobadz broni", false)</script>
+						<command></command>
+						<packageName></packageName>
+						<regex>^zzm</regex>
+					</Alias>
+					<Alias isActive="yes" isFolder="no">
+						<name>zioła - boost</name>
+						<script>send("opusc bronie", false)
+expandAlias("/z_przezuj aralia 2", false)
+expandAlias("/z_powachaj bielun 2", false)
+expandAlias("/z_powachaj krasnodrzew 2", false)
+expandAlias("/z_przezuj drath 2", false)
+expandAlias("/z_zjedz casur 2", false)
+expandAlias("/z_przezuj kulczyba 2", false)
+send("dobadz broni", false)</script>
+						<command></command>
+						<packageName></packageName>
+						<regex>^zboost$</regex>
+					</Alias>
+					<Alias isActive="yes" isFolder="no">
+						<name>zioła - int boost</name>
+						<script>send("opusc bronie", false)
+expandAlias("/z_przezuj ususzona_mandragora 3", false)
+expandAlias("/z_rozgryz ususzony_lulek 3", false)
+send("dobadz broni", false)</script>
+						<command></command>
+						<packageName></packageName>
+						<regex>^zint$</regex>
+					</Alias>
+					<Alias isActive="yes" isFolder="no">
+						<name>zioła - mana</name>
+						<script>send("opusc bronie", false)
+expandAlias("/z_przezuj bulawinka 3", false)
+expandAlias("/z_zjedz hyzop 3", false)
+expandAlias("/z_rozkrusz ususzona_rosiczka 3", false)
+send("dobadz broni", false)</script>
+						<command></command>
+						<packageName></packageName>
+						<regex>^zmana$</regex>
+					</Alias>
+					<Alias isActive="yes" isFolder="no">
+						<name>zioła - regen many</name>
+						<script>send("opusc bronie", false)
+expandAlias("/z_zjedz ostrozen 6", false)
+send("dobadz broni", false)</script>
+						<command></command>
+						<packageName></packageName>
+						<regex>^zregen$</regex>
+					</Alias>
+					<Alias isActive="yes" isFolder="no">
+						<name>ziola - przygotuj się na wyprawę</name>
+						<script>expandAlias("/wezz deliona 10", false)
+expandAlias("/wezz chaber 4", false)
+expandAlias("/wezz siezygron 4", false)
+expandAlias("/wezz swietlik 10", false)
+expandAlias("/wezz babka 10", false)
+expandAlias("/wezz barwinek 10", false)
+expandAlias("/wezz dziurawiec 10", false)
+expandAlias("/wezz glog 10", false)
+expandAlias("/wezz komosa 10", false)
+expandAlias("/wezz rdest_ptasi 10", false)
+expandAlias("/wezz arnika 10", false)
+expandAlias("/wezz bylica_pospolita 10", false)
+expandAlias("/wezz kasztanowiec 10", false)
+expandAlias("/wezz lulecznica 10", false)
+expandAlias("/wezz bulawinka 2", false)
+expandAlias("/wezz ususzona_rosiczka 2", false)
+send("otworz przytroczone woreczki", false)
+send("wloz ziola do przytroczonego woreczka", false)
+send("wloz ziola do 2. przytroczonego woreczka", false)
+send("wloz ziola do 3. przytroczonego woreczka", false)
+send("zamknij przytroczone woreczki", false)
+send("odloz woreczki", false)</script>
+						<command></command>
+						<packageName></packageName>
+						<regex>^\/z_go</regex>
+					</Alias>
+					<Alias isActive="yes" isFolder="no">
+						<name>zioła - opróżnij przytroczone woreczki</name>
+						<script>send("ot przytroczony woreczek", false)
+send("wez ziola z niego", false) 
+send("ot 2. przytroczony woreczek", false) 
+send("wez ziola z niego", false) 
+send("ot 3. przytroczony woreczek", false)
+send("wez ziola z niego", false)
+send("zam woreczki", false)
+expandAlias("/zio1", false)</script>
+						<command></command>
+						<packageName></packageName>
+						<regex>^\/z_oproznij</regex>
+					</Alias>
+				</AliasGroup>
+			</AliasGroup>
+		</AliasGroup>
+	</AliasPackage>
+</MudletPackage>
