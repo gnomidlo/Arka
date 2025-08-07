@@ -3,26 +3,31 @@
 <MudletPackage version="1.001">
 	<ScriptPackage>
 		<ScriptGroup isActive="yes" isFolder="yes">
-			<name>Kalendarz 3.5</name>
+			<name>Kalendarz 3.6</name>
 			<packageName></packageName>
 			<script></script>
 			<eventHandlerList />
 			<Script isActive="yes" isFolder="no">
 				<name>kalendarz - core</name>
-				<packageName>Kalendarz 3.5</packageName>
+				<packageName>Kalendarz 3.6</packageName>
 				<script>
 				<![CDATA[
 -- =============================================================================
--- = Kalendarz 3.5
+-- = Kalendarz 3.6
 -- =============================================================================
+-- Wersja 3.6:
+-- - Dodano system "uczenia się" - skrypt zapisuje zaobserwowane czasy
+--   wschodów i zachodów słońca, aby z czasem używać dokładnych danych
+--   zamiast przewidywań.
+-- - Poprawiono logikę obliczania następnego świtu/zmierzchu, aby była
+--   bardziej intuicyjna i poprawnie pokazywała czas do najbliższych zdarzeń.
+-- - Dodano nowy wzorzec do triggera kalibracji, aby poprawnie
+--   reagował na wszystkie komunikaty o zachodzie słońca.
+-- - Ulepszono formatowanie w głównym widoku dla idealnego wyrównania kolumn.
+--
 -- Wersja 3.5:
 -- - Dostosowano odstępy w głównym widoku, aby uzyskać bardziej
 --   kompaktowy i wyrównany układ.
---
--- Wersja 3.4:
--- - Poprawiono estetykę głównego widoku: wydłużono belki, wyśrodkowano
---   tytuł i wyrównano kolumny z informacjami.
--- - Zamieniono miejscami "Godzinę" i "Porę Roku" dla lepszego układu.
 -- =============================================================================
 
 calendar = {
@@ -31,6 +36,7 @@ calendar = {
   gamehour_real_time = 120,
   cache = {},
   last_daylight_status = nil,
+  observed_sun_times = { imperial = {}, ishtar = {} },
 
   imperial  = {
     config = {
@@ -442,7 +448,11 @@ function calendar.show_calendar_results(filters, in_real_days)
 end
 
 function calendar.save_local_time_data()
-  local data = { imperial_offset = calendar.imperial.data.offset, ishtar_offset = calendar.ishtar.data.offset }
+  local data = { 
+    imperial_offset = calendar.imperial.data.offset, 
+    ishtar_offset = calendar.ishtar.data.offset,
+    observed_sun_times = calendar.observed_sun_times
+  }
   local path = calendar.json_file_path
   local file, err = io.open(path, "w")
   if file then file:write(yajl.to_string(data)); file:close()
@@ -460,6 +470,9 @@ function calendar.read_local_time_data()
     end
     if data and data["ishtar_offset"] and tonumber(data["ishtar_offset"]) > 0 then
       calendar.ishtar = calendar.create_calendar(calendar.ishtar, data["ishtar_offset"])
+    end
+    if data and data["observed_sun_times"] then
+      calendar.observed_sun_times = data["observed_sun_times"]
     end
   end
 end
@@ -597,6 +610,12 @@ function calendar.minutes_to_time(minutes)
 end
 
 function calendar.get_sunrise_sunset(cal, day)
+    -- Priorytet dla zaobserwowanych danych
+    if calendar.observed_sun_times[cal.config.domain] and calendar.observed_sun_times[cal.config.domain][tostring(day)] then
+        return calendar.observed_sun_times[cal.config.domain][tostring(day)]
+    end
+
+    -- Fallback do interpolacji
     local cache_key = cal.config.domain .. "_sun_" .. tostring(day)
     if calendar.cache[cache_key] then return calendar.cache[cache_key] end
 
@@ -626,7 +645,7 @@ function calendar.get_sunrise_sunset(cal, day)
     return result
 end
 
-function calendar.get_next_sun_event_timestamp(cal, day, hour, minute)
+function calendar.get_next_sun_event_timestamp(cal, day)
     local now_ts = getEpoch()
     
     local sun_times_today = calendar.get_sunrise_sunset(cal, day)
@@ -667,7 +686,7 @@ function calendar.display_full_time_info(cal, day, hour)
 	local season = calendar.get_current_season(cal, day)
 	local month_info = calendar.get_month_info(cal, day)
 	
-	local sun_timestamps = calendar.get_next_sun_event_timestamp(cal, day, hour, 0)
+	local sun_timestamps = calendar.get_next_sun_event_timestamp(cal, day)
     local time_to_sunrise = sun_timestamps.sunrise_ts - getEpoch()
     local time_to_sunset = sun_timestamps.sunset_ts - getEpoch()
 	
@@ -742,6 +761,12 @@ function calendar.recalibrate_by_event(cal_name, event_type)
 
 	cal.data.offset = new_offset
 	calendar[cal_name] = calendar.create_calendar(cal, new_offset)
+    
+    -- Zapisz zaobserwowany czas
+    if not calendar.observed_sun_times[cal.config.domain] then calendar.observed_sun_times[cal.config.domain] = {} end
+    if not calendar.observed_sun_times[cal.config.domain][tostring(current_game_day)] then calendar.observed_sun_times[cal.config.domain][tostring(current_game_day)] = {} end
+    calendar.observed_sun_times[cal.config.domain][tostring(current_game_day)][event_type] = event_time_str
+    
 	cecho(string.format("\n<light_steel_blue>Kalendarz (%s) został automatycznie zsynchronizowany.<reset>", cal.config.name))
 end
 
@@ -755,10 +780,10 @@ calendar.init()
 	</ScriptPackage>
 	<AliasPackage>
 		<AliasGroup isActive="yes" isFolder="yes">
-			<name>Kalendarz 3.3</name>
+			<name>Kalendarz 3.5</name>
 			<script></script>
 			<command></command>
-			<packageName>Kalendarz 3.3</packageName>
+			<packageName>Kalendarz 3.5</packageName>
 			<regex></regex>
 			<Alias isActive="yes" isFolder="no">
 				<name>czas</name>
@@ -844,13 +869,13 @@ calendar.init()
 	</AliasPackage>
 	<TriggerPackage>
 		<TriggerGroup isActive="yes" isFolder="yes" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
-			<name>Kalendarz 3.3</name>
+			<name>Kalendarz 3.5</name>
 			<script></script>
 			<triggerType>0</triggerType>
 			<conditonLineDelta>0</conditonLineDelta>
 			<mStayOpen>0</mStayOpen>
 			<mCommand></mCommand>
-			<packageName>Kalendarz 3.3</packageName>
+			<packageName>Kalendarz 3.5</packageName>
 			<mFgColor>#ff0000</mFgColor>
 			<mBgColor>#ffff00</mBgColor>
 			<mSoundFile></mSoundFile>
@@ -960,7 +985,7 @@ elseif matches[2] and matches[2]:find("pierwszy dzien nowego roku") then
   calendar.imperial = calendar.refresh_calendar(calendar.imperial, 1, 8)
 elseif matches[1]:find("promienie wschodzacego slonca") then
 	calendar.recalibrate_by_event("imperial", "sunrise")
-elseif matches[1]:find("Wieczorna zorza gasnie") then
+elseif matches[1]:find("Wieczorna zorza gasnie") or matches[1]:find("znikaja za horyzontem") then
 	calendar.recalibrate_by_event("imperial", "sunset")
 end
 ]]>
@@ -980,15 +1005,16 @@ end
 					<string>^Pierwsze promienie wschodzacego slonca (.*)\. W Starym Swiecie rozpoczyna sie (.*)\.$</string>
 					<string>^Przesiane przez geste galezie, ukosne promienie wschodzacego slonca .* kolejny dzien\.$</string>
 					<string>^Wieczorna zorza gasnie, a miedzy drzewami rozsnuwa sie calun mgly\..*$</string>
+                    <string>^Ostatnie promienie zachodzacego slonca znikaja za horyzontem\..*$</string>
 				</regexCodeList>
 				<regexCodePropertyList>
 					<integer>1</integer>
 					<integer>1</integer>
 					<integer>1</integer>
 					<integer>1</integer>
+                    <integer>1</integer>
 				</regexCodePropertyList>
 			</Trigger>
 		</TriggerGroup>
 	</TriggerPackage>
 </MudletPackage>
-" in the document abo
