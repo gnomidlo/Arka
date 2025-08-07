@@ -19,7 +19,7 @@ calendar = {
   gamehour_real_time = 120, -- duration of an hour on MUD in seconds
 
   imperial  = {
-    settings = {
+    config = {
       name = "Kalendarz imperialny",
       domain = "imperial",
       days_in_year = 400,
@@ -180,7 +180,7 @@ calendar = {
   },
 
   ishtar = {
-    settings = {
+    config = {
       name = "Kalnedarz ishtar",
       domain = "ishtar",
       days_in_year = 360,
@@ -500,7 +500,7 @@ function calendar.create_calendar(cal, offset)
   local type = ""
   if offset == nil then
     if debug then
-      print_log("Błąd w narzutu kalendarza: "..cal["settings"]["name"].." -> "..offset) 
+      print_log("Błąd w narzutu kalendarza: "..cal.config.name.." -> "..offset) 
     end  
     return cal
   end
@@ -511,22 +511,22 @@ function calendar.create_calendar(cal, offset)
     type = "calendar"
   end
   if string.len(type) > 0 then
-    cal["data"][type] = {}
-    for i=1,tonumber(cal["settings"]["days_in_year"]) do
-      cal["data"][type][i] = {}
+    cal.data[type] = {}
+    for i=1,tonumber(cal.config.days_in_year) do
+      cal.data[type][i] = {}
       for j=0,23 do
-        cal["data"][type][i][j] = timestamp
+        cal.data[type][i][j] = timestamp
         timestamp = timestamp + calendar.gamehour_real_time
     
       end
     end
     if offset > 0 then
-      cal["data"]["offset"] = offset
+      cal.data.offset = offset
       cal = calendar.reload_calendar(cal)
     end
   else
     if debug then
-      print_log("Błąd w narzutu kalendarza: "..cal["settings"]["name"].." -> "..offset) 
+      print_log("Błąd w narzutu kalendarza: "..cal.config.name.." -> "..offset) 
     end  
   end
   return cal
@@ -534,9 +534,9 @@ end
 
 -- Refresh calendar data based on current time
 function calendar.refresh_calendar(cal, d, h)
-  cal["data"]["offset"] = getEpoch() - cal["data"]["template"][d][h]
-  cal = calendar.create_calendar(cal, cal["data"]["offset"])
-  calendar.domain = cal.settings.domain
+  cal.data.offset = getEpoch() - cal.data.template[d][h]
+  cal = calendar.create_calendar(cal, cal.data.offset)
+  calendar.domain = cal.config.domain
   calendar.save_local_time_data(cal)
   return calendar.reload_calendar(cal)
 end
@@ -550,31 +550,31 @@ function calendar.reload_calendar(cal)
     local n = math.ceil((b - a) / add)
     return a + n * add
   end
-  if table_size(cal["data"]["calendar"]) > 0 then
-    cal["data"]["results"] = {}
+  if table_size(cal.data.calendar) > 0 then
+    cal.data.results = {}
     local t = 0
     local et = getEpoch()
     local day = 0
-    for k, v in pairs(cal["settings"]["search_times"]) do
-      day = tonumber(v["day"])
-      t = cal["data"]["calendar"][day][v["hour"]]
+    for k, v in pairs(cal.config.search_times) do
+      day = tonumber(v.day)
+      t = cal.data.calendar[day][v.hour]
       if t < et then
-        t = fill_time(t, et, cal["settings"]["year_time"])
+        t = fill_time(t, et, cal.config.year_time)
       end
-      if not cal["data"]["results"][t] then  -- Avoid duplicates
-        cal["data"]["results"][t] = { desc = v["desc"], timestamp = t, color = v["color"], type = v["type"], precision = cal["data"]["precision"], 
-                     game_date = "("..calendar.get_gamedate(cal, day, v["hour"])..")"} 
+      if not cal.data.results[t] then  -- Avoid duplicates
+        cal.data.results[t] = { desc = v.desc, timestamp = t, color = v.color, type = v.type, precision = cal.data.precision, 
+                     game_date = "("..calendar.get_gamedate(cal, day, v.hour)..")"} 
       end
     end
     -- Convert results to a list
     local results_list = {}
-    for _, event in pairs(cal["data"]["results"]) do
+    for _, event in pairs(cal.data.results) do
       table.insert(results_list, event)
     end
-    cal["data"]["results"] = results_list
+    cal.data.results = results_list
   else
     if debug then
-      print_log("Błąd w przeladowaniu kalendarza: "..cal["settings"]["name"]) 
+      print_log("Błąd w przeladowaniu kalendarza: "..cal.config.name) 
     end  
   end
   return cal
@@ -610,7 +610,7 @@ function calendar.get_game_time(timestamp, domain)
  
   local t = timestamp
   if not checked_time then
-    t = timestamp - calendar[domain].data.offset
+    t = timestamp - cal.data.offset
   end
   
   local r = {}
@@ -759,8 +759,8 @@ end
 -- Save offsets to local JSON
 function calendar.save_local_time_data()
   local data = {
-    imperial_offset = calendar["imperial"]["data"]["offset"], 
-    ishtar_offset = calendar["ishtar"]["data"]["offset"], 
+    imperial_offset = calendar["imperial"].data.offset, 
+    ishtar_offset = calendar["ishtar"].data.offset, 
  
   }
   
@@ -801,6 +801,16 @@ function calendar.init()
   calendar.ishtar = calendar.create_calendar(calendar.ishtar, 0)
   calendar.read_local_time_data()
   calendar.init_gmcp()
+
+  -- Pre-sort tables for optimization
+  for _, cal in pairs({calendar.imperial, calendar.ishtar}) do
+      table.sort(cal.config.seasons, function(a, b) return a.day < b.day end)
+      cal.config.sorted_months = {}
+      for name, start_day in pairs(cal.config.first_day_of_calparts) do
+        table.insert(cal.config.sorted_months, {name = name, start = start_day})
+      end
+      table.sort(cal.config.sorted_months, function(a,b) return a.start < b.start end)
+  end
 end
 
 
@@ -849,13 +859,13 @@ end
 function calendar.update_calendar_by_precision(cal, timestamp)
   local diff = 0
   cal.data.precision = 0
-  for d,v in pairs(cal["data"]["calendar"]) do
+  for d,v in pairs(cal.data.calendar) do
     for h,t in pairs(v) do
       diff = timestamp - t
       if diff == 0 or (diff > 0 and diff < calendar.gamehour_real_time) then
         if debug then
        
-           print_log("Poprawiono dokladnosc pomiaru kalendarza do 0 sekund: "..cal.settings.name) 
+           print_log("Poprawiono dokladnosc pomiaru kalendarza do 0 sekund: "..cal.config.name) 
         end       
         calendar.refresh_calendar(cal, d, h)
       end
@@ -869,7 +879,7 @@ end
 -- Get day and month based on day of the year
 function calendar.get_monthday(cal, day)
   local c = {}
-  for k,v in pairs(cal["settings"]["first_day_of_calparts"]) do
+  for k,v in pairs(cal.config.first_day_of_calparts) do
     table.insert(c, { month=k, start=v })
   end
   local function comp(a,b)  
@@ -879,25 +889,25 @@ function calendar.get_monthday(cal, day)
   table.sort(c, comp)
   
   local next_month_start = 0
-  local month_start = cal["settings"]["days_in_year"]
+  local month_start = cal.config.days_in_year
   local tmp = false
   local month = "nieznany1"
   local next_month = "nieznany2"
 
   for _,v in ipairs(c) do
-    if cal["settings"]["first_day_of_calparts"][v["month"]] == day then
-      return {day=1, month=v["month"]}
+    if cal.config.first_day_of_calparts[v.month] == day then
+      return {day=1, month=v.month}
     end
     if tmp then
-      next_month_start = v["start"]-1
-      next_month = v["month"]
+      next_month_start = v.start-1
+      next_month = v.month
       tmp = false
    
        break
     end
-    if v["start"] <= day then
-      month = v["month"]
-      month_start = (v["start"]-1)
+    if v.start <= day then
+      month = v.month
+      month_start = (v.start-1)
       tmp = true
     end
   end
@@ -936,8 +946,7 @@ end
 
 function calendar.get_current_season(cal, day)
     local current_season = "Nieznana"
-    table.sort(cal.settings.seasons, function(a, b) return a.day < b.day end)
-    for _, season in ipairs(cal.settings.seasons) do
+    for _, season in ipairs(cal.config.seasons) do
         if tonumber(day) >= tonumber(season.day) then
             current_season = season.name
         else
@@ -948,11 +957,7 @@ function calendar.get_current_season(cal, day)
 end
 
 function calendar.get_month_info(cal, day)
-    local sorted_months = {}
-    for name, start_day in pairs(cal.settings.first_day_of_calparts) do
-        table.insert(sorted_months, {name = name, start = start_day})
-    end
-    table.sort(sorted_months, function(a,b) return a.start < b.start end)
+    local sorted_months = cal.config.sorted_months
     
     local current_month = {name = "Unknown", day = 0, length = 0}
     
@@ -964,7 +969,7 @@ function calendar.get_month_info(cal, day)
             if i < #sorted_months then
                 current_month.length = sorted_months[i+1].start - month.start
             else
-                current_month.length = cal.settings.days_in_year - month.start + 1
+                current_month.length = cal.config.days_in_year - month.start + 1
             end
             break 
         end
@@ -984,7 +989,7 @@ function calendar.minutes_to_time(minutes)
 end
 
 function calendar.get_sunrise_sunset(cal, day)
-    local cycle = cal.settings.sun_cycle
+    local cycle = cal.config.sun_cycle
 	day = tonumber(day)
     table.sort(cycle, function(a,b) return a.day < b.day end)
 
@@ -1014,7 +1019,7 @@ function calendar.get_sunrise_sunset(cal, day)
 
     local total_days_in_period
     if p2.day < p1.day then
-        total_days_in_period = (cal.settings.days_in_year - p1.day) + p2.day
+        total_days_in_period = (cal.config.days_in_year - p1.day) + p2.day
     else
         total_days_in_period = p2.day - p1.day
     end
@@ -1027,7 +1032,7 @@ function calendar.get_sunrise_sunset(cal, day)
 
     local days_into_period
     if day < p1.day then 
-        days_into_period = (cal.settings.days_in_year - p1.day) + day
+        days_into_period = (cal.config.days_in_year - p1.day) + day
     else
         days_into_period = day - p1.day
     end
@@ -1092,7 +1097,7 @@ function calendar.get_next_three_events(filters)
     local next_events = {}
     
     for _, event in ipairs(union) do
-        if (filters == nil or table_contains(filters, event["type"])) and event["timestamp"] >= now then
+        if (filters == nil or table_contains(filters, event.type)) and event.timestamp >= now then
             table.insert(next_events, event)
             if #next_events == 3 then
                 break
@@ -1118,20 +1123,11 @@ function calendar.recalibrate_by_event(cal_name, event_type)
 	local cal = calendar[cal_name]
 	local now = getEpoch()
 
-	-- Get current day of year from our potentially drifted calendar
-	local current_game_day_approx = nil
-	local day_found = false
-	for day=1, cal.settings.days_in_year do
-		for hour=0,23 do
-			if cal.data.calendar[day] and cal.data.calendar[day][hour] and cal.data.calendar[day][hour] >= now then
-				current_game_day_approx = day
-				day_found = true
-				break
-			end
-		end
-		if day_found then break end
-	end
-	
+	-- Mathematically calculate current game day
+	local seconds_in_game_day = 24 * calendar.gamehour_real_time
+	local elapsed_time_in_year = (now - cal.data.offset) % cal.config.year_time
+	local current_game_day_approx = math.floor(elapsed_time_in_year / seconds_in_game_day) + 1
+
 	if not current_game_day_approx then return end
 
 	local sun_times = calendar.get_sunrise_sunset(cal, current_game_day_approx)
@@ -1157,7 +1153,7 @@ function calendar.recalibrate_by_event(cal_name, event_type)
 	-- Apply the new offset and reload
 	cal.data.offset = new_offset
 	calendar[cal_name] = calendar.create_calendar(cal, new_offset)
-	cecho(string.format("<light_steel_blue>Kalendarz (%s) został automatycznie zsynchronizowany.\n", cal_name))
+	cecho(string.format("<light_steel_blue>Kalendarz (%s) został automatycznie zsynchronizowany.\n", cal.config.name))
 end
 
 
@@ -1300,7 +1296,7 @@ local pd = matches[4]
 local m = matches[6]
 
 local d = calendar.string2int[matches[5]]
-local yd = calendar.ishtar.settings.first_day_of_calparts[m] + d - 1
+local yd = calendar.ishtar.config.first_day_of_calparts[m] + d - 1
 
 if pd == "wieczorem" or pd == "poludniu" or (pd == "nocy" and h > 7) then
   h = h + 12
@@ -1348,10 +1344,10 @@ local d = "-"
 local special_imperial_days = {"Hexentag", "Mitterfruhl", "Sonnenstill", "Geheimnistag", "Mitterherbst"}
 
 if table_contains(special_imperial_days, m) then 
-  yd = calendar.imperial.settings.first_day_of_calparts[m]
+  yd = calendar.imperial.config.first_day_of_calparts[m]
 else
   d = calendar.string2int[matches[5]]
-  yd = calendar.imperial.settings.first_day_of_calparts[m] + d - 1
+  yd = calendar.imperial.config.first_day_of_calparts[m] + d - 1
 end
 
 if pd == "wieczorem" or pd == "poludniu" or (pd == "nocy" and h > 8) then
