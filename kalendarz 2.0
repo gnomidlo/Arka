@@ -1053,7 +1053,7 @@ function calendar.get_sunrise_sunset(cal, day)
     }
 end
 
-function calendar.display_full_time_info(cal, day)
+function calendar.display_full_time_info(cal, day, hour)
 	local day_num = tonumber(day)
 	if not day_num or not cal.data.calendar[day_num] then return end
 
@@ -1065,6 +1065,7 @@ function calendar.display_full_time_info(cal, day)
 	
 	local line1 = string.format("<light_steel_blue>%-10s <white>%-17s <aquamarine>|| <light_steel_blue>%-8s <white>%-10s <aquamarine>|| <light_steel_blue>%-12s <white>%s", "MIESIAC:", month_info.name, "DZIEN:", month_info.day.."/"..month_info.length, "PORA ROKU:", season)
 	local line2 = string.format("<light_steel_blue>%-10s <white>%s <light_slate_grey>(rl: %s) <aquamarine>|| <light_steel_blue>%-8s <white>%s <light_slate_grey>(rl: %s)", "SWIT:", sun_times.sunrise, sun_times.sunrise_rl, "ZMIERZCH:", sun_times.sunset, sun_times.sunset_rl)
+	local hour_line = string.format("<light_steel_blue>GODZINA:   <aquamarine>%d:00", hour)
 	
 	local events_string = ""
 	if #next_events > 0 then
@@ -1072,7 +1073,7 @@ function calendar.display_full_time_info(cal, day)
 		for i, event in ipairs(next_events) do
 			local remaining_time = event.timestamp - getEpoch()
 			if remaining_time > 0 then
-				table.insert(events_list, string.format("  %d. %s<%s>%s<reset> -> <wheat>za %s", i, calendar.get_prefix(event.type), event.color, event.desc:gsub("%s+$", ""), calendar.resttime(remaining_time)))
+				table.insert(events_list, string.format("  %d. %s<%s>%s<reset> %s -> <wheat>za %s", i, calendar.get_prefix(event.type), event.color, event.desc:gsub("%s+$", ""), os.date('%d.%m.%Y %H:%M:%S', event.timestamp), calendar.resttime(remaining_time)))
 			end
 		end
 		events_string = table.concat(events_list, "\n")
@@ -1080,7 +1081,7 @@ function calendar.display_full_time_info(cal, day)
 		events_string = "  <dim_gray>Brak nadchodzących wydarzeń"
 	end
 
-	cecho("\n<reset>"..line1.."\n"..line2.."\n".."<light_steel_blue>ZBLIZAJA SIE:\n<reset>"..events_string.."\n")
+	cecho("\n<reset>"..hour_line.."\n"..line1.."\n"..line2.."\n".."<light_steel_blue>ZBLIZAJA SIE:\n<reset>"..events_string.."\n")
 end
 
 
@@ -1111,6 +1112,53 @@ function calendar.get_next_three_events(filters)
     return next_events
 end
 
+function calendar.recalibrate_by_event(cal_name, event_type)
+	if not calendar[cal_name] or not calendar[cal_name].data.offset or calendar[cal_name].data.offset == 0 then return end
+	
+	local cal = calendar[cal_name]
+	local now = getEpoch()
+
+	-- Get current day of year from our potentially drifted calendar
+	local current_game_day_approx = nil
+	local day_found = false
+	for day=1, cal.settings.days_in_year do
+		for hour=0,23 do
+			if cal.data.calendar[day] and cal.data.calendar[day][hour] and cal.data.calendar[day][hour] >= now then
+				current_game_day_approx = day
+				day_found = true
+				break
+			end
+		end
+		if day_found then break end
+	end
+	
+	if not current_game_day_approx then return end
+
+	local sun_times = calendar.get_sunrise_sunset(cal, current_game_day_approx)
+	local event_time_str
+	if event_type == "sunrise" then
+		event_time_str = sun_times.sunrise
+	elseif event_type == "sunset" then
+		event_time_str = sun_times.sunset
+	else
+		return
+	end
+
+	local event_minutes = calendar.time_to_minutes(event_time_str)
+	local event_seconds_into_day = event_minutes * (calendar.gamehour_real_time / 60)
+	
+	-- Calculate the timestamp for the start of the game day
+	local day_start_timestamp_template = cal.data.template[current_game_day_approx][0]
+
+	-- The precise time of the event is `now`.
+	-- The expected time of the event (in seconds from year start) is `day_start_timestamp_template + event_seconds_into_day`.
+	local new_offset = now - (day_start_timestamp_template + event_seconds_into_day)
+
+	-- Apply the new offset and reload
+	cal.data.offset = new_offset
+	calendar[cal_name] = calendar.create_calendar(cal, new_offset)
+	cecho(string.format("<light_steel_blue>Kalendarz (%s) został automatycznie zsynchronizowany.\n", cal_name))
+end
 
 
 -- Initialize the calendar module
@@ -1260,7 +1308,7 @@ end
 
 calendar.ishtar.data.precision = 119
 calendar.ishtar = calendar.refresh_calendar(calendar.ishtar, yd, h)
-calendar.display_full_time_info(calendar.ishtar, yd)
+calendar.display_full_time_info(calendar.ishtar, yd, h)
 ]]>
 </script>
 				<triggerType>0</triggerType>
@@ -1312,7 +1360,7 @@ end
 
 calendar.imperial.data.precision = 119
 calendar.imperial = calendar.refresh_calendar(calendar.imperial, yd, h)
-calendar.display_full_time_info(calendar.imperial, yd)
+calendar.display_full_time_info(calendar.imperial, yd, h)
 ]]>
 </script>
 				<triggerType>0</triggerType>
@@ -1340,14 +1388,16 @@ calendar.display_full_time_info(calendar.imperial, yd)
 				<name>kalendarz imperium eventy</name>
 				<script>
 				<![CDATA[
-if matches[3] == "noc Geheimnisnacht" then
+if matches[2] and matches[2]:find("noc Geheimnisnacht") then
   -- calendar.imperial.data.precision = 0
   -- calendar.imperial = calendar.refresh_calendar(calendar.imperial, 201, 17)
-end
-
-if matches[3] == "pierwszy dzien nowego roku" then
+elseif matches[2] and matches[2]:find("pierwszy dzien nowego roku") then
   calendar.imperial.data.precision = 0
   calendar.imperial = calendar.refresh_calendar(calendar.imperial, 1, 8)
+elseif matches[1]:find("promienie wschodzacego slonca") then
+	calendar.recalibrate_by_event("imperial", "sunrise")
+elseif matches[1]:find("Wieczorna zorza gasnie") then
+	calendar.recalibrate_by_event("imperial", "sunset")
 end
 ]]>
 </script>
@@ -1362,11 +1412,14 @@ end
 				<colorTriggerFgColor>#000000</colorTriggerFgColor>
 				<colorTriggerBgColor>#000000</colorTriggerBgColor>
 				<regexCodeList>
-					<string>^Ostatnie promienie zachodzacego slonca (.*) W Starym Swiecie rozpoczyna sie (.*).$</string>
-					<string>^Pierwsze promienie wschodzacego slonca (.*).
-W Starym Swiecie rozpoczyna sie (.*).$</string>
+					<string>^Ostatnie promienie zachodzacego slonca (.*) W Starym Swiecie rozpoczyna sie (.*)\.$</string>
+					<string>^Pierwsze promienie wschodzacego slonca (.*)\. W Starym Swiecie rozpoczyna sie (.*)\.$</string>
+					<string>^Przesiane przez geste galezie, ukosne promienie wschodzacego slonca .* kolejny dzien\.$</string>
+					<string>^Wieczorna zorza gasnie, a miedzy drzewami rozsnuwa sie calun mgly\..*$</string>
 				</regexCodeList>
 				<regexCodePropertyList>
+					<integer>1</integer>
+					<integer>1</integer>
 					<integer>1</integer>
 					<integer>1</integer>
 				</regexCodePropertyList>
