@@ -30,124 +30,124 @@ calendar = {
       },
     
       search_times = {
-        {day=1, hour=17,   desc="Leci pyl:           ", color="dodger_blue", type="special_imperial"}, -- Hexennacht
+        {day=1, hour=17,   desc="Leci pyl:            ", color="dodger_blue", type="special_imperial"}, -- Hexennacht
         
-        {day=1, hour=17,   desc="Poczatek pelni:     ", color="powder_blue", type="full_moon_imperial"},
-        {day=2, hour=8,    desc="Koniec pelni:       ", color="powder_blue", type="full_moon_imperial"},
+        {day=1, hour=17,   desc="Poczatek pelni:      ", color="powder_blue", type="full_moon_imperial"},
+        {day=2, hour=8,    desc="Koniec pelni:        ", color="powder_blue", type="full_moon_imperial"},
         
-        {day=14, hour=17,  desc="Poczatek nowiu:     ", color="slate_blue", type="new_moon_imperial"},
-        {day=15, hour=8,   desc="Koniec nowiu:       ", color="slate_blue", type="new_moon_imperial"},
+        {day=14, hour=17,  desc="Poczatek nowiu:      ", color="slate_blue", type="new_moon_imperial"},
+        {day=15, hour=8,   desc="Koniec nowiu:        ", color="slate_blue", type="new_moon_imperial"},
         
-        {day=26, hour=17,  desc="Poczatek pelni:     ", color="powder_blue", type="full_moon_imperial"},
-        {day=27, hour=8,   desc="Koniec pelni:       ", color="powder_blue", type="full_moon_imperial"},
+        {day=26, hour=17,  desc="Poczatek pelni:      ", color="powder_blue", type="full_moon_imperial"},
+        {day=27, hour=8,   desc="Koniec pelni:        ", color="powder_blue", type="full_moon_imperial"},
         
-        {day=39, hour=18,  desc="Poczatek nowiu:     ", color="slate_blue", type="new_moon_imperial"},
-        {day=40, hour=7,   desc="Koniec nowiu:       ", color="slate_blue", type="new_moon_imperial"},
+        {day=39, hour=18,  desc="Poczatek nowiu:      ", color="slate_blue", type="new_moon_imperial"},
+        {day=40, hour=7,   desc="Koniec nowiu:        ", color="slate_blue", type="new_moon_imperial"},
         
-        {day=51, hour=18,  desc="Poczatek pelni:     ", color="powder_blue", type="full_moon_imperial"},
-        {day=52, hour=7,   desc="Koniec pelni:       ", color="powder_blue", type="full_moon_imperial"},
+        {day=51, hour=18,  desc="Poczatek pelni:      ", color="powder_blue", type="full_moon_imperial"},
+        {day=52, hour=7,   desc="Koniec pelni:        ", color="powder_blue", type="full_moon_imperial"},
         
         {day=64, hour=18,  desc="Poczatek nowiu:      ", color="slate_blue", type="new_moon_imperial"},
-        {day=65, hour=7,   desc="Koniec nowiu:       ", color="slate_blue", type="new_moon_imperial"},
+        {day=65, hour=7,   desc="Koniec nowiu:        ", color="slate_blue", type="new_moon_imperial"},
         
-        {day=76, hour=19,  desc="Poczatek pelni:     ", color="powder_blue", type="full_moon_imperial"},
-        {day=77, hour=6,   desc="Koniec pelni:       ", color="powder_blue", type="full_moon_imperial"},
+        {day=76, hour=19,  desc="Poczatek pelni:      ", color="powder_blue", type="full_moon_imperial"},
+        {day=77, hour=6,   desc="Koniec pelni:        ", color="powder_blue", type="full_moon_imperial"},
         
-        {day=89, hour=19,  desc="Poczatek nowiu:    ", color="slate_blue", type="new_moon_imperial"},
-        {day=90, hour=6,   desc="Koniec nowiu:       ", color="slate_blue", type="new_moon_imperial"},
+        {day=89, hour=19,  desc="Poczatek nowiu:      ", color="slate_blue", type="new_moon_imperial"},
+        {day=90, hour=6,   desc="Koniec nowiu:        ", color="slate_blue", type="new_moon_imperial"},
 
-        {day=102, hour=21, desc="Poczatek pelni:     ", color="powder_blue", type="full_moon_imperial"},
-        {day=103, hour=5,  desc="Koniec pelni:       ", color="powder_blue", type="full_moon_imperial"},
+        {day=102, hour=21, desc="Poczatek pelni:      ", color="powder_blue", type="full_moon_imperial"},
+        {day=103, hour=5,  desc="Koniec pelni:        ", color="powder_blue", type="full_moon_imperial"},
         
-        {day=114, hour=20, desc="Poczatek nowiu:     ", color="slate_blue", type="new_moon_imperial"},
-        {day=115, hour=5,  desc="Koniec nowiu:       ", color="slate_blue", type="new_moon_imperial"},
+        {day=114, hour=20, desc="Poczatek nowiu:      ", color="slate_blue", type="new_moon_imperial"},
+        {day=115, hour=5,  desc="Koniec nowiu:        ", color="slate_blue", type="new_moon_imperial"},
 
-        {day=126, hour=20, desc="Poczatek pelni:     ", color="powder_blue", type="full_moon_imperial"},
-        {day=127, hour=5,  desc="Koniec pelni:       ", color="powder_blue", type="full_moon_imperial"},
+        {day=126, hour=20, desc="Poczatek pelni:      ", color="powder_blue", type="full_moon_imperial"},
+        {day=127, hour=5,  desc="Koniec pelni:        ", color="powder_blue", type="full_moon_imperial"},
         
-        {day=139, hour=21, desc="Poczatek nowiu:     ", color="slate_blue", type="new_moon_imperial"},
-        {day=140, hour=5,  desc="Koniec nowiu:       ", color="slate_blue", type="new_moon_imperial"},
+        {day=139, hour=21, desc="Poczatek nowiu:      ", color="slate_blue", type="new_moon_imperial"},
+        {day=140, hour=5,  desc="Koniec nowiu:        ", color="slate_blue", type="new_moon_imperial"},
 
   
-        {day=151, hour=21, desc="Poczatek pelni:     ", color="powder_blue", type="full_moon_imperial"},
-        {day=152, hour=5,  desc="Koniec pelni:       ", color="powder_blue", type="full_moon_imperial"},
+        {day=151, hour=21, desc="Poczatek pelni:      ", color="powder_blue", type="full_moon_imperial"},
+        {day=152, hour=5,  desc="Koniec pelni:        ", color="powder_blue", type="full_moon_imperial"},
         
-        {day=164, hour=21, desc="Poczatek nowiu:     ", color="slate_blue", type="new_moon_imperial"},
-        {day=165, hour=5,  desc="Koniec nowiu:       ", color="slate_blue", type="new_moon_imperial"},
+        {day=164, hour=21, desc="Poczatek nowiu:      ", color="slate_blue", type="new_moon_imperial"},
+        {day=165, hour=5,  desc="Koniec nowiu:        ", color="slate_blue", type="new_moon_imperial"},
 
         {day=176, hour=22, desc="Poczatek pelni:      ", color="powder_blue", type="full_moon_imperial"},
-        {day=177, hour=4,  desc="Koniec pelni:       ", color="powder_blue", type="full_moon_imperial"},
+        {day=177, hour=4,  desc="Koniec pelni:        ", color="powder_blue", type="full_moon_imperial"},
         
-        {day=189, hour=22, desc="Poczatek nowiu:     ", color="slate_blue", type="new_moon_imperial"},
-        {day=190, hour=4,  desc="Koniec nowiu:       ", color="slate_blue", type="new_moon_imperial"},
+        {day=189, hour=22, desc="Poczatek nowiu:      ", color="slate_blue", type="new_moon_imperial"},
+        {day=190, hour=4,  desc="Koniec nowiu:        ", color="slate_blue", type="new_moon_imperial"},
  
-        {day=201, hour=17, desc="Leci pyl:           ", color="dodger_blue", type="special_imperial"},
+        {day=201, hour=17, desc="Leci pyl:            ", color="dodger_blue", type="special_imperial"},
   
    
-        {day=202, hour=20, desc="Poczatek pelni:     ", color="powder_blue", type="full_moon_imperial"},
-        {day=203, hour=5,  desc="Koniec pelni:       ", color="powder_blue", type="full_moon_imperial"},
+        {day=202, hour=20, desc="Poczatek pelni:      ", color="powder_blue", type="full_moon_imperial"},
+        {day=203, hour=5,  desc="Koniec pelni:        ", color="powder_blue", type="full_moon_imperial"},
        
-        {day=214, hour=20, desc="Poczatek nowiu:     ", color="slate_blue", type="new_moon_imperial"},
-        {day=215, hour=5,  desc="Koniec nowiu:       ", color="slate_blue", type="new_moon_imperial"},
+        {day=214, hour=20, desc="Poczatek nowiu:      ", color="slate_blue", type="new_moon_imperial"},
+        {day=215, hour=5,  desc="Koniec nowiu:        ", color="slate_blue", type="new_moon_imperial"},
 
-        {day=227, hour=20, desc="Poczatek pelni:     ", color="powder_blue", type="full_moon_imperial"},
-        {day=228, hour=5,  desc="Koniec pelni:       ", color="powder_blue", type="full_moon_imperial"},
+        {day=227, hour=20, desc="Poczatek pelni:      ", color="powder_blue", type="full_moon_imperial"},
+        {day=228, hour=5,  desc="Koniec pelni:        ", color="powder_blue", type="full_moon_imperial"},
         
-        {day=239, hour=20, desc="Poczatek nowiu:     ", color="slate_blue", type="new_moon_imperial"},
-        {day=240, hour=5,  desc="Koniec nowiu:       ", color="slate_blue", type="new_moon_imperial"},
+        {day=239, hour=20, desc="Poczatek nowiu:      ", color="slate_blue", type="new_moon_imperial"},
+        {day=240, hour=5,  desc="Koniec nowiu:        ", color="slate_blue", type="new_moon_imperial"},
 
-        {day=251, hour=20, desc="Poczatek pelni:     ", color="powder_blue", type="full_moon_imperial"},
+        {day=251, hour=20, desc="Poczatek pelni:      ", color="powder_blue", type="full_moon_imperial"},
         {day=252, hour=5,  desc="Koniec pelni:        ", color="powder_blue", type="full_moon_imperial"},
         
-        {day=253, hour=20, desc="Leci pyl:           ", color="dodger_blue", type="special_imperial"},
+        {day=253, hour=20, desc="Leci pyl:            ", color="dodger_blue", type="special_imperial"},
         
-        {day=264, hour=20, desc="Poczatek nowiu:     ", color="slate_blue", type="new_moon_imperial"},
-        {day=265, hour=5,  desc="Koniec nowiu:       ", color="slate_blue", type="new_moon_imperial"},
+        {day=264, hour=20, desc="Poczatek nowiu:      ", color="slate_blue", type="new_moon_imperial"},
+        {day=265, hour=5,  desc="Koniec nowiu:        ", color="slate_blue", type="new_moon_imperial"},
 
         {day=276, hour=19, desc="Poczatek pelni:      ", color="powder_blue", type="full_moon_imperial"},
-        {day=277, hour=6,  desc="Koniec pelni:       ", color="powder_blue", type="full_moon_imperial"},
+        {day=277, hour=6,  desc="Koniec pelni:        ", color="powder_blue", type="full_moon_imperial"},
         
-        {day=278, hour=19, desc="Leci pyl:           ", color="dodger_blue", type="special_imperial"},
+        {day=278, hour=19, desc="Leci pyl:            ", color="dodger_blue", type="special_imperial"},
         
-        {day=289, hour=19, desc="Poczatek nowiu:     ", color="slate_blue", type="new_moon_imperial"},
+        {day=289, hour=19, desc="Poczatek nowiu:      ", color="slate_blue", type="new_moon_imperial"},
         {day=290, hour=6,  desc="Koniec nowiu:        ", color="slate_blue", type="new_moon_imperial"},
 
 
-        {day=301, hour=18, desc="Poczatek pelni:     ", color="powder_blue", type="full_moon_imperial"}, -- Kaltezeit 301
-        {day=302, hour=6,  desc="Koniec pelni:       ", color="powder_blue", type="full_moon_imperial"},
+        {day=301, hour=18, desc="Poczatek pelni:      ", color="powder_blue", type="full_moon_imperial"}, -- Kaltezeit 301
+        {day=302, hour=6,  desc="Koniec pelni:        ", color="powder_blue", type="full_moon_imperial"},
         
-        {day=314, hour=18, desc="Poczatek nowiu:     ", color="slate_blue", type="new_moon_imperial"},
-        {day=315, hour=6,  desc="Koniec nowiu:       ", color="slate_blue", type="new_moon_imperial"},
+        {day=314, hour=18, desc="Poczatek nowiu:      ", color="slate_blue", type="new_moon_imperial"},
+        {day=315, hour=6,  desc="Koniec nowiu:        ", color="slate_blue", type="new_moon_imperial"},
 
        
-        {day=326, hour=18, desc="Leci pyl:           ", color="dodger_blue", type="special_imperial"},
+        {day=326, hour=18, desc="Leci pyl:            ", color="dodger_blue", type="special_imperial"},
 
-        {day=326, hour=18, desc="Poczatek pelni:     ", color="powder_blue", type="full_moon_imperial"},
-        {day=327, hour=6,  desc="Koniec pelni:       ", color="powder_blue", type="full_moon_imperial"},
+        {day=326, hour=18, desc="Poczatek pelni:      ", color="powder_blue", type="full_moon_imperial"},
+        {day=327, hour=6,  desc="Koniec pelni:        ", color="powder_blue", type="full_moon_imperial"},
         
         -- Ulrichszeit 334
-        {day=339, hour=17, desc="Poczatek nowiu:     ", color="slate_blue", type="new_moon_imperial"},
+        {day=339, hour=17, desc="Poczatek nowiu:      ", color="slate_blue", type="new_moon_imperial"},
         
-        {day=340, hour=7,  desc="Koniec nowiu:       ", color="slate_blue", type="new_moon_imperial"},
+        {day=340, hour=7,  desc="Koniec nowiu:        ", color="slate_blue", type="new_moon_imperial"},
 
-        {day=351, hour=17, desc="Poczatek pelni:     ", color="powder_blue", type="full_moon_imperial"},
-        {day=352, hour=7,  desc="Koniec pelni:       ", color="powder_blue", type="full_moon_imperial"},
+        {day=351, hour=17, desc="Poczatek pelni:      ", color="powder_blue", type="full_moon_imperial"},
+        {day=352, hour=7,  desc="Koniec pelni:        ", color="powder_blue", type="full_moon_imperial"},
         
-        {day=364, hour=17, desc="Poczatek nowiu:     ", color="slate_blue", type="new_moon_imperial"},
-        {day=365, hour=7,  desc="Koniec nowiu:       ", color="slate_blue", type="new_moon_imperial"},
+        {day=364, hour=17, desc="Poczatek nowiu:      ", color="slate_blue", type="new_moon_imperial"},
+        {day=365, hour=7,  desc="Koniec nowiu:        ", color="slate_blue", type="new_moon_imperial"},
 
  
-        {day=376, hour=16, desc="Poczatek pelni:     ", color="powder_blue", type="full_moon_imperial"},
-        {day=377, hour=8,  desc="Koniec pelni:       ", color="powder_blue", type="full_moon_imperial"},
+        {day=376, hour=16, desc="Poczatek pelni:      ", color="powder_blue", type="full_moon_imperial"},
+        {day=377, hour=8,  desc="Koniec pelni:        ", color="powder_blue", type="full_moon_imperial"},
         
-        {day=389, hour=16, desc="Poczatek nowiu:     ", color="slate_blue", type="new_moon_imperial"},
-        {day=390, hour=8,  desc="Koniec nowiu:       ", color="slate_blue", type="new_moon_imperial"},
+        {day=389, hour=16, desc="Poczatek nowiu:      ", color="slate_blue", type="new_moon_imperial"},
+        {day=390, hour=8,  desc="Koniec nowiu:        ", color="slate_blue", type="new_moon_imperial"},
       
         -- pory roku
-        {day=18, hour=0,   desc="Poczatek wiosny:    ", color="green", type="season_imperial"},
-        {day=118, hour=0,  desc="Poczatek lata:      ", color="yellow", type="season_imperial"},
-        {day=218, hour=0,  desc="Poczatek jesieni:   ", color="brown", type="season_imperial"},
-        {day=319, hour=0,  desc="Poczatek zimy:      ", color="white", type="season_imperial"},
+        {day=18, hour=0,   desc="Poczatek wiosny:     ", color="green", type="season_imperial"},
+        {day=118, hour=0,  desc="Poczatek lata:       ", color="yellow", type="season_imperial"},
+        {day=218, hour=0,  desc="Poczatek jesieni:    ", color="brown", type="season_imperial"},
+        {day=319, hour=0,  desc="Poczatek zimy:       ", color="white", type="season_imperial"},
       },
     },
     data = {
@@ -172,182 +172,182 @@ calendar = {
       search_times = {
         
         --YULE:
-        {day=1, hour=0,    desc="Poczatek zimy:      ", color="white", type="season_ishtar"},
-        {day=1, hour=0,    desc="Przesilenie zimowe: ", color="white", type="solstice_ishtar"},
+        {day=1, hour=0,    desc="Poczatek zimy:       ", color="white", type="season_ishtar"},
+        {day=1, hour=0,    desc="Przesilenie zimowe:  ", color="white", type="solstice_ishtar"},
       
-        {day=1, hour=0,    desc="Ryboludzie:         ", color="white", type="fishman_ishtar"},    
+        {day=1, hour=0,    desc="Ryboludzie:          ", color="white", type="fishman_ishtar"},    
 
-        {day=6, hour=5,    desc="Eysenlaan festyn    ", color="magenta", type="eys_feast_ishtar"},
-        {day=9, hour=23,   desc="Eysenlaan koniec    ", color="magenta", type="eys_feast_ishtar"},
+        {day=6, hour=5,    desc="Eysenlaan festyn     ", color="magenta", type="eys_feast_ishtar"},
+        {day=9, hour=23,   desc="Eysenlaan koniec     ", color="magenta", type="eys_feast_ishtar"},
   
-        {day=4, hour=0,    desc="Poczatek pelni:     ", color="powder_blue", type="full_moon_ishtar"},
+        {day=4, hour=0,    desc="Poczatek pelni:      ", color="powder_blue", type="full_moon_ishtar"},
         {day=6, hour=0,    desc="Koniec pelni:        ", color="powder_blue", type="full_moon_ishtar"},
 
-        {day=4, hour=2,    desc="Szpiedzy wychodza:  ", color="chocolate", type="spy_ishtar"},
-        {day=4, hour=8,    desc="Szpiedzy znikaja:   ", color="chocolate", type="spy_ishtar"},
-        {day=7, hour=22,   desc="Szpiedzy wychodza:  ", color="chocolate", type="spy_ishtar"},
-        {day=8, hour=8,    desc="Szpiedzy znikaja:   ", color="chocolate", type="spy_ishtar"},
+        {day=4, hour=2,    desc="Szpiedzy wychodza:   ", color="chocolate", type="spy_ishtar"},
+        {day=4, hour=8,    desc="Szpiedzy znikaja:    ", color="chocolate", type="spy_ishtar"},
+        {day=7, hour=22,   desc="Szpiedzy wychodza:   ", color="chocolate", type="spy_ishtar"},
+        {day=8, hour=8,    desc="Szpiedzy znikaja:    ", color="chocolate", type="spy_ishtar"},
 
-        {day=28, hour=0,   desc="Poczatek pelni:     ", color="powder_blue", type="full_moon_ishtar"},
-        {day=30, hour=0,   desc="Koniec pelni:       ", color="powder_blue", type="full_moon_ishtar"},
+        {day=28, hour=0,   desc="Poczatek pelni:      ", color="powder_blue", type="full_moon_ishtar"},
+        {day=30, hour=0,   desc="Koniec pelni:        ", color="powder_blue", type="full_moon_ishtar"},
 
-        {day=28, hour=2,   desc="Szpiedzy wychodza:  ", color="chocolate", type="spy_ishtar"},
-        {day=28, hour=8,   desc="Szpiedzy znikaja:   ", color="chocolate", type="spy_ishtar"},
-        {day=31, hour=22,  desc="Szpiedzy wychodza:  ", color="chocolate", type="spy_ishtar"},
-        {day=32, hour=8,   desc="Szpiedzy znikaja:   ", color="chocolate", type="spy_ishtar"},
+        {day=28, hour=2,   desc="Szpiedzy wychodza:   ", color="chocolate", type="spy_ishtar"},
+        {day=28, hour=8,   desc="Szpiedzy znikaja:    ", color="chocolate", type="spy_ishtar"},
+        {day=31, hour=22,  desc="Szpiedzy wychodza:   ", color="chocolate", type="spy_ishtar"},
+        {day=32, hour=8,   desc="Szpiedzy znikaja:    ", color="chocolate", type="spy_ishtar"},
 
         --IMBAELK:
  
         {day=51, hour=5,  desc="Eysenlaan festyn     ", color="magenta", type="eys_feast_ishtar"},
         {day=54, hour=23, desc="Eysenlaan koniec     ", color="magenta", type="eys_feast_ishtar"},        
 
-        {day=52, hour=0,   desc="Poczatek pelni:     ", color="powder_blue", type="full_moon_ishtar"},
-        {day=54, hour=0,   desc="Koniec pelni:       ", color="powder_blue", type="full_moon_ishtar"},
+        {day=52, hour=0,   desc="Poczatek pelni:      ", color="powder_blue", type="full_moon_ishtar"},
+        {day=54, hour=0,   desc="Koniec pelni:        ", color="powder_blue", type="full_moon_ishtar"},
 
         {day=52, hour=2,   desc="Szpiedzy wychodza:   ", color="chocolate", type="spy_ishtar"},
-        {day=52, hour=7,   desc="Szpiedzy znikaja:   ", color="chocolate", type="spy_ishtar"},
-        {day=55, hour=22,  desc="Szpiedzy wychodza:  ", color="chocolate", type="spy_ishtar"},
-        {day=56, hour=7,   desc="Szpiedzy znikaja:   ", color="chocolate", type="spy_ishtar"},
+        {day=52, hour=7,   desc="Szpiedzy znikaja:    ", color="chocolate", type="spy_ishtar"},
+        {day=55, hour=22,  desc="Szpiedzy wychodza:   ", color="chocolate", type="spy_ishtar"},
+        {day=56, hour=7,   desc="Szpiedzy znikaja:    ", color="chocolate", type="spy_ishtar"},
         
-        {day=76, hour=0,   desc="Poczatek pelni:     ", color="powder_blue", type="full_moon_ishtar"},
+        {day=76, hour=0,   desc="Poczatek pelni:      ", color="powder_blue", type="full_moon_ishtar"},
         {day=78, hour=0,   desc="Koniec pelni:        ", color="powder_blue", type="full_moon_ishtar"},
 
-        {day=76, hour=2,   desc="Szpiedzy wychodza:  ", color="chocolate", type="spy_ishtar"},
-        {day=76, hour=7,   desc="Szpiedzy znikaja:   ", color="chocolate", type="spy_ishtar"},
-        {day=79, hour=22,  desc="Szpiedzy wychodza:  ", color="chocolate", type="spy_ishtar"},
-        {day=80, hour=7,   desc="Szpiedzy znikaja:   ", color="chocolate", type="spy_ishtar"},
+        {day=76, hour=2,   desc="Szpiedzy wychodza:   ", color="chocolate", type="spy_ishtar"},
+        {day=76, hour=7,   desc="Szpiedzy znikaja:    ", color="chocolate", type="spy_ishtar"},
+        {day=79, hour=22,  desc="Szpiedzy wychodza:   ", color="chocolate", type="spy_ishtar"},
+        {day=80, hour=7,   desc="Szpiedzy znikaja:    ", color="chocolate", type="spy_ishtar"},
 
-        {day=91, hour=0,   desc="Poczatek wiosny:    ", color="green", type="season_ishtar"},
+        {day=91, hour=0,   desc="Poczatek wiosny:     ", color="green", type="season_ishtar"},
        
-        {day=91, hour=0,   desc="Rownonoc wiosenna:  ", color="green", type="equinox_ishtar"},
-        {day=91, hour=0,   desc="Ryboludzie:         ", color="green", type="fishman_ishtar"},
+        {day=91, hour=0,   desc="Rownonoc wiosenna:   ", color="green", type="equinox_ishtar"},
+        {day=91, hour=0,   desc="Ryboludzie:          ", color="green", type="fishman_ishtar"},
 
         {day=96, hour=5,  desc="Eysenlaan festyn     ", color="magenta", type="eys_feast_ishtar"},
         {day=99, hour=23, desc="Eysenlaan koniec     ", color="magenta", type="eys_feast_ishtar"},
 
         
-        {day=100, hour=0,  desc="Poczatek pelni:     ", color="powder_blue", type="full_moon_ishtar"},   
+        {day=100, hour=0,  desc="Poczatek pelni:      ", color="powder_blue", type="full_moon_ishtar"},   
              
-        {day=102, hour=0,  desc="Koniec pelni:       ", color="powder_blue", type="full_moon_ishtar"},
+        {day=102, hour=0,  desc="Koniec pelni:        ", color="powder_blue", type="full_moon_ishtar"},
 
-        {day=100, hour=2,  desc="Szpiedzy wychodza:  ", color="chocolate", type="spy_ishtar"},
-        {day=100, hour=6,  desc="Szpiedzy znikaja:   ", color="chocolate", type="spy_ishtar"},
-        {day=103, hour=22, desc="Szpiedzy wychodza:  ", color="chocolate", type="spy_ishtar"},
-        {day=104, hour=6,  desc="Szpiedzy znikaja:   ", color="chocolate", type="spy_ishtar"},
+        {day=100, hour=2,  desc="Szpiedzy wychodza:   ", color="chocolate", type="spy_ishtar"},
+        {day=100, hour=6,  desc="Szpiedzy znikaja:    ", color="chocolate", type="spy_ishtar"},
+        {day=103, hour=22, desc="Szpiedzy wychodza:   ", color="chocolate", type="spy_ishtar"},
+        {day=104, hour=6,  desc="Szpiedzy znikaja:    ", color="chocolate", type="spy_ishtar"},
         
  
-        {day=124, hour=0,  desc="Poczatek pelni:     ", color="powder_blue", type="full_moon_ishtar"},
-        {day=126, hour=0,  desc="Koniec pelni:       ", color="powder_blue", type="full_moon_ishtar"},
+        {day=124, hour=0,  desc="Poczatek pelni:      ", color="powder_blue", type="full_moon_ishtar"},
+        {day=126, hour=0,  desc="Koniec pelni:        ", color="powder_blue", type="full_moon_ishtar"},
 
-        {day=124, hour=2,  desc="Szpiedzy wychodza:  ", color="chocolate", type="spy_ishtar"},
-        {day=124, hour=6,  desc="Szpiedzy znikaja:   ", color="chocolate", type="spy_ishtar"},
-        {day=127, hour=22, desc="Szpiedzy wychodza:  ", color="chocolate", type="spy_ishtar"},
+        {day=124, hour=2,  desc="Szpiedzy wychodza:   ", color="chocolate", type="spy_ishtar"},
+        {day=124, hour=6,  desc="Szpiedzy znikaja:    ", color="chocolate", type="spy_ishtar"},
+        {day=127, hour=22, desc="Szpiedzy wychodza:   ", color="chocolate", type="spy_ishtar"},
         {day=128, hour=6,  desc="Szpiedzy znikaja:    ", color="chocolate", type="spy_ishtar"},
   
-        {day=141, hour=5,  desc="Eysenlaan festyn    ", color="magenta", type="eys_feast_ishtar"},
-        {day=144, hour=23, desc="Eysenlaan koniec    ", color="magenta", type="eys_feast_ishtar"},
+        {day=141, hour=5,  desc="Eysenlaan festyn     ", color="magenta", type="eys_feast_ishtar"},
+        {day=144, hour=23, desc="Eysenlaan koniec     ", color="magenta", type="eys_feast_ishtar"},
   
         
-        {day=148, hour=0,  desc="Poczatek pelni:     ", color="powder_blue", type="full_moon_ishtar"},
-        {day=150, hour=0,  desc="Koniec pelni:       ", color="powder_blue", type="full_moon_ishtar"},
+        {day=148, hour=0,  desc="Poczatek pelni:      ", color="powder_blue", type="full_moon_ishtar"},
+        {day=150, hour=0,  desc="Koniec pelni:        ", color="powder_blue", type="full_moon_ishtar"},
 
-        {day=148, hour=2,  desc="Szpiedzy wychodza:  ", color="chocolate", type="spy_ishtar"},
-        {day=148, hour=5,  desc="Szpiedzy znikaja:   ", color="chocolate", type="spy_ishtar"},
-        {day=151, hour=22, desc="Szpiedzy wychodza:  ", color="chocolate", type="spy_ishtar"},
-        {day=152, hour=5,  desc="Szpiedzy znikaja:   ", color="chocolate", type="spy_ishtar"},
+        {day=148, hour=2,  desc="Szpiedzy wychodza:   ", color="chocolate", type="spy_ishtar"},
+        {day=148, hour=5,  desc="Szpiedzy znikaja:    ", color="chocolate", type="spy_ishtar"},
+        {day=151, hour=22, desc="Szpiedzy wychodza:   ", color="chocolate", type="spy_ishtar"},
+        {day=152, hour=5,  desc="Szpiedzy znikaja:    ", color="chocolate", type="spy_ishtar"},
         
-        {day=172, hour=0,  desc="Poczatek pelni:     ", color="powder_blue", type="full_moon_ishtar"},
+        {day=172, hour=0,  desc="Poczatek pelni:      ", color="powder_blue", type="full_moon_ishtar"},
         {day=174, hour=0,  desc="Koniec pelni:        ", color="powder_blue", type="full_moon_ishtar"},
 
-        {day=172, hour=2,  desc="Szpiedzy wychodza:  ", color="chocolate", type="spy_ishtar"},
-        {day=172, hour=5,  desc="Szpiedzy znikaja:   ", color="chocolate", type="spy_ishtar"},
-        {day=175, hour=22, desc="Szpiedzy wychodza:  ", color="chocolate", type="spy_ishtar"},
-        {day=176, hour=5,  desc="Szpiedzy znikaja:   ", color="chocolate", type="spy_ishtar"},
+        {day=172, hour=2,  desc="Szpiedzy wychodza:   ", color="chocolate", type="spy_ishtar"},
+        {day=172, hour=5,  desc="Szpiedzy znikaja:    ", color="chocolate", type="spy_ishtar"},
+        {day=175, hour=22, desc="Szpiedzy wychodza:   ", color="chocolate", type="spy_ishtar"},
+        {day=176, hour=5,  desc="Szpiedzy znikaja:    ", color="chocolate", type="spy_ishtar"},
 
-        {day=181, hour=0,  desc="Poczatek lata:      ", color="yellow", type="season_ishtar"},
-        {day=181, hour=0,  desc="Przesilenie letnie: ", color="yellow", type="solstice_ishtar"},
-        {day=181, hour=0,  desc="Ryboludzie:         ", color="yellow", type="fishman_ishtar"},
+        {day=181, hour=0,  desc="Poczatek lata:       ", color="yellow", type="season_ishtar"},
+        {day=181, hour=0,  desc="Przesilenie letnie:  ", color="yellow", type="solstice_ishtar"},
+        {day=181, hour=0,  desc="Ryboludzie:          ", color="yellow", type="fishman_ishtar"},
         
-        {day=186, hour=5,  desc="Eysenlaan festyn    ", color="magenta", type="eys_feast_ishtar"},
-        {day=189, hour=23, desc="Eysenlaan koniec    ", color="magenta", type="eys_feast_ishtar"},
+        {day=186, hour=5,  desc="Eysenlaan festyn     ", color="magenta", type="eys_feast_ishtar"},
+        {day=189, hour=23, desc="Eysenlaan koniec     ", color="magenta", type="eys_feast_ishtar"},
         
-        {day=196, hour=0,  desc="Poczatek pelni:     ", color="powder_blue", type="full_moon_ishtar"},
+        {day=196, hour=0,  desc="Poczatek pelni:      ", color="powder_blue", type="full_moon_ishtar"},
     
-        {day=198, hour=0,  desc="Koniec pelni:       ", color="powder_blue", type="full_moon_ishtar"},
+        {day=198, hour=0,  desc="Koniec pelni:        ", color="powder_blue", type="full_moon_ishtar"},
 
-        {day=196, hour=2,  desc="Szpiedzy wychodza:  ", color="chocolate", type="spy_ishtar"},
-        {day=196, hour=4,  desc="Szpiedzy znikaja:   ", color="chocolate", type="spy_ishtar"},
-        {day=199, hour=22, desc="Szpiedzy wychodza:  ", color="chocolate", type="spy_ishtar"},
-        {day=200, hour=4,  desc="Szpiedzy znikaja:   ", color="chocolate", type="spy_ishtar"},
+        {day=196, hour=2,  desc="Szpiedzy wychodza:   ", color="chocolate", type="spy_ishtar"},
+        {day=196, hour=4,  desc="Szpiedzy znikaja:    ", color="chocolate", type="spy_ishtar"},
+        {day=199, hour=22, desc="Szpiedzy wychodza:   ", color="chocolate", type="spy_ishtar"},
+        {day=200, hour=4,  desc="Szpiedzy znikaja:    ", color="chocolate", type="spy_ishtar"},
         
-        {day=220, hour=0,  desc="Poczatek pelni:     ", color="powder_blue", type="full_moon_ishtar"},
-        {day=224, hour=0,  desc="Koniec pelni:       ", color="powder_blue", type="full_moon_ishtar"},
+        {day=220, hour=0,  desc="Poczatek pelni:      ", color="powder_blue", type="full_moon_ishtar"},
+        {day=224, hour=0,  desc="Koniec pelni:        ", color="powder_blue", type="full_moon_ishtar"},
 
-        {day=220, hour=2,  desc="Szpiedzy wychodza:  ", color="chocolate", type="spy_ishtar"},
-        {day=220, hour=4,  desc="Szpiedzy znikaja:   ", color="chocolate", type="spy_ishtar"},
-        {day=225, hour=22, desc="Szpiedzy wychodza:  ", color="chocolate", type="spy_ishtar"},
-        {day=226, hour=5,  desc="Szpiedzy znikaja:   ", color="chocolate", type="spy_ishtar"},
+        {day=220, hour=2,  desc="Szpiedzy wychodza:   ", color="chocolate", type="spy_ishtar"},
+        {day=220, hour=4,  desc="Szpiedzy znikaja:    ", color="chocolate", type="spy_ishtar"},
+        {day=225, hour=22, desc="Szpiedzy wychodza:   ", color="chocolate", type="spy_ishtar"},
+        {day=226, hour=5,  desc="Szpiedzy znikaja:    ", color="chocolate", type="spy_ishtar"},
  
     
-        {day=231, hour=5,  desc="Eysenlaan festyn    ", color="magenta", type="eys_feast_ishtar"},
-        {day=234, hour=23, desc="Eysenlaan koniec    ", color="magenta", type="eys_feast_ishtar"},
+        {day=231, hour=5,  desc="Eysenlaan festyn     ", color="magenta", type="eys_feast_ishtar"},
+        {day=234, hour=23, desc="Eysenlaan koniec     ", color="magenta", type="eys_feast_ishtar"},
         
-        {day=244, hour=0,  desc="Poczatek pelni:     ", color="powder_blue", type="full_moon_ishtar"},
-        {day=246, hour=0,  desc="Koniec pelni:       ", color="powder_blue", type="full_moon_ishtar"},
+        {day=244, hour=0,  desc="Poczatek pelni:      ", color="powder_blue", type="full_moon_ishtar"},
+        {day=246, hour=0,  desc="Koniec pelni:        ", color="powder_blue", type="full_moon_ishtar"},
 
-        {day=244, hour=2,  desc="Szpiedzy wychodza:  ", color="chocolate", type="spy_ishtar"},
+        {day=244, hour=2,  desc="Szpiedzy wychodza:   ", color="chocolate", type="spy_ishtar"},
      
-        {day=244, hour=5,  desc="Szpiedzy znikaja:   ", color="chocolate", type="spy_ishtar"},
-        {day=247, hour=22, desc="Szpiedzy wychodza:  ", color="chocolate", type="spy_ishtar"},
-        {day=248, hour=5,  desc="Szpiedzy znikaja:   ", color="chocolate", type="spy_ishtar"},
+        {day=244, hour=5,  desc="Szpiedzy znikaja:    ", color="chocolate", type="spy_ishtar"},
+        {day=247, hour=22, desc="Szpiedzy wychodza:   ", color="chocolate", type="spy_ishtar"},
+        {day=248, hour=5,  desc="Szpiedzy znikaja:    ", color="chocolate", type="spy_ishtar"},
         
-        {day=268, hour=0,  desc="Poczatek pelni:     ", color="powder_blue", type="full_moon_ishtar"},
-        {day=270, hour=0,  desc="Koniec pelni:       ", color="powder_blue", type="full_moon_ishtar"},
+        {day=268, hour=0,  desc="Poczatek pelni:      ", color="powder_blue", type="full_moon_ishtar"},
+        {day=270, hour=0,  desc="Koniec pelni:        ", color="powder_blue", type="full_moon_ishtar"},
 
         
-        {day=268, hour=2,  desc="Szpiedzy wychodza:  ", color="chocolate", type="spy_ishtar"},
-        {day=268, hour=5,  desc="Szpiedzy znikaja:   ", color="chocolate", type="spy_ishtar"},
+        {day=268, hour=2,  desc="Szpiedzy wychodza:   ", color="chocolate", type="spy_ishtar"},
+        {day=268, hour=5,  desc="Szpiedzy znikaja:    ", color="chocolate", type="spy_ishtar"},
 
-        {day=271, hour=0,  desc="Poczatek jesieni:   ", color="brown", type="season_ishtar"},
-        {day=271, hour=0,  desc="Rownonoc jesienna:  ", color="brown", type="equinox_ishtar"},
-        {day=271, hour=0,  desc="Ryboludzie:         ", color="brown", type="fishman_ishtar"},
+        {day=271, hour=0,  desc="Poczatek jesieni:    ", color="brown", type="season_ishtar"},
+        {day=271, hour=0,  desc="Rownonoc jesienna:   ", color="brown", type="equinox_ishtar"},
+        {day=271, hour=0,  desc="Ryboludzie:          ", color="brown", type="fishman_ishtar"},
 
-        {day=271, hour=22, desc="Szpiedzy wychodza:  ", color="chocolate", type="spy_ishtar"},
+        {day=271, hour=22, desc="Szpiedzy wychodza:   ", color="chocolate", type="spy_ishtar"},
      
-        {day=272, hour=7,  desc="Szpiedzy znikaja:   ", color="chocolate", type="spy_ishtar"},
+        {day=272, hour=7,  desc="Szpiedzy znikaja:    ", color="chocolate", type="spy_ishtar"},
 
-        {day=276, hour=5,  desc="Eysenlaan festyn    ", color="magenta", type="eys_feast_ishtar"},
-        {day=279, hour=23, desc="Eysenlaan koniec    ", color="magenta", type="eys_feast_ishtar"},
+        {day=276, hour=5,  desc="Eysenlaan festyn     ", color="magenta", type="eys_feast_ishtar"},
+        {day=279, hour=23, desc="Eysenlaan koniec     ", color="magenta", type="eys_feast_ishtar"},
 
-        {day=292, hour=0,  desc="Poczatek pelni:     ", color="powder_blue", type="full_moon_ishtar"},
-        {day=294, hour=0,  desc="Koniec pelni:       ", color="powder_blue", type="full_moon_ishtar"},
+        {day=292, hour=0,  desc="Poczatek pelni:      ", color="powder_blue", type="full_moon_ishtar"},
+        {day=294, hour=0,  desc="Koniec pelni:        ", color="powder_blue", type="full_moon_ishtar"},
 
         {day=292, hour=2,  desc="Szpiedzy wychodza:   ", color="chocolate", type="spy_ishtar"},
-        {day=292, hour=7,  desc="Szpiedzy znikaja:   ", color="chocolate", type="spy_ishtar"},
-        {day=295, hour=22, desc="Szpiedzy wychodza:  ", color="chocolate", type="spy_ishtar"},
-        {day=296, hour=7,  desc="Szpiedzy znikaja:   ", color="chocolate", type="spy_ishtar"},
+        {day=292, hour=7,  desc="Szpiedzy znikaja:    ", color="chocolate", type="spy_ishtar"},
+        {day=295, hour=22, desc="Szpiedzy wychodza:   ", color="chocolate", type="spy_ishtar"},
+        {day=296, hour=7,  desc="Szpiedzy znikaja:    ", color="chocolate", type="spy_ishtar"},
 
-        {day=315, hour=18, desc="Leci pyl:           ", color="dodger_blue", type="special_ishtar"},
+        {day=315, hour=18, desc="Leci pyl:            ", color="dodger_blue", type="special_ishtar"},
         
         {day=316, hour=0,  desc="Poczatek pelni:      ", color="powder_blue", type="full_moon_ishtar"},
-        {day=318, hour=0,  desc="Koniec pelni:       ", color="powder_blue", type="full_moon_ishtar"},
+        {day=318, hour=0,  desc="Koniec pelni:        ", color="powder_blue", type="full_moon_ishtar"},
 
-        {day=316, hour=2,  desc="Szpiedzy wychodza:  ", color="chocolate", type="spy_ishtar"},
-        {day=316, hour=6,  desc="Szpiedzy znikaja:   ", color="chocolate", type="spy_ishtar"},
-        {day=319, hour=22, desc="Szpiedzy wychodza:  ", color="chocolate", type="spy_ishtar"},
-        {day=320, hour=6,  desc="Szpiedzy znikaja:   ", color="chocolate", type="spy_ishtar"},
+        {day=316, hour=2,  desc="Szpiedzy wychodza:   ", color="chocolate", type="spy_ishtar"},
+        {day=316, hour=6,  desc="Szpiedzy znikaja:    ", color="chocolate", type="spy_ishtar"},
+        {day=319, hour=22, desc="Szpiedzy wychodza:   ", color="chocolate", type="spy_ishtar"},
+        {day=320, hour=6,  desc="Szpiedzy znikaja:    ", color="chocolate", type="spy_ishtar"},
 
        {day=321, hour=5,  desc="Eysenlaan festyn     ", color="magenta", type="eys_feast_ishtar"},
        {day=324, hour=23, desc="Eysenlaan koniec     ", color="magenta", type="eys_feast_ishtar"},
 
         
-        {day=340, hour=0,  desc="Poczatek pelni:     ", color="powder_blue", type="full_moon_ishtar"},
-        {day=342, hour=0,  desc="Koniec pelni:       ", color="powder_blue", type="full_moon_ishtar"},
+        {day=340, hour=0,  desc="Poczatek pelni:      ", color="powder_blue", type="full_moon_ishtar"},
+        {day=342, hour=0,  desc="Koniec pelni:        ", color="powder_blue", type="full_moon_ishtar"},
 
-        {day=340, hour=2,  desc="Szpiedzy wychodza:  ", color="chocolate", type="spy_ishtar"},
-        {day=340, hour=6,  desc="Szpiedzy znikaja:   ", color="chocolate", type="spy_ishtar"},
-        {day=343, hour=22, desc="Szpiedzy wychodza:  ", color="chocolate", type="spy_ishtar"},
-        {day=344, hour=6,  desc="Szpiedzy znikaja:   ", color="chocolate", type="spy_ishtar"},
+        {day=340, hour=2,  desc="Szpiedzy wychodza:   ", color="chocolate", type="spy_ishtar"},
+        {day=340, hour=6,  desc="Szpiedzy znikaja:    ", color="chocolate", type="spy_ishtar"},
+        {day=343, hour=22, desc="Szpiedzy wychodza:   ", color="chocolate", type="spy_ishtar"},
+        {day=344, hour=6,  desc="Szpiedzy znikaja:    ", color="chocolate", type="spy_ishtar"},
         
       },
     },
@@ -437,20 +437,22 @@ end
 -- Function to get prefix based on type
 function calendar.get_prefix(type)
   local arr = string.split(type, "_")
-  local str = ""
-  if arr[#arr] == "imperial" then
-    str = "[Imperium] "
-  elseif arr[#arr] == "ishtar" then
-    str = "[Ishtar  ] "
+  local domain = arr[#arr]
+  if domain == "imperial" then
+    return "&lt;aquamarine&gt;[&lt;light_goldenrod&gt;Imperium&lt;aquamarine&gt;]&lt;reset&gt; "
+  elseif domain == "ishtar" then
+    return "&lt;aquamarine&gt;[&lt;cornflower_blue&gt;Ishtar&lt;aquamarine&gt;]&lt;reset&gt; "
   end
-  return str
+  return ""
 end
 
 -- Function to check if filters contain only one domain
 function calendar.check_filters(filters)
-  local f = calendar.get_prefix(filters[1])
-  for k,v in pairs(filters) do
-    if f ~= calendar.get_prefix(v) then
+  if not filters or #filters == 0 then return false end
+  local first_prefix = calendar.get_prefix(filters[1])
+  if first_prefix == "" then return true end -- Return true if no specific domain prefix
+  for i = 2, #filters do
+    if first_prefix ~= calendar.get_prefix(filters[i]) then
        return false
     end
   end
@@ -698,21 +700,19 @@ end
     end
     if filters == nil or table_contains(filters, v["type"]) then
       t = v["timestamp"] - now
+      local output_line = ""
+      if desc_type then
+        output_line = string.format("&lt;%s&gt;%s &lt;white&gt;%s &lt;yellow&gt;-&gt; %sza %s &lt;gray&gt;%s\n", v["color"], v["desc"], os.date('%d.%m.%Y %H:%M:%S', v["timestamp"]), c, calendar.resttime(t), v["game_date"])
+      else
+        output_line = string.format("%s&lt;%s&gt;%s &lt;white&gt;%s &lt;yellow&gt;-&gt; %sza %s &lt;gray&gt;%s\n", calendar.get_prefix(v["type"]), v["color"], v["desc"], os.date('%d.%m.%Y %H:%M:%S', v["timestamp"]), c, calendar.resttime(t), v["game_date"])
+      end
+
       if time &gt; 0 then
         if t &gt;= 0 and t &lt;= time then
-          if desc_type then
-            cecho("&lt;"..v["color"].."&gt;"..v["desc"].." "..os.date('%d.%m.%Y %H:%M:%S', v["timestamp"]).." &lt;yellow&gt;-&gt; "..c.."za "..calendar.resttime(t).." &lt;gray&gt;"..v["game_date"].."\n")
-          else
-            cecho("&lt;"..v["color"].."&gt;"..calendar.get_prefix(v["type"])..v["desc"].." "..os.date('%d.%m.%Y %H:%M:%S', v["timestamp"]).." &lt;yellow&gt;-&gt; "..c.."za "..calendar.resttime(t).." &lt;gray&gt;"..v["game_date"].."\n")
-          end
+          cecho(output_line)
         end
-     
       else
-        if desc_type then
-          cecho("&lt;"..v["color"].."&gt;"..v["desc"].." "..os.date('%d.%m.%Y %H:%M:%S', v["timestamp"]).." &lt;yellow&gt;-&gt; "..c.."za "..calendar.resttime(t).." &lt;gray&gt;"..v["game_date"].."\n")
-        else
-          cecho("&lt;"..v["color"].."&gt;"..calendar.get_prefix(v["type"])..v["desc"].." "..os.date('%d.%m.%Y %H:%M:%S', v["timestamp"]).." &lt;yellow&gt;-&gt; "..c.."za "..calendar.resttime(t).." &lt;gray&gt;"..v["game_date"].."\n")
-        end
+        cecho(output_line)
       end
     end
   end  
