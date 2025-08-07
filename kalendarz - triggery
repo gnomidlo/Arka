@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE MudletPackage>
+<MudletPackage version="1.001">
+	<TriggerPackage>
+		<TriggerGroup isActive="yes" isFolder="yes" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+			<name>kalendarz</name>
+			<script></script>
+			<triggerType>0</triggerType>
+			<conditonLineDelta>0</conditonLineDelta>
+			<mStayOpen>0</mStayOpen>
+			<mCommand></mCommand>
+			<packageName></packageName>
+			<mFgColor>#ff0000</mFgColor>
+			<mBgColor>#ffff00</mBgColor>
+			<mSoundFile></mSoundFile>
+			<colorTriggerFgColor>#000000</colorTriggerFgColor>
+			<colorTriggerBgColor>#000000</colorTriggerBgColor>
+			<regexCodeList />
+			<regexCodePropertyList />
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>kalendarz ishtar</name>
+				<script>local yd = 0
+-- Uncomment the line below for debugging purposes
+-- display(2, matches[2], 3, matches[3], 4, matches[4], 5, matches[5], 6, matches[6], 7, matches[7], 8, matches[8])
+
+local H = matches[3]
+local h = calendar.string2int[matches[3]]
+local pd = matches[4]
+local m = matches[6]
+
+-- Calculate the day of the month
+local d = calendar.string2int[matches[5]]
+-- Calculate the day of the year based on "czas"
+local yd = calendar.ishtar.settings.first_day_of_calparts[m] + d - 1
+
+if pd == "wieczorem" or pd == "poludniu" or (pd == "nocy" and h &gt; 7) then
+  h = h + 12
+end
+
+calendar.ishtar.data.precision = 119 -- After "czas" command, precision changes to max error of 119 sec
+calendar.ishtar = calendar.refresh_calendar(calendar.ishtar, yd, h)
+
+-- Uncomment the line below to display debug information
+-- display("dzien", d, "miesiac", m, "dzien roku", yd, "godzina pory", H, "pora dnia", pd, "godzina row", h)
+</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>(^Jest w przyblizeniu (\w+) (?:|w|po|przed|nad|poznym)\s*(dzien|nocy|poludniu|poludniem|poludnie|rano|ranem|wieczorem).*, (.*) dzien pory (\w+))</string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>1</integer>
+				</regexCodePropertyList>
+			</Trigger>
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>kalendarz imperium</name>
+				<script>local cm = table_size(matches)
+
+-- Uncomment the line below for debugging purposes
+-- display("count: "..table_size(matches), 3, matches[3], 4, matches[4], 5, matches[5], 6, matches[6], 7, matches[7], 8, matches[8])
+
+local yd = 0
+
+local H = matches[3]
+local h = calendar.string2int[matches[3]]
+local pd = matches[4]
+
+local m = matches[5]
+
+if cm &gt; 5 then
+  m = matches[6]
+end
+
+local d = "-"
+
+local special_imperial_days = {"Hexentag", "Mitterfruhl", "Sonnenstill", "Geheimnistag", "Mitterherbst"}
+
+-- For special days, the day of the year is determined directly from calparts definitions
+if table_contains(special_imperial_days, m) then 
+  yd = calendar.imperial.settings.first_day_of_calparts[m]
+else
+  d = calendar.string2int[matches[5]]
+  -- Calculate the day of the year based on "czas"
+  yd = calendar.imperial.settings.first_day_of_calparts[m] + d - 1
+end
+
+if pd == "wieczorem" or pd == "poludniu" or (pd == "nocy" and h &gt; 8) then
+  h = h + 12
+end
+
+calendar.imperial.data.precision = 119 -- After "czas" command, precision changes to max error of 119 sec
+calendar.imperial = calendar.refresh_calendar(calendar.imperial, yd, h)
+-- Uncomment the line below to display debug information
+-- display("dzien", d, "miesiac", m, "dzien roku", yd, "godzina pory", H, "pora dnia", pd, "godzina row", h)
+</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>(^Jest w przyblizeniu (\w+) (?:|w|po|przed|nad|poznym)\s*(dzien|nocy|...|wieczorem).*, (.*) dzien miesiaca (\w+))</string>
+					<string>(^Jest w przyblizeniu (\w+) ... , (.*), dzien (\w+))</string>
+					<string>(^Jest w przyblizeniu (\w+) ... , dzien (\w+))</string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>1</integer>
+					<integer>1</integer>
+					<integer>1</integer>
+				</regexCodePropertyList>
+			</Trigger>
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>kalendarz czas imperium eventy</name>
+				<script>if matches[3] == "noc Geheimnisnacht" then
+  -- Uncomment the lines below if needed
+  -- calendar.imperial.data.precision = 0
+  -- calendar.imperial = calendar.refresh_calendar(calendar.imperial, 201, 17)
+  -- TODO: Color the line and add notification
+end
+
+if matches[3] == "pierwszy dzien nowego roku" then
+  calendar.imperial.data.precision = 0
+  calendar.imperial = calendar.refresh_calendar(calendar.imperial, 1, 8)
+end
+</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>^Ostatnie promienie zachodzacego slonca (.*) W Starym Swiecie rozpoczyna sie (.*).$</string>
+					<string>^Pierwsze promienie wschodzacego slonca (.*). W Starym Swiecie rozpoczyna sie (.*).$</string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>1</integer>
+					<integer>1</integer>
+				</regexCodePropertyList>
+			</Trigger>
+		</TriggerGroup>
+	</TriggerPackage>
+</MudletPackage>
