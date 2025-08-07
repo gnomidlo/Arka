@@ -10,7 +10,9 @@
 			<Script isActive="yes" isFolder="no">
 				<name>kalendarz - core</name>
 				<packageName>Kalendarz 2.0</packageName>
-				<script>-- Define the calendar module
+				<script>
+				<![CDATA[
+-- Define the calendar module
 calendar = {
   domain = "gdziestam", -- domain of the MUD we're in
   json_file_path = getMudletHomeDir() .. "/my_calendar.json", -- file where offsets for domains are saved
@@ -28,6 +30,24 @@ calendar = {
         ["Hexentag"] = 1, ["Nachhexen"] = 2, ["Jahrdrung"] = 34, ["Mitterfruhl"] = 67, ["Pflugzeit"] = 68, ["Sigmarszeit"] = 101, ["Sommerzeit"] = 134, ["Sonnenstill"] = 167, ["Vorgeheim"] = 168,
         ["Geheimnistag"] = 201, ["Nachgeheim"] = 202, ["Erntezeit"] = 234, ["Mitterherbst"] = 267, ["Brauzeit"] = 268, ["Kaltezeit"] = 301, ["Ulrichszeit"] = 334, ["Mondstill"] = 367, ["Vorhexen"] = 368,  
       },
+	  
+	  seasons = {
+		{day=1, name="Pozna zima"},
+		{day=18, name="Wczesna wiosna"},
+		{day=67, name="Pozna wiosna"},
+		{day=118, name="Wczesne lato"},
+		{day=167, name="Pozne lato"},
+		{day=218, name="Wczesna jesien"},
+		{day=267, name="Pozna jesien"},
+		{day=319, name="Wczesna zima"}
+	  },
+	  
+	  sun_cycle = {
+		{day=18,  sunrise="06:30", sunset="18:30"}, -- Rownonoc wiosenna
+		{day=118, sunrise="05:00", sunset="21:00"}, -- Przesilenie letnie
+		{day=218, sunrise="06:30", sunset="18:30"}, -- Rownonoc jesienna
+		{day=319, sunrise="08:00", sunset="17:00"}  -- Przesilenie zimowe
+	  },
     
       search_times = {
         {day=1, hour=17,   desc="Leci pyl:            ", color="dodger_blue", type="special_imperial"}, -- Hexennacht
@@ -169,6 +189,21 @@ calendar = {
       
         ["Yule"] = 1, ["Imbaelk"] = 46, ["Birke"] = 91, ["Blathe"] = 136, ["Feainn"] = 181, ["Lammas"] = 226, ["Velen"] = 271, ["Saovine"] = 316,
       },
+	  
+	  seasons = {
+		{day=1, name="Zima"},
+		{day=91, name="Wiosna"},
+		{day=181, name="Lato"},
+		{day=271, name="Jesien"}
+	  },
+	  
+	  sun_cycle = {
+		{day=1,   sunrise="08:00", sunset="17:00"}, -- Przesilenie zimowe
+		{day=91,  sunrise="06:30", sunset="18:30"}, -- Rownonoc wiosenna
+		{day=181, sunrise="05:00", sunset="21:00"}, -- Przesilenie letnie
+		{day=271, sunrise="06:30", sunset="18:30"}  -- Rownonoc jesienna
+	  },
+	  
       search_times = {
         
         --YULE:
@@ -431,7 +466,7 @@ local debug = false
 
 -- Define a function to print logs
 function print_log(message)
-  cecho("&lt;yellow&gt;" .. message .. "\n")
+  cecho("<yellow>" .. message .. "\n")
 end
 
 -- Function to get prefix based on type
@@ -439,9 +474,9 @@ function calendar.get_prefix(type)
   local arr = string.split(type, "_")
   local domain = arr[#arr]
   if domain == "imperial" then
-    return "&lt;aquamarine&gt;[&lt;light_goldenrod&gt;Imperium&lt;aquamarine&gt;]&lt;reset&gt; "
+    return "<aquamarine>[<light_goldenrod>Imperium<aquamarine>]<reset> "
   elseif domain == "ishtar" then
-    return "&lt;aquamarine&gt;[&lt;cornflower_blue&gt;Ishtar&lt;aquamarine&gt;]&lt;reset&gt; "
+    return "<aquamarine>[<cornflower_blue>Ishtar<aquamarine>]<reset> "
   end
   return ""
 end
@@ -465,17 +500,17 @@ function calendar.create_calendar(cal, offset)
   local type = ""
   if offset == nil then
     if debug then
-      print_log("Błąd w narzutu kalendarza: "..cal["settings"]["name"].." -&gt; "..offset) 
+      print_log("Błąd w narzutu kalendarza: "..cal["settings"]["name"].." -> "..offset) 
     end  
     return cal
   end
 
   if offset == 0 then
     type = "template"
-  elseif offset &gt; 0 then
+  elseif offset > 0 then
     type = "calendar"
   end
-  if string.len(type) &gt; 0 then
+  if string.len(type) > 0 then
     cal["data"][type] = {}
     for i=1,tonumber(cal["settings"]["days_in_year"]) do
       cal["data"][type][i] = {}
@@ -485,13 +520,13 @@ function calendar.create_calendar(cal, offset)
     
       end
     end
-    if offset &gt; 0 then
+    if offset > 0 then
       cal["data"]["offset"] = offset
       cal = calendar.reload_calendar(cal)
     end
   else
     if debug then
-      print_log("Błąd w narzutu kalendarza: "..cal["settings"]["name"].." -&gt; "..offset) 
+      print_log("Błąd w narzutu kalendarza: "..cal["settings"]["name"].." -> "..offset) 
     end  
   end
   return cal
@@ -509,13 +544,13 @@ end
 -- Reload event timestamps
 function calendar.reload_calendar(cal)
   local function fill_time(a, b, add)
-    if a &gt;= b then
+    if a >= b then
       return a
     end
     local n = math.ceil((b - a) / add)
     return a + n * add
   end
-  if table_size(cal["data"]["calendar"]) &gt; 0 then
+  if table_size(cal["data"]["calendar"]) > 0 then
     cal["data"]["results"] = {}
     local t = 0
     local et = getEpoch()
@@ -523,7 +558,7 @@ function calendar.reload_calendar(cal)
     for k, v in pairs(cal["settings"]["search_times"]) do
       day = tonumber(v["day"])
       t = cal["data"]["calendar"][day][v["hour"]]
-      if t &lt; et then
+      if t < et then
         t = fill_time(t, et, cal["settings"]["year_time"])
       end
       if not cal["data"]["results"][t] then  -- Avoid duplicates
@@ -565,7 +600,7 @@ function calendar.get_game_time(timestamp, domain)
   local checked_time = false
   for a,v in pairs(cal.data.calendar) do
     for b,t in pairs(v) do
-      if t &gt;= timestamp then
+      if t >= timestamp then
         checked_time = true
       end
       tmp[t] = a.."_"..b
@@ -596,12 +631,12 @@ function calendar.get_game_time(timestamp, domain)
   end
      
   for k,v in pairsByKeys(tmp) do
-    if k &gt;= timestamp then
+    if k >= timestamp then
       break
     end
     r = string.split(v, "_")
   end
-  if table_size(r) &gt; 1 then
+  if table_size(r) > 1 then
     return calendar.get_gamedate(cal, r[1], r[2])
   else
     return ""
@@ -610,15 +645,15 @@ end
 
 -- Get combined event results
 function calendar.get_events_results()
-  if table_size(calendar.imperial.data.calendar) &gt; 0 then
+  if table_size(calendar.imperial.data.calendar) > 0 then
     calendar.imperial = calendar.reload_calendar(calendar.imperial)
   end
-  if table_size(calendar.ishtar.data.calendar) &gt; 0 then
+  if table_size(calendar.ishtar.data.calendar) > 0 then
     calendar.ishtar = calendar.reload_calendar(calendar.ishtar)
   end
   
   local function comp(a, b)
-    if a["timestamp"] &lt; b["timestamp"] then
+    if a["timestamp"] < b["timestamp"] then
       return true
     end
     return false
@@ -626,11 +661,11 @@ function calendar.get_events_results()
   
   local union = {}
   
-  if table_size(calendar.imperial.data.calendar) &gt; 0 and table_size(calendar.ishtar.data.calendar) &gt; 0 then
+  if table_size(calendar.imperial.data.calendar) > 0 and table_size(calendar.ishtar.data.calendar) > 0 then
     union = table_n_union(calendar.imperial.data.results, calendar.ishtar.data.results)
-  elseif table_size(calendar.imperial.data.calendar) &gt; 0 then
+  elseif table_size(calendar.imperial.data.calendar) > 0 then
     union = calendar.imperial.data.results
-  elseif table_size(calendar.ishtar.data.calendar) &gt; 0 then
+  elseif table_size(calendar.ishtar.data.calendar) > 0 then
     union = calendar.ishtar.data.results
   end
 
@@ -641,7 +676,7 @@ end
 -- Function to format remaining time
 function calendar.resttime(time)
   local ret = ""
-  if time &gt; 0 then
+  if time > 0 then
     local days = math.floor(time/86400)
     local remaining = time % 86400
     local hours = math.floor(remaining/3600)
@@ -650,11 +685,11 @@ function calendar.resttime(time)
     remaining = remaining % 60
     local seconds = math.floor(remaining)
     
-    if days &gt; 0 then
+    if days > 0 then
       ret = days.."d "..hours.."h "..minutes.."m "..seconds.."s"
-    elseif days == 0 and hours &gt; 0 then
+    elseif days == 0 and hours > 0 then
       ret = hours.."h "..minutes.."m "..seconds.."s"
-    elseif days == 0 and hours == 0 and minutes &gt; 0 then
+    elseif days == 0 and hours == 0 and minutes > 0 then
       ret = minutes.."m "..seconds.."s"
     elseif days == 0 and hours == 0 and minutes == 0 then
       ret = seconds.."s"
@@ -691,24 +726,24 @@ end
 
   
   local union = calendar.get_events_results()
-  local c = "&lt;wheat&gt;"
+  local c = "<wheat>"
   for k, v in pairs(union) do
     if v["precision"] == 0 then
-      c = "&lt;gold&gt;"
+      c = "<gold>"
     else
-      c = "&lt;wheat&gt;"
+      c = "<wheat>"
     end
     if filters == nil or table_contains(filters, v["type"]) then
       t = v["timestamp"] - now
       local output_line = ""
       if desc_type then
-        output_line = string.format("&lt;%s&gt;%s &lt;white&gt;%s &lt;yellow&gt;-&gt; %sza %s &lt;gray&gt;%s\n", v["color"], v["desc"], os.date('%d.%m.%Y %H:%M:%S', v["timestamp"]), c, calendar.resttime(t), v["game_date"])
+        output_line = string.format("<%s>%s <white>%s <yellow>-> %sza %s <gray>%s\n", v["color"], v["desc"], os.date('%d.%m.%Y %H:%M:%S', v["timestamp"]), c, calendar.resttime(t), v["game_date"])
       else
-        output_line = string.format("%s&lt;%s&gt;%s &lt;white&gt;%s &lt;yellow&gt;-&gt; %sza %s &lt;gray&gt;%s\n", calendar.get_prefix(v["type"]), v["color"], v["desc"], os.date('%d.%m.%Y %H:%M:%S', v["timestamp"]), c, calendar.resttime(t), v["game_date"])
+        output_line = string.format("%s<%s>%s <white>%s <yellow>-> %sza %s <gray>%s\n", calendar.get_prefix(v["type"]), v["color"], v["desc"], os.date('%d.%m.%Y %H:%M:%S', v["timestamp"]), c, calendar.resttime(t), v["game_date"])
       end
 
-      if time &gt; 0 then
-        if t &gt;= 0 and t &lt;= time then
+      if time > 0 then
+        if t >= 0 and t <= time then
           cecho(output_line)
         end
       else
@@ -746,10 +781,10 @@ function calendar.read_local_time_data()
     local content = file:read("*a")
     file:close()
     local data = yajl.to_value(content)
-    if data["imperial_offset"] ~= nil and tonumber(data["imperial_offset"]) &gt; 0 then
+    if data["imperial_offset"] ~= nil and tonumber(data["imperial_offset"]) > 0 then
       calendar.imperial = calendar.create_calendar(calendar.imperial, data["imperial_offset"])
     end
-    if data["ishtar_offset"] ~= nil and tonumber(data["ishtar_offset"]) &gt; 0 then
+    if data["ishtar_offset"] ~= nil and tonumber(data["ishtar_offset"]) > 0 then
       calendar.ishtar = calendar.create_calendar(calendar.ishtar, data["ishtar_offset"])
     end
     
@@ -785,9 +820,9 @@ end
 -- Update calendar based on GMCP time change
 function calendar.handle_gmcp_time()
   local timestamp = getEpoch()
-  if calendar.domain == "ishtar" and calendar.ishtar.data.precision &gt; 0 then
+  if calendar.domain == "ishtar" and calendar.ishtar.data.precision > 0 then
     calendar.update_calendar_by_precision(calendar.ishtar, timestamp)
-  elseif calendar.domain == "imperial" and calendar.imperial.data.precision &gt; 0 then
+  elseif calendar.domain == "imperial" and calendar.imperial.data.precision > 0 then
     calendar.update_calendar_by_precision(calendar.imperial, timestamp)
   else
     if debug then
@@ -817,7 +852,7 @@ function calendar.update_calendar_by_precision(cal, timestamp)
   for d,v in pairs(cal["data"]["calendar"]) do
     for h,t in pairs(v) do
       diff = timestamp - t
-      if diff == 0 or (diff &gt; 0 and diff &lt; calendar.gamehour_real_time) then
+      if diff == 0 or (diff > 0 and diff < calendar.gamehour_real_time) then
         if debug then
        
            print_log("Poprawiono dokladnosc pomiaru kalendarza do 0 sekund: "..cal.settings.name) 
@@ -839,7 +874,7 @@ function calendar.get_monthday(cal, day)
   end
   local function comp(a,b)  
    
-    return a["start"] &gt; b["start"]
+    return a["start"] > b["start"]
   end
   table.sort(c, comp)
   
@@ -860,7 +895,7 @@ function calendar.get_monthday(cal, day)
    
        break
     end
-    if v["start"] &lt;= day then
+    if v["start"] <= day then
       month = v["month"]
       month_start = (v["start"]-1)
       tmp = true
@@ -899,6 +934,155 @@ function table_n_union(t1, t2)
   return res
 end
 
+function calendar.get_current_season(cal, day)
+    local current_season = "Nieznana"
+    table.sort(cal.settings.seasons, function(a, b) return a.day < b.day end)
+    for _, season in ipairs(cal.settings.seasons) do
+        if tonumber(day) >= tonumber(season.day) then
+            current_season = season.name
+        else
+            break
+        end
+    end
+    return current_season
+end
+
+function calendar.get_month_info(cal, day)
+    local sorted_months = {}
+    for name, start_day in pairs(cal.settings.first_day_of_calparts) do
+        table.insert(sorted_months, {name = name, start = start_day})
+    end
+    table.sort(sorted_months, function(a,b) return a.start < b.start end)
+    
+    local current_month = {name = "Unknown", day = 0, length = 0}
+    
+    for i = #sorted_months, 1, -1 do
+        local month = sorted_months[i]
+        if tonumber(day) >= tonumber(month.start) then
+            current_month.name = month.name
+            current_month.day = tonumber(day) - tonumber(month.start) + 1
+            if i < #sorted_months then
+                current_month.length = sorted_months[i+1].start - month.start
+            else
+                current_month.length = cal.settings.days_in_year - month.start + 1
+            end
+            break 
+        end
+    end
+    return current_month
+end
+
+function calendar.time_to_minutes(time_str)
+    local h, m = time_str:match("(%d+):(%d+)")
+    return tonumber(h) * 60 + tonumber(m)
+end
+
+function calendar.minutes_to_time(minutes)
+    local h = math.floor(minutes / 60)
+    local m = math.floor(minutes % 60)
+    return string.format("%02d:%02d", h, m)
+end
+
+function calendar.get_sunrise_sunset(cal, day)
+    local cycle = cal.settings.sun_cycle
+	day = tonumber(day)
+    table.sort(cycle, function(a,b) return a.day < b.day end)
+
+    local p1, p2
+    
+    if day < cycle[1].day then
+        p1 = cycle[#cycle]
+        p2 = cycle[1]
+    else
+        for i = 1, #cycle do
+            if day >= cycle[i].day then
+                p1 = cycle[i]
+                if i == #cycle then
+                    p2 = cycle[1] 
+                else
+                    p2 = cycle[i+1]
+                end
+            else
+                break
+            end
+        end
+    end
+
+    if not p1 or not p2 then
+        return { sunrise = "06:00", sunset = "18:00", sunrise_rl = "??:??", sunset_rl = "??:??" }
+    end
+
+    local total_days_in_period
+    if p2.day < p1.day then
+        total_days_in_period = (cal.settings.days_in_year - p1.day) + p2.day
+    else
+        total_days_in_period = p2.day - p1.day
+    end
+	
+	if total_days_in_period == 0 then
+		local sunrise_ts = cal.data.calendar[day][0] + (calendar.time_to_minutes(p1.sunrise) * (calendar.gamehour_real_time/60))
+		local sunset_ts = cal.data.calendar[day][0] + (calendar.time_to_minutes(p1.sunset) * (calendar.gamehour_real_time/60))
+		return { sunrise = p1.sunrise, sunset = p1.sunset, sunrise_rl = os.date("%H:%M", sunrise_ts), sunset_rl = os.date("%H:%M", sunset_ts) }
+	end
+
+    local days_into_period
+    if day < p1.day then 
+        days_into_period = (cal.settings.days_in_year - p1.day) + day
+    else
+        days_into_period = day - p1.day
+    end
+
+    local progress = days_into_period / total_days_in_period
+
+    local sunrise1_min = calendar.time_to_minutes(p1.sunrise)
+    local sunrise2_min = calendar.time_to_minutes(p2.sunrise)
+    local sunset1_min = calendar.time_to_minutes(p1.sunset)
+    local sunset2_min = calendar.time_to_minutes(p2.sunset)
+
+    local current_sunrise_min = sunrise1_min + (sunrise2_min - sunrise1_min) * progress
+    local current_sunset_min = sunset1_min + (sunset2_min - sunset1_min) * progress
+
+	local sunrise_timestamp = cal.data.calendar[day][0] + (current_sunrise_min * (calendar.gamehour_real_time/60))
+	local sunset_timestamp = cal.data.calendar[day][0] + (current_sunset_min * (calendar.gamehour_real_time/60))
+
+    return {
+        sunrise = calendar.minutes_to_time(current_sunrise_min),
+        sunset = calendar.minutes_to_time(current_sunset_min),
+		sunrise_rl = os.date("%H:%M", sunrise_timestamp),
+		sunset_rl = os.date("%H:%M", sunset_timestamp)
+    }
+end
+
+function calendar.display_full_time_info(cal, day)
+	local day_num = tonumber(day)
+	if not day_num or not cal.data.calendar[day_num] then return end
+
+	local season = calendar.get_current_season(cal, day_num)
+	local month_info = calendar.get_month_info(cal, day_num)
+	local sun_times = calendar.get_sunrise_sunset(cal, day_num)
+	
+	local next_events = calendar.get_next_three_events()
+	
+	local line1 = string.format("<light_steel_blue>%-10s <white>%-17s <aquamarine>|| <light_steel_blue>%-8s <white>%-10s <aquamarine>|| <light_steel_blue>%-12s <white>%s", "MIESIAC:", month_info.name, "DZIEN:", month_info.day.."/"..month_info.length, "PORA ROKU:", season)
+	local line2 = string.format("<light_steel_blue>%-10s <white>%s <light_slate_grey>(rl: %s) <aquamarine>|| <light_steel_blue>%-8s <white>%s <light_slate_grey>(rl: %s)", "SWIT:", sun_times.sunrise, sun_times.sunrise_rl, "ZMIERZCH:", sun_times.sunset, sun_times.sunset_rl)
+	
+	local events_string = ""
+	if #next_events > 0 then
+		local events_list = {}
+		for i, event in ipairs(next_events) do
+			local remaining_time = event.timestamp - getEpoch()
+			if remaining_time > 0 then
+				table.insert(events_list, string.format("  %d. %s<%s>%s<reset> -> <wheat>za %s", i, calendar.get_prefix(event.type), event.color, event.desc:gsub("%s+$", ""), calendar.resttime(remaining_time)))
+			end
+		end
+		events_string = table.concat(events_list, "\n")
+	else
+		events_string = "  <dim_gray>Brak nadchodzących wydarzeń"
+	end
+
+	cecho("\n<reset>"..line1.."\n"..line2.."\n".."<light_steel_blue>ZBLIZAJA SIE:\n<reset>"..events_string.."\n")
+end
+
 
 -- Funkcja do pobierania najbliższych trzech nadchodzących wydarzeń
 function calendar.get_next_three_events(filters)
@@ -907,7 +1091,7 @@ function calendar.get_next_three_events(filters)
     local next_events = {}
     
     for _, event in ipairs(union) do
-        if (filters == nil or table_contains(filters, event["type"])) and event["timestamp"] &gt;= now then
+        if (filters == nil or table_contains(filters, event["type"])) and event["timestamp"] >= now then
             table.insert(next_events, event)
             if #next_events == 3 then
                 break
@@ -931,7 +1115,9 @@ end
 
 -- Initialize the calendar module
 calendar.init()
-</script>
+
+				]]>
+				</script>
 				<eventHandlerList />
 			</Script>
 		</ScriptGroup>
@@ -1057,29 +1243,25 @@ calendar.init()
 			<regexCodePropertyList />
 			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 				<name>kalendarz ishtar</name>
-				<script>local yd = 0
--- Uncomment the line below for debugging purposes
--- display(2, matches[2], 3, matches[3], 4, matches[4], 5, matches[5], 6, matches[6], 7, matches[7], 8, matches[8])
-
+				<script>
+				<![CDATA[
+local yd = 0
 local H = matches[3]
 local h = calendar.string2int[matches[3]]
 local pd = matches[4]
 local m = matches[6]
 
--- Calculate the day of the month
 local d = calendar.string2int[matches[5]]
--- Calculate the day of the year based on "czas"
 local yd = calendar.ishtar.settings.first_day_of_calparts[m] + d - 1
 
-if pd == "wieczorem" or pd == "poludniu" or (pd == "nocy" and h &gt; 7) then
+if pd == "wieczorem" or pd == "poludniu" or (pd == "nocy" and h > 7) then
   h = h + 12
 end
 
-calendar.ishtar.data.precision = 119 -- After "czas" command, precision changes to max error of 119 sec
+calendar.ishtar.data.precision = 119
 calendar.ishtar = calendar.refresh_calendar(calendar.ishtar, yd, h)
-
--- Uncomment the line below to display debug information
--- display("dzien", d, "miesiac", m, "dzien roku", yd, "godzina pory", H, "pora dnia", pd, "godzina row", h)
+calendar.display_full_time_info(calendar.ishtar, yd)
+]]>
 </script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
@@ -1100,44 +1282,38 @@ calendar.ishtar = calendar.refresh_calendar(calendar.ishtar, yd, h)
 			</Trigger>
 			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 				<name>kalendarz imperium</name>
-				<script>local cm = table_size(matches)
-
--- Uncomment the line below for debugging purposes
--- display("count: "..table_size(matches), 3, matches[3], 4, matches[4], 5, matches[5], 6, matches[6], 7, matches[7], 8, matches[8])
+				<script>
+				<![CDATA[
+local cm = table_size(matches)
 
 local yd = 0
-
 local H = matches[3]
 local h = calendar.string2int[matches[3]]
 local pd = matches[4]
-
 local m = matches[5]
 
-if cm &gt; 5 then
+if cm > 5 then
   m = matches[6]
 end
 
 local d = "-"
-
 local special_imperial_days = {"Hexentag", "Mitterfruhl", "Sonnenstill", "Geheimnistag", "Mitterherbst"}
 
--- For special days, the day of the year is determined directly from calparts definitions
 if table_contains(special_imperial_days, m) then 
   yd = calendar.imperial.settings.first_day_of_calparts[m]
 else
   d = calendar.string2int[matches[5]]
-  -- Calculate the day of the year based on "czas"
   yd = calendar.imperial.settings.first_day_of_calparts[m] + d - 1
 end
 
-if pd == "wieczorem" or pd == "poludniu" or (pd == "nocy" and h &gt; 8) then
+if pd == "wieczorem" or pd == "poludniu" or (pd == "nocy" and h > 8) then
   h = h + 12
 end
 
-calendar.imperial.data.precision = 119 -- After "czas" command, precision changes to max error of 119 sec
+calendar.imperial.data.precision = 119
 calendar.imperial = calendar.refresh_calendar(calendar.imperial, yd, h)
--- Uncomment the line below to display debug information
--- display("dzien", d, "miesiac", m, "dzien roku", yd, "godzina pory", H, "pora dnia", pd, "godzina row", h)
+calendar.display_full_time_info(calendar.imperial, yd)
+]]>
 </script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
@@ -1162,17 +1338,18 @@ calendar.imperial = calendar.refresh_calendar(calendar.imperial, yd, h)
 			</Trigger>
 			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
 				<name>kalendarz imperium eventy</name>
-				<script>if matches[3] == "noc Geheimnisnacht" then
-  -- Uncomment the lines below if needed
+				<script>
+				<![CDATA[
+if matches[3] == "noc Geheimnisnacht" then
   -- calendar.imperial.data.precision = 0
   -- calendar.imperial = calendar.refresh_calendar(calendar.imperial, 201, 17)
-  -- TODO: Color the line and add notification
 end
 
 if matches[3] == "pierwszy dzien nowego roku" then
   calendar.imperial.data.precision = 0
   calendar.imperial = calendar.refresh_calendar(calendar.imperial, 1, 8)
 end
+]]>
 </script>
 				<triggerType>0</triggerType>
 				<conditonLineDelta>0</conditonLineDelta>
