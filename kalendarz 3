@@ -1,0 +1,994 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE MudletPackage>
+<MudletPackage version="1.001">
+	<ScriptPackage>
+		<ScriptGroup isActive="yes" isFolder="yes">
+			<name>Kalendarz 3.5</name>
+			<packageName></packageName>
+			<script></script>
+			<eventHandlerList />
+			<Script isActive="yes" isFolder="no">
+				<name>kalendarz - core</name>
+				<packageName>Kalendarz 3.5</packageName>
+				<script>
+				<![CDATA[
+-- =============================================================================
+-- = Kalendarz 3.5
+-- =============================================================================
+-- Wersja 3.5:
+-- - Dostosowano odstępy w głównym widoku, aby uzyskać bardziej
+--   kompaktowy i wyrównany układ.
+--
+-- Wersja 3.4:
+-- - Poprawiono estetykę głównego widoku: wydłużono belki, wyśrodkowano
+--   tytuł i wyrównano kolumny z informacjami.
+-- - Zamieniono miejscami "Godzinę" i "Porę Roku" dla lepszego układu.
+-- =============================================================================
+
+calendar = {
+  domain = "gdziestam",
+  json_file_path = getMudletHomeDir() .. "/my_calendar.json",
+  gamehour_real_time = 120,
+  cache = {},
+  last_daylight_status = nil,
+
+  imperial  = {
+    config = {
+      name = "Kalendarz imperialny",
+      domain = "imperial",
+      days_in_year = 400,
+      year_time = 1151880,
+   
+      first_day_of_calparts = {
+        ["Hexentag"] = 1, ["Nachhexen"] = 2, ["Jahrdrung"] = 34, ["Mitterfruhl"] = 67, ["Pflugzeit"] = 68, ["Sigmarszeit"] = 101, ["Sommerzeit"] = 134, ["Sonnenstill"] = 167, ["Vorgeheim"] = 168,
+        ["Geheimnistag"] = 201, ["Nachgeheim"] = 202, ["Erntezeit"] = 234, ["Mitterherbst"] = 267, ["Brauzeit"] = 268, ["Kaltezeit"] = 301, ["Ulrichszeit"] = 334, ["Mondstill"] = 367, ["Vorhexen"] = 368,  
+      },
+	  
+	  seasons = {
+		{day=1, name="Pozna zima"}, {day=18, name="Wczesna wiosna"}, {day=67, name="Pozna wiosna"},
+		{day=118, name="Wczesne lato"}, {day=167, name="Pozne lato"}, {day=218, name="Wczesna jesien"},
+		{day=267, name="Pozna jesien"}, {day=319, name="Wczesna zima"}
+	  },
+	  
+	  sun_cycle = {
+		{day=18,  sunrise="06:30", sunset="18:30"}, {day=118, sunrise="05:00", sunset="21:00"},
+		{day=218, sunrise="06:30", sunset="18:30"}, {day=319, sunrise="08:00", sunset="17:00"}
+	  },
+    
+      search_times = {
+        {day=1, hour=17,   desc="Leci pyl", color="dodger_blue", type="special_imperial"},
+        {day=1, hour=17,   desc="Poczatek pelni", color="powder_blue", type="full_moon_imperial"},
+        {day=2, hour=8,    desc="Koniec pelni", color="powder_blue", type="full_moon_imperial"},
+        {day=14, hour=17,  desc="Poczatek nowiu", color="slate_blue", type="new_moon_imperial"},
+        {day=15, hour=8,   desc="Koniec nowiu", color="slate_blue", type="new_moon_imperial"},
+        {day=26, hour=17,  desc="Poczatek pelni", color="powder_blue", type="full_moon_imperial"},
+        {day=27, hour=8,   desc="Koniec pelni", color="powder_blue", type="full_moon_imperial"},
+        {day=39, hour=18,  desc="Poczatek nowiu", color="slate_blue", type="new_moon_imperial"},
+        {day=40, hour=7,   desc="Koniec nowiu", color="slate_blue", type="new_moon_imperial"},
+        {day=51, hour=18,  desc="Poczatek pelni", color="powder_blue", type="full_moon_imperial"},
+        {day=52, hour=7,   desc="Koniec pelni", color="powder_blue", type="full_moon_imperial"},
+        {day=64, hour=18,  desc="Poczatek nowiu", color="slate_blue", type="new_moon_imperial"},
+        {day=65, hour=7,   desc="Koniec nowiu", color="slate_blue", type="new_moon_imperial"},
+        {day=76, hour=19,  desc="Poczatek pelni", color="powder_blue", type="full_moon_imperial"},
+        {day=77, hour=6,   desc="Koniec pelni", color="powder_blue", type="full_moon_imperial"},
+        {day=89, hour=19,  desc="Poczatek nowiu", color="slate_blue", type="new_moon_imperial"},
+        {day=90, hour=6,   desc="Koniec nowiu", color="slate_blue", type="new_moon_imperial"},
+        {day=102, hour=21, desc="Poczatek pelni", color="powder_blue", type="full_moon_imperial"},
+        {day=103, hour=5,  desc="Koniec pelni", color="powder_blue", type="full_moon_imperial"},
+        {day=114, hour=20, desc="Poczatek nowiu", color="slate_blue", type="new_moon_imperial"},
+        {day=115, hour=5,  desc="Koniec nowiu", color="slate_blue", type="new_moon_imperial"},
+        {day=126, hour=20, desc="Poczatek pelni", color="powder_blue", type="full_moon_imperial"},
+        {day=127, hour=5,  desc="Koniec pelni", color="powder_blue", type="full_moon_imperial"},
+        {day=139, hour=21, desc="Poczatek nowiu", color="slate_blue", type="new_moon_imperial"},
+        {day=140, hour=5,  desc="Koniec nowiu", color="slate_blue", type="new_moon_imperial"},
+        {day=151, hour=21, desc="Poczatek pelni", color="powder_blue", type="full_moon_imperial"},
+        {day=152, hour=5,  desc="Koniec pelni", color="powder_blue", type="full_moon_imperial"},
+        {day=164, hour=21, desc="Poczatek nowiu", color="slate_blue", type="new_moon_imperial"},
+        {day=165, hour=5,  desc="Koniec nowiu", color="slate_blue", type="new_moon_imperial"},
+        {day=176, hour=22, desc="Poczatek pelni", color="powder_blue", type="full_moon_imperial"},
+        {day=177, hour=4,  desc="Koniec pelni", color="powder_blue", type="full_moon_imperial"},
+        {day=189, hour=22, desc="Poczatek nowiu", color="slate_blue", type="new_moon_imperial"},
+        {day=190, hour=4,  desc="Koniec nowiu", color="slate_blue", type="new_moon_imperial"},
+        {day=201, hour=17, desc="Leci pyl", color="dodger_blue", type="special_imperial"},
+        {day=202, hour=20, desc="Poczatek pelni", color="powder_blue", type="full_moon_imperial"},
+        {day=203, hour=5,  desc="Koniec pelni", color="powder_blue", type="full_moon_imperial"},
+        {day=214, hour=20, desc="Poczatek nowiu", color="slate_blue", type="new_moon_imperial"},
+        {day=215, hour=5,  desc="Koniec nowiu", color="slate_blue", type="new_moon_imperial"},
+        {day=227, hour=20, desc="Poczatek pelni", color="powder_blue", type="full_moon_imperial"},
+        {day=228, hour=5,  desc="Koniec pelni", color="powder_blue", type="full_moon_imperial"},
+        {day=239, hour=20, desc="Poczatek nowiu", color="slate_blue", type="new_moon_imperial"},
+        {day=240, hour=5,  desc="Koniec nowiu", color="slate_blue", type="new_moon_imperial"},
+        {day=251, hour=20, desc="Poczatek pelni", color="powder_blue", type="full_moon_imperial"},
+        {day=252, hour=5,  desc="Koniec pelni", color="powder_blue", type="full_moon_imperial"},
+        {day=253, hour=20, desc="Leci pyl", color="dodger_blue", type="special_imperial"},
+        {day=264, hour=20, desc="Poczatek nowiu", color="slate_blue", type="new_moon_imperial"},
+        {day=265, hour=5,  desc="Koniec nowiu", color="slate_blue", type="new_moon_imperial"},
+        {day=276, hour=19, desc="Poczatek pelni", color="powder_blue", type="full_moon_imperial"},
+        {day=277, hour=6,  desc="Koniec pelni", color="powder_blue", type="full_moon_imperial"},
+        {day=278, hour=19, desc="Leci pyl", color="dodger_blue", type="special_imperial"},
+        {day=289, hour=19, desc="Poczatek nowiu", color="slate_blue", type="new_moon_imperial"},
+        {day=290, hour=6,  desc="Koniec nowiu", color="slate_blue", type="new_moon_imperial"},
+        {day=301, hour=18, desc="Poczatek pelni", color="powder_blue", type="full_moon_imperial"}, -- Kaltezeit 301
+        {day=302, hour=6,  desc="Koniec pelni", color="powder_blue", type="full_moon_imperial"},
+        {day=314, hour=18, desc="Poczatek nowiu", color="slate_blue", type="new_moon_imperial"},
+        {day=315, hour=6,  desc="Koniec nowiu", color="slate_blue", type="new_moon_imperial"},
+        {day=326, hour=18, desc="Leci pyl", color="dodger_blue", type="special_imperial"},
+        {day=326, hour=18, desc="Poczatek pelni", color="powder_blue", type="full_moon_imperial"},
+        {day=327, hour=6,  desc="Koniec pelni", color="powder_blue", type="full_moon_imperial"},
+        {day=339, hour=17, desc="Poczatek nowiu", color="slate_blue", type="new_moon_imperial"},
+        {day=340, hour=7,  desc="Koniec nowiu", color="slate_blue", type="new_moon_imperial"},
+        {day=351, hour=17, desc="Poczatek pelni", color="powder_blue", type="full_moon_imperial"},
+        {day=352, hour=7,  desc="Koniec pelni", color="powder_blue", type="full_moon_imperial"},
+        {day=364, hour=17, desc="Poczatek nowiu", color="slate_blue", type="new_moon_imperial"},
+        {day=365, hour=7,  desc="Koniec nowiu", color="slate_blue", type="new_moon_imperial"},
+        {day=376, hour=16, desc="Poczatek pelni", color="powder_blue", type="full_moon_imperial"},
+        {day=377, hour=8,  desc="Koniec pelni", color="powder_blue", type="full_moon_imperial"},
+        {day=389, hour=16, desc="Poczatek nowiu", color="slate_blue", type="new_moon_imperial"},
+        {day=390, hour=8,  desc="Koniec nowiu", color="slate_blue", type="new_moon_imperial"},
+        {day=18, hour=0,   desc="Poczatek wiosny", color="green", type="season_imperial"},
+        {day=118, hour=0,  desc="Poczatek lata", color="yellow", type="season_imperial"},
+        {day=218, hour=0,  desc="Poczatek jesieni", color="brown", type="season_imperial"},
+        {day=319, hour=0,  desc="Poczatek zimy", color="white", type="season_imperial"},
+      },
+    },
+    data = { offset = 0, precision = 119, template = {}, calendar = {}, results = {} },
+  },
+
+  ishtar = {
+    config = {
+      name = "Kalendarz ishtar",
+      domain = "ishtar",
+      days_in_year = 360,
+      year_time = 1036680,
+      first_day_of_calparts = {
+        ["Yule"] = 1, ["Imbaelk"] = 46, ["Birke"] = 91, ["Blathe"] = 136, ["Feainn"] = 181, ["Lammas"] = 226, ["Velen"] = 271, ["Saovine"] = 316,
+      },
+	  seasons = {
+		{day=1, name="Zima"}, {day=91, name="Wiosna"}, {day=181, name="Lato"}, {day=271, name="Jesien"}
+	  },
+	  sun_cycle = {
+		{day=1,   sunrise="08:00", sunset="17:00"}, {day=91,  sunrise="06:30", sunset="18:30"},
+		{day=181, sunrise="05:00", sunset="21:00"}, {day=271, sunrise="06:30", sunset="18:30"}
+	  },
+      search_times = {
+        {day=1, hour=0,    desc="Poczatek zimy", color="white", type="season_ishtar"},
+        {day=1, hour=0,    desc="Przesilenie zimowe", color="white", type="solstice_ishtar"},
+        {day=1, hour=0,    desc="Ryboludzie", color="white", type="fishman_ishtar"},
+        {day=6, hour=5,    desc="Eysenlaan festyn", color="magenta", type="eys_feast_ishtar"},
+        {day=9, hour=23,   desc="Eysenlaan koniec", color="magenta", type="eys_feast_ishtar"},
+        {day=4, hour=0,    desc="Poczatek pelni", color="powder_blue", type="full_moon_ishtar"},
+        {day=6, hour=0,    desc="Koniec pelni", color="powder_blue", type="full_moon_ishtar"},
+        {day=4, hour=2,    desc="Szpiedzy wychodza", color="chocolate", type="spy_ishtar"},
+        {day=4, hour=8,    desc="Szpiedzy znikaja", color="chocolate", type="spy_ishtar"},
+        {day=7, hour=22,   desc="Szpiedzy wychodza", color="chocolate", type="spy_ishtar"},
+        {day=8, hour=8,    desc="Szpiedzy znikaja", color="chocolate", type="spy_ishtar"},
+        {day=28, hour=0,   desc="Poczatek pelni", color="powder_blue", type="full_moon_ishtar"},
+        {day=30, hour=0,   desc="Koniec pelni", color="powder_blue", type="full_moon_ishtar"},
+        {day=28, hour=2,   desc="Szpiedzy wychodza", color="chocolate", type="spy_ishtar"},
+        {day=28, hour=8,   desc="Szpiedzy znikaja", color="chocolate", type="spy_ishtar"},
+        {day=31, hour=22,  desc="Szpiedzy wychodza", color="chocolate", type="spy_ishtar"},
+        {day=32, hour=8,    desc="Szpiedzy znikaja", color="chocolate", type="spy_ishtar"},
+        {day=51, hour=5,  desc="Eysenlaan festyn", color="magenta", type="eys_feast_ishtar"},
+        {day=54, hour=23, desc="Eysenlaan koniec", color="magenta", type="eys_feast_ishtar"},
+        {day=52, hour=0,   desc="Poczatek pelni", color="powder_blue", type="full_moon_ishtar"},
+        {day=54, hour=0,   desc="Koniec pelni", color="powder_blue", type="full_moon_ishtar"},
+        {day=52, hour=2,   desc="Szpiedzy wychodza", color="chocolate", type="spy_ishtar"},
+        {day=52, hour=7,   desc="Szpiedzy znikaja", color="chocolate", type="spy_ishtar"},
+        {day=55, hour=22,  desc="Szpiedzy wychodza", color="chocolate", type="spy_ishtar"},
+        {day=56, hour=7,   desc="Szpiedzy znikaja", color="chocolate", type="spy_ishtar"},
+        {day=76, hour=0,   desc="Poczatek pelni", color="powder_blue", type="full_moon_ishtar"},
+        {day=78, hour=0,   desc="Koniec pelni", color="powder_blue", type="full_moon_ishtar"},
+        {day=76, hour=2,   desc="Szpiedzy wychodza", color="chocolate", type="spy_ishtar"},
+        {day=76, hour=7,   desc="Szpiedzy znikaja", color="chocolate", type="spy_ishtar"},
+        {day=79, hour=22,  desc="Szpiedzy wychodza", color="chocolate", type="spy_ishtar"},
+        {day=80, hour=7,   desc="Szpiedzy znikaja", color="chocolate", type="spy_ishtar"},
+        {day=91, hour=0,   desc="Poczatek wiosny", color="green", type="season_ishtar"},
+        {day=91, hour=0,   desc="Rownonoc wiosenna", color="green", type="equinox_ishtar"},
+        {day=91, hour=0,   desc="Ryboludzie", color="green", type="fishman_ishtar"},
+        {day=96, hour=5,  desc="Eysenlaan festyn", color="magenta", type="eys_feast_ishtar"},
+        {day=99, hour=23, desc="Eysenlaan koniec", color="magenta", type="eys_feast_ishtar"},
+        {day=100, hour=0,  desc="Poczatek pelni", color="powder_blue", type="full_moon_ishtar"},
+        {day=102, hour=0,  desc="Koniec pelni", color="powder_blue", type="full_moon_ishtar"},
+        {day=100, hour=2,  desc="Szpiedzy wychodza", color="chocolate", type="spy_ishtar"},
+        {day=100, hour=6,  desc="Szpiedzy znikaja", color="chocolate", type="spy_ishtar"},
+        {day=103, hour=22, desc="Szpiedzy wychodza", color="chocolate", type="spy_ishtar"},
+        {day=104, hour=6,  desc="Szpiedzy znikaja", color="chocolate", type="spy_ishtar"},
+        {day=124, hour=0,  desc="Poczatek pelni", color="powder_blue", type="full_moon_ishtar"},
+        {day=126, hour=0,  desc="Koniec pelni", color="powder_blue", type="full_moon_ishtar"},
+        {day=124, hour=2,  desc="Szpiedzy wychodza", color="chocolate", type="spy_ishtar"},
+        {day=124, hour=6,  desc="Szpiedzy znikaja", color="chocolate", type="spy_ishtar"},
+        {day=127, hour=22, desc="Szpiedzy wychodza", color="chocolate", type="spy_ishtar"},
+        {day=128, hour=6,  desc="Szpiedzy znikaja", color="chocolate", type="spy_ishtar"},
+        {day=141, hour=5,  desc="Eysenlaan festyn", color="magenta", type="eys_feast_ishtar"},
+        {day=144, hour=23, desc="Eysenlaan koniec", color="magenta", type="eys_feast_ishtar"},
+        {day=148, hour=0,  desc="Poczatek pelni", color="powder_blue", type="full_moon_ishtar"},
+        {day=150, hour=0,  desc="Koniec pelni", color="powder_blue", type="full_moon_ishtar"},
+        {day=148, hour=2,  desc="Szpiedzy wychodza", color="chocolate", type="spy_ishtar"},
+        {day=148, hour=5,  desc="Szpiedzy znikaja", color="chocolate", type="spy_ishtar"},
+        {day=151, hour=22, desc="Szpiedzy wychodza", color="chocolate", type="spy_ishtar"},
+        {day=152, hour=5,  desc="Szpiedzy znikaja", color="chocolate", type="spy_ishtar"},
+        {day=172, hour=0,  desc="Poczatek pelni", color="powder_blue", type="full_moon_ishtar"},
+        {day=174, hour=0,  desc="Koniec pelni", color="powder_blue", type="full_moon_ishtar"},
+        {day=172, hour=2,  desc="Szpiedzy wychodza", color="chocolate", type="spy_ishtar"},
+        {day=172, hour=5,  desc="Szpiedzy znikaja", color="chocolate", type="spy_ishtar"},
+        {day=175, hour=22, desc="Szpiedzy wychodza", color="chocolate", type="spy_ishtar"},
+        {day=176, hour=5,  desc="Szpiedzy znikaja", color="chocolate", type="spy_ishtar"},
+        {day=181, hour=0,  desc="Poczatek lata", color="yellow", type="season_ishtar"},
+        {day=181, hour=0,  desc="Przesilenie letnie", color="yellow", type="solstice_ishtar"},
+        {day=181, hour=0,  desc="Ryboludzie", color="yellow", type="fishman_ishtar"},
+        {day=186, hour=5,  desc="Eysenlaan festyn", color="magenta", type="eys_feast_ishtar"},
+        {day=189, hour=23, desc="Eysenlaan koniec", color="magenta", type="eys_feast_ishtar"},
+        {day=196, hour=0,  desc="Poczatek pelni", color="powder_blue", type="full_moon_ishtar"},
+        {day=198, hour=0,  desc="Koniec pelni", color="powder_blue", type="full_moon_ishtar"},
+        {day=196, hour=2,  desc="Szpiedzy wychodza", color="chocolate", type="spy_ishtar"},
+        {day=196, hour=4,  desc="Szpiedzy znikaja", color="chocolate", type="spy_ishtar"},
+        {day=199, hour=22, desc="Szpiedzy wychodza", color="chocolate", type="spy_ishtar"},
+        {day=200, hour=4,  desc="Szpiedzy znikaja", color="chocolate", type="spy_ishtar"},
+        {day=220, hour=0,  desc="Poczatek pelni", color="powder_blue", type="full_moon_ishtar"},
+        {day=224, hour=0,  desc="Koniec pelni", color="powder_blue", type="full_moon_ishtar"},
+        {day=220, hour=2,  desc="Szpiedzy wychodza", color="chocolate", type="spy_ishtar"},
+        {day=220, hour=4,  desc="Szpiedzy znikaja", color="chocolate", type="spy_ishtar"},
+        {day=225, hour=22, desc="Szpiedzy wychodza", color="chocolate", type="spy_ishtar"},
+        {day=226, hour=5,  desc="Szpiedzy znikaja", color="chocolate", type="spy_ishtar"},
+        {day=231, hour=5,  desc="Eysenlaan festyn", color="magenta", type="eys_feast_ishtar"},
+        {day=234, hour=23, desc="Eysenlaan koniec", color="magenta", type="eys_feast_ishtar"},
+        {day=244, hour=0,  desc="Poczatek pelni", color="powder_blue", type="full_moon_ishtar"},
+        {day=246, hour=0,  desc="Koniec pelni", color="powder_blue", type="full_moon_ishtar"},
+        {day=244, hour=2,  desc="Szpiedzy wychodza", color="chocolate", type="spy_ishtar"},
+        {day=244, hour=5,  desc="Szpiedzy znikaja", color="chocolate", type="spy_ishtar"},
+        {day=247, hour=22, desc="Szpiedzy wychodza", color="chocolate", type="spy_ishtar"},
+        {day=248, hour=5,  desc="Szpiedzy znikaja", color="chocolate", type="spy_ishtar"},
+        {day=268, hour=0,  desc="Poczatek pelni", color="powder_blue", type="full_moon_ishtar"},
+        {day=270, hour=0,  desc="Koniec pelni", color="powder_blue", type="full_moon_ishtar"},
+        {day=268, hour=2,  desc="Szpiedzy wychodza", color="chocolate", type="spy_ishtar"},
+        {day=268, hour=5,  desc="Szpiedzy znikaja", color="chocolate", type="spy_ishtar"},
+        {day=271, hour=0,  desc="Poczatek jesieni", color="brown", type="season_ishtar"},
+        {day=271, hour=0,  desc="Rownonoc jesienna", color="brown", type="equinox_ishtar"},
+        {day=271, hour=0,  desc="Ryboludzie", color="brown", type="fishman_ishtar"},
+        {day=271, hour=22, desc="Szpiedzy wychodza", color="chocolate", type="spy_ishtar"},
+        {day=272, hour=7,  desc="Szpiedzy znikaja", color="chocolate", type="spy_ishtar"},
+        {day=276, hour=5,  desc="Eysenlaan festyn", color="magenta", type="eys_feast_ishtar"},
+        {day=279, hour=23, desc="Eysenlaan koniec", color="magenta", type="eys_feast_ishtar"},
+        {day=292, hour=0,  desc="Poczatek pelni", color="powder_blue", type="full_moon_ishtar"},
+        {day=294, hour=0,  desc="Koniec pelni", color="powder_blue", type="full_moon_ishtar"},
+        {day=292, hour=2,  desc="Szpiedzy wychodza", color="chocolate", type="spy_ishtar"},
+        {day=292, hour=7,   desc="Szpiedzy znikaja", color="chocolate", type="spy_ishtar"},
+        {day=295, hour=22, desc="Szpiedzy wychodza", color="chocolate", type="spy_ishtar"},
+        {day=296, hour=7,  desc="Szpiedzy znikaja", color="chocolate", type="spy_ishtar"},
+        {day=315, hour=18, desc="Leci pyl", color="dodger_blue", type="special_ishtar"},
+        {day=316, hour=0,  desc="Poczatek pelni", color="powder_blue", type="full_moon_ishtar"},
+        {day=318, hour=0,  desc="Koniec pelni", color="powder_blue", type="full_moon_ishtar"},
+        {day=316, hour=2,  desc="Szpiedzy wychodza", color="chocolate", type="spy_ishtar"},
+        {day=316, hour=6,  desc="Szpiedzy znikaja", color="chocolate", type="spy_ishtar"},
+        {day=319, hour=22, desc="Szpiedzy wychodza", color="chocolate", type="spy_ishtar"},
+        {day=320, hour=6,  desc="Szpiedzy znikaja", color="chocolate", type="spy_ishtar"},
+        {day=321, hour=5,  desc="Eysenlaan festyn", color="magenta", type="eys_feast_ishtar"},
+        {day=324, hour=23, desc="Eysenlaan koniec", color="magenta", type="eys_feast_ishtar"},
+        {day=340, hour=0,  desc="Poczatek pelni", color="powder_blue", type="full_moon_ishtar"},
+        {day=342, hour=0,  desc="Koniec pelni", color="powder_blue", type="full_moon_ishtar"},
+        {day=340, hour=2,  desc="Szpiedzy wychodza", color="chocolate", type="spy_ishtar"},
+        {day=340, hour=6,  desc="Szpiedzy znikaja", color="chocolate", type="spy_ishtar"},
+        {day=343, hour=22, desc="Szpiedzy wychodza", color="chocolate", type="spy_ishtar"},
+        {day=344, hour=6,  desc="Szpiedzy znikaja", color="chocolate", type="spy_ishtar"},
+      },
+    },
+    data = { offset = 0, precision = 119, template = {}, calendar = {}, results = {} },
+  },
+
+  string2int = {
+    ["pierwszy"] = 1, ["pierwsza"] = 1, ["drugi"] = 2, ["druga"] = 2, ["trzeci"] = 3, ["trzecia"] = 3,
+    ["czwarty"] = 4, ["czwarta"] = 4, ["piaty"] = 5, ["piata"] = 5, ["szosty"] = 6, ["szosta"] = 6,
+    ["siodmy"] = 7, ["siodma"] = 7, ["osmy"] = 8, ["osma"] = 8, ["dziewiaty"] = 9, ["dziewiata"] = 9,
+    ["dziesiaty"] = 10, ["dziesiata"] = 10, ["jedenasty"] = 11, ["jedenasta"] = 11, ["dwunasty"] = 12,
+    ["dwunasta"] = 12, ["trzynasty"] = 13, ["trzynasta"] = 13, ["czternasty"] = 14, ["czternasta"] = 14,
+    ["pietnasty"] = 15, ["szesnasty"] = 16, ["siedemnasty"] = 17, ["osiemnasty"] = 18, ["dziewietnasty"] = 19,
+    ["dwudziesty"] = 20, ["dwudziesty pierwszy"] = 21, ["dwudziesty drugi"] = 22, ["dwudziesty trzeci"] = 23,
+    ["dwudziesty czwarty"] = 24, ["dwudziesty piaty"] = 25, ["dwudziesty szosty"] = 26, ["dwudziesty siodmy"] = 27,
+    ["dwudziesty osmy"] = 28, ["dwudziesty dziewiaty"] = 29, ["trzydziesty"] = 30, ["trzydziesty pierwszy"] = 31,
+    ["trzydziesty drugi"] = 32, ["trzydziesty trzeci"] = 33, ["trzydziesty czwarty"] = 34, ["trzydziesty piaty"] = 35,
+    ["trzydziesty szosty"] = 36, ["trzydziesty siodmy"] = 37, ["trzydziesty osmy"] = 38, ["trzydziesty dziewiaty"] = 39,
+    ["czterdziesty"] = 40, ["czterdziesty pierwszy"] = 41, ["czterdziesty drugi"] = 42, ["czterdziesty trzeci"] = 43,
+    ["czterdziesty czwarty"] = 44, ["czterdziesty piaty"] = 45,
+  },
+}
+
+local debug = false
+local function print_log(message) if debug then cecho("<yellow>" .. message .. "\n") end end
+
+function calendar.get_prefix(type)
+  local arr = string.split(type, "_")
+  local domain = arr[#arr]
+  if domain == "imperial" then return "<aquamarine>[<light_goldenrod>Imperium<aquamarine>]<reset> "
+  elseif domain == "ishtar" then return "<aquamarine>[<cornflower_blue>Ishtar<aquamarine>]<reset> " end
+  return ""
+end
+
+function calendar.check_filters(filters)
+  if not filters or #filters == 0 then return false end
+  local first_prefix = calendar.get_prefix(filters[1])
+  if first_prefix == "" then return true end
+  for i = 2, #filters do
+    if first_prefix ~= calendar.get_prefix(filters[i]) then return false end
+  end
+  return true
+end
+
+function calendar.create_calendar(cal, offset)
+  local timestamp = offset
+  local type = ""
+  if offset == nil then print_log("Błąd w narzutu kalendarza: "..cal.config.name.." -> "..offset); return cal end
+  if offset == 0 then type = "template"
+  elseif offset > 0 then type = "calendar" end
+  
+  if string.len(type) > 0 then
+    cal.data[type] = {}
+    for i=1,tonumber(cal.config.days_in_year) do
+      cal.data[type][i] = {}
+      for j=0,23 do
+        cal.data[type][i][j] = timestamp
+        timestamp = timestamp + calendar.gamehour_real_time
+      end
+    end
+    if offset > 0 then
+      cal.data.offset = offset
+      cal = calendar.reload_calendar(cal)
+    end
+  else
+    print_log("Błąd w narzutu kalendarza: "..cal.config.name.." -> "..offset)
+  end
+  return cal
+end
+
+function calendar.refresh_calendar(cal, d, h)
+  cal.data.offset = getEpoch() - cal.data.template[d][h]
+  cal = calendar.create_calendar(cal, cal.data.offset)
+  calendar.domain = cal.config.domain
+  calendar.save_local_time_data(cal)
+  return calendar.reload_calendar(cal)
+end
+
+function calendar.reload_calendar(cal)
+  local function fill_time(a, b, add)
+    if a >= b then return a end
+    return a + (math.ceil((b - a) / add) * add)
+  end
+  if cal and cal.data and cal.data.calendar and table_size(cal.data.calendar) > 0 then
+    cal.data.results = {}
+    local t = 0
+    local et = getEpoch()
+    for _, v in pairs(cal.config.search_times) do
+      local day = tonumber(v.day)
+      if cal.data.calendar[day] and cal.data.calendar[day][v.hour] then
+        t = cal.data.calendar[day][v.hour]
+        if t < et then t = fill_time(t, et, cal.config.year_time) end
+        if not cal.data.results[t] then
+          cal.data.results[t] = { desc = v.desc, timestamp = t, color = v.color, type = v.type, precision = cal.data.precision, game_date = "("..calendar.get_gamedate(cal, day, v.hour)..")"}
+        end
+      end
+    end
+    local results_list = {}
+    for _, event in pairs(cal.data.results) do table.insert(results_list, event) end
+    cal.data.results = results_list
+  else
+    print_log("Błąd w przeladowaniu kalendarza: ".. (cal.config and cal.config.name or "Nieznany"))
+  end
+  return cal
+end
+
+function calendar.get_events_results()
+  if calendar.imperial and calendar.imperial.data and table_size(calendar.imperial.data.calendar or {}) > 0 then calendar.imperial = calendar.reload_calendar(calendar.imperial) end
+  if calendar.ishtar and calendar.ishtar.data and table_size(calendar.ishtar.data.calendar or {}) > 0 then calendar.ishtar = calendar.reload_calendar(calendar.ishtar) end
+  
+  local union = {}
+  local imp_res = calendar.imperial and calendar.imperial.data and calendar.imperial.data.results
+  local ish_res = calendar.ishtar and calendar.ishtar.data and calendar.ishtar.data.results
+
+  if imp_res and #imp_res > 0 and ish_res and #ish_res > 0 then
+    union = table_n_union(imp_res, ish_res)
+  elseif imp_res and #imp_res > 0 then union = imp_res
+  elseif ish_res and #ish_res > 0 then union = ish_res end
+
+  table.sort(union, function(a, b) return a["timestamp"] < b["timestamp"] end)
+  return union
+end
+
+function calendar.resttime(time)
+  if time <= 0 then return "0s" end
+  local days = math.floor(time/86400); local rem = time % 86400
+  local hours = math.floor(rem/3600); rem = rem % 3600
+  local minutes = math.floor(rem/60); local seconds = math.floor(rem % 60)
+  if days > 0 then return days.."d "..hours.."h"
+  elseif hours > 0 then return hours.."h "..minutes.."m"
+  else return minutes.."m "..seconds.."s" end
+end
+
+function calendar.format_12h(hour, with_suffix)
+    local h12 = hour % 12
+    if h12 == 0 then h12 = 12 end
+    local suffix = hour < 12 and "am" or "pm"
+    local color = suffix == "am" and "light_yellow" or "light_grey"
+    if with_suffix then
+        return string.format("<%s>%d%s<reset>", color, h12, suffix)
+    else
+        return string.format("<%s>%d:00<reset>", color, h12)
+    end
+end
+
+function calendar.show_calendar_results(filters, in_real_days)
+  local now = getEpoch()
+  local time_limit = (in_real_days or 0) * 86400
+  local desc_type = calendar.check_filters(filters)
+  
+  local union = calendar.get_events_results()
+  for _, v in pairs(union) do
+    if filters == nil or table_contains(filters, v["type"]) then
+      local t = v["timestamp"] - now
+      local output_line
+      local event_desc = v.desc .. string.rep(" ", 20 - #v.desc)
+      
+      if desc_type then
+        output_line = string.format("<%s>%s <yellow>-> <wheat>za %-10s <gray>(%s)\n", v["color"], event_desc, calendar.resttime(t), os.date('%H:%M %d.%m', v["timestamp"]))
+      else
+        output_line = string.format("%s<%s>%s <yellow>-> <wheat>za %-10s <gray>(%s)\n", calendar.get_prefix(v["type"]), v["color"], event_desc, calendar.resttime(t), os.date('%H:%M %d.%m', v["timestamp"]))
+      end
+
+      if time_limit > 0 then
+        if t >= 0 and t <= time_limit then cecho(output_line) end
+      else
+        if t >=0 then cecho(output_line) end
+      end
+    end
+  end
+end
+
+function calendar.save_local_time_data()
+  local data = { imperial_offset = calendar.imperial.data.offset, ishtar_offset = calendar.ishtar.data.offset }
+  local path = calendar.json_file_path
+  local file, err = io.open(path, "w")
+  if file then file:write(yajl.to_string(data)); file:close()
+  else print_log("Nie udalo sie zapisac pliku JSON: " .. tostring(err)) end
+end
+
+function calendar.read_local_time_data()
+  if io.exists(calendar.json_file_path) then
+    local file, err = io.open(calendar.json_file_path, "r")
+    if not file then print_log("Nie udalo sie odczytac pliku JSON: " .. tostring(err)); return end
+    local content = file:read("*a"); file:close()
+    local data = yajl.to_value(content)
+    if data and data["imperial_offset"] and tonumber(data["imperial_offset"]) > 0 then
+      calendar.imperial = calendar.create_calendar(calendar.imperial, data["imperial_offset"])
+    end
+    if data and data["ishtar_offset"] and tonumber(data["ishtar_offset"]) > 0 then
+      calendar.ishtar = calendar.create_calendar(calendar.ishtar, data["ishtar_offset"])
+    end
+  end
+end
+
+function calendar.init()
+  for _, cal in pairs({calendar.imperial, calendar.ishtar}) do
+      if cal.config.seasons then
+          table.sort(cal.config.seasons, function(a, b) return a.day < b.day end)
+      end
+      cal.config.sorted_months = {}
+      if cal.config.first_day_of_calparts then
+          for name, start_day in pairs(cal.config.first_day_of_calparts) do
+            table.insert(cal.config.sorted_months, {name = name, start = start_day})
+          end
+          table.sort(cal.config.sorted_months, function(a,b) return a.start < b.start end)
+      end
+  end
+
+  calendar.imperial = calendar.create_calendar(calendar.imperial, 0)
+  calendar.ishtar = calendar.create_calendar(calendar.ishtar, 0)
+  calendar.read_local_time_data()
+  calendar.init_gmcp()
+end
+
+function calendar.init_gmcp()
+  event_handlers = event_handlers or {}
+  if event_handlers["calendar_time"] then killAnonymousEventHandler(event_handlers["calendar_time"]) end
+  event_handlers["calendar_time"] = registerAnonymousEventHandler("gmcp.room.time", calendar.handle_gmcp_time)
+  if event_handlers["calendar_domain"] then killAnonymousEventHandler(event_handlers["calendar_domain"]) end
+  event_handlers["calendar_domain"] = registerAnonymousEventHandler("gmcp.room.info.map", calendar.handle_gmcp_domain)
+end
+
+function calendar.handle_gmcp_time()
+  if gmcp.room.time.daylight ~= calendar.last_daylight_status and calendar.last_daylight_status ~= nil then
+      local cal_name = calendar.domain
+      local event_type = gmcp.room.time.daylight and "sunrise" or "sunset"
+      cecho(string.format("\n<cornflower_blue>INFO: <white>Wykryto %s, synchronizowanie kalendarza...", event_type))
+      calendar.recalibrate_by_event(cal_name, event_type)
+  end
+  calendar.last_daylight_status = gmcp.room.time.daylight
+end
+
+function calendar.handle_gmcp_domain()
+  if gmcp and gmcp.room and gmcp.room.info and gmcp.room.info.map and gmcp.room.info.map.domain then
+    if gmcp.room.info.map.domain == "Imperium" then calendar.domain = "imperial"
+    elseif gmcp.room.info.map.domain == "Ishtar" then calendar.domain = "ishtar" end
+  end
+end
+
+function calendar.get_monthday(cal, day)
+  local cache_key = cal.config.domain .. "_monthday_" .. tostring(day)
+  if calendar.cache[cache_key] then return calendar.cache[cache_key] end
+  
+  if not cal.config.sorted_months then return {day=0, month="błąd"} end
+  
+  local sorted_months = cal.config.sorted_months
+  local month_info = {day=0, month="nieznany"}
+  for i = #sorted_months, 1, -1 do
+    if day >= sorted_months[i].start then
+      month_info = {day = day - sorted_months[i].start + 1, month = sorted_months[i].name}
+      break
+    end
+  end
+  calendar.cache[cache_key] = month_info
+  return month_info
+end
+
+function calendar.get_gamedate(cal, ds, h)
+  local dd = calendar.get_monthday(cal, tonumber(ds))
+  return dd.day .. ". " .. dd.month .. " o " .. calendar.format_12h(tonumber(h), false) .. " [" .. ds .. "]"
+end
+
+function calendar.strip_colors(str)
+    if not str then return "" end
+    return str:gsub("<[^>]+>", "")
+end
+
+function table_contains(t, val)
+  for _, v in pairs(t) do if v == val then return true end end
+  return false
+end
+
+function table_size(t)
+  local count = 0
+  for _ in pairs(t) do count = count + 1 end
+  return count
+end
+
+function table_n_union(t1, t2)
+  local res = {}
+  for _, v in ipairs(t1) do table.insert(res, v) end
+  for _, v in ipairs(t2) do table.insert(res, v) end
+  return res
+end
+
+function calendar.get_current_season(cal, day)
+    local current_season = "Nieznana"
+    if not cal.config.seasons then return current_season end
+    for _, season in ipairs(cal.config.seasons) do
+        if tonumber(day) >= tonumber(season.day) then current_season = season.name else break end
+    end
+    return current_season
+end
+
+function calendar.get_month_info(cal, day)
+    local cache_key = cal.config.domain .. "_monthinfo_" .. tostring(day)
+    if calendar.cache[cache_key] then return calendar.cache[cache_key] end
+
+    if not cal.config.sorted_months then return {name = "Błąd", day = 0, length = 0} end
+    local sorted_months = cal.config.sorted_months
+    local current_month = {name = "Unknown", day = 0, length = 0}
+    for i = #sorted_months, 1, -1 do
+        local month = sorted_months[i]
+        if day >= month.start then
+            current_month.name = month.name
+            current_month.day = day - month.start + 1
+            if i < #sorted_months then current_month.length = sorted_months[i+1].start - month.start
+            else current_month.length = cal.config.days_in_year - month.start + 1 end
+            break
+        end
+    end
+    calendar.cache[cache_key] = current_month
+    return current_month
+end
+
+function calendar.time_to_minutes(time_str)
+    local h, m = time_str:match("(%d+):(%d+)")
+    return (tonumber(h) or 0) * 60 + (tonumber(m) or 0)
+end
+
+function calendar.minutes_to_time(minutes)
+    local h = math.floor(minutes / 60) % 24
+    local m = math.floor(minutes % 60)
+    return string.format("%02d:%02d", h, m)
+end
+
+function calendar.get_sunrise_sunset(cal, day)
+    local cache_key = cal.config.domain .. "_sun_" .. tostring(day)
+    if calendar.cache[cache_key] then return calendar.cache[cache_key] end
+
+    local cycle = cal.config.sun_cycle
+    table.sort(cycle, function(a,b) return a.day < b.day end)
+    local p1, p2
+    if day < cycle[1].day then p1, p2 = cycle[#cycle], cycle[1]
+    else
+        for i = 1, #cycle do
+            if day >= cycle[i].day then
+                p1 = cycle[i]
+                p2 = (i == #cycle) and cycle[1] or cycle[i+1]
+            else break end
+        end
+    end
+    if not p1 or not p2 then return { sunrise = "06:00", sunset = "18:00" } end
+    local total_days = (p2.day < p1.day) and (cal.config.days_in_year - p1.day) + p2.day or p2.day - p1.day
+	if total_days == 0 then return { sunrise = p1.sunrise, sunset = p1.sunset } end
+    local days_into = (day < p1.day) and (cal.config.days_in_year - p1.day) + day or day - p1.day
+    local progress = days_into / total_days
+    local sunrise1, sunset1 = calendar.time_to_minutes(p1.sunrise), calendar.time_to_minutes(p1.sunset)
+    local sunrise2, sunset2 = calendar.time_to_minutes(p2.sunrise), calendar.time_to_minutes(p2.sunset)
+    local current_sunrise = calendar.minutes_to_time(sunrise1 + (sunrise2 - sunrise1) * progress)
+    local current_sunset = calendar.minutes_to_time(sunset1 + (sunset2 - sunset1) * progress)
+    local result = { sunrise = current_sunrise, sunset = current_sunset }
+    calendar.cache[cache_key] = result
+    return result
+end
+
+function calendar.get_next_sun_event_timestamp(cal, day, hour, minute)
+    local now_ts = getEpoch()
+    
+    local sun_times_today = calendar.get_sunrise_sunset(cal, day)
+    local sunrise_today_min = calendar.time_to_minutes(sun_times_today.sunrise)
+    local sunset_today_min = calendar.time_to_minutes(sun_times_today.sunset)
+    
+    local day_start_ts = cal.data.calendar[day][0]
+    local sunrise_today_ts = day_start_ts + (sunrise_today_min * (calendar.gamehour_real_time / 60))
+    local sunset_today_ts = day_start_ts + (sunset_today_min * (calendar.gamehour_real_time / 60))
+
+    local next_sunrise_ts, next_sunset_ts
+
+    if now_ts < sunrise_today_ts then
+        next_sunrise_ts = sunrise_today_ts
+    else
+        local next_day = (day % cal.config.days_in_year) + 1
+        local sun_times_tomorrow = calendar.get_sunrise_sunset(cal, next_day)
+        local sunrise_tomorrow_min = calendar.time_to_minutes(sun_times_tomorrow.sunrise)
+        local next_day_start_ts = cal.data.calendar[next_day][0]
+        next_sunrise_ts = next_day_start_ts + (sunrise_tomorrow_min * (calendar.gamehour_real_time / 60))
+    end
+
+    if now_ts < sunset_today_ts then
+        next_sunset_ts = sunset_today_ts
+    else
+        local next_day = (day % cal.config.days_in_year) + 1
+        local sun_times_tomorrow = calendar.get_sunrise_sunset(cal, next_day)
+        local sunset_tomorrow_min = calendar.time_to_minutes(sun_times_tomorrow.sunset)
+        local next_day_start_ts = cal.data.calendar[next_day][0]
+        next_sunset_ts = next_day_start_ts + (sunset_tomorrow_min * (calendar.gamehour_real_time / 60))
+    end
+    
+    return { sunrise_ts = next_sunrise_ts, sunset_ts = next_sunset_ts }
+end
+
+function calendar.display_full_time_info(cal, day, hour)
+	if not day or not cal or not cal.data.calendar or not cal.data.calendar[day] then return end
+	local season = calendar.get_current_season(cal, day)
+	local month_info = calendar.get_month_info(cal, day)
+	
+	local sun_timestamps = calendar.get_next_sun_event_timestamp(cal, day, hour, 0)
+    local time_to_sunrise = sun_timestamps.sunrise_ts - getEpoch()
+    local time_to_sunset = sun_timestamps.sunset_ts - getEpoch()
+	
+	local next_events = calendar.get_next_n_events(3)
+	
+    local line_sep = "<slate_grey>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━<reset>"
+	local title = string.format("          <white>..:: %s ::..", cal.config.name)
+    local subtitle = string.format("          <dim_grey>(%s. %s, dzien %d/%d)<reset>", month_info.day, month_info.name, day, cal.config.days_in_year)
+    
+    local line1_part1 = string.format("<light_steel_blue>Godzina: <white>%s", calendar.format_12h(hour, false))
+    local line1_part2 = string.format("<light_steel_blue>Pora Roku: <white>%s", season)
+    local line1_padding = 35 - #calendar.strip_colors(line1_part1)
+    if line1_padding < 1 then line1_padding = 1 end
+    local line1 = line1_part1 .. string.rep(" ", line1_padding) .. line1_part2
+
+    local line2_part1 = string.format("<gold>Nastepny swit: <white>%s", os.date("%H:%M", sun_timestamps.sunrise_ts) .. " (za " .. calendar.resttime(time_to_sunrise) .. ")")
+    local line2_part2 = string.format("<gold>Nastepny zmierzch: <white>%s", os.date("%H:%M", sun_timestamps.sunset_ts) .. " (za " .. calendar.resttime(time_to_sunset) .. ")")
+    local line2_padding = 35 - #calendar.strip_colors(line2_part1)
+    if line2_padding < 1 then line2_padding = 1 end
+    local line2 = line2_part1 .. string.rep(" ", line2_padding) .. line2_part2
+
+	local events_string = ""
+	if #next_events > 0 then
+		local events_list = {}
+		for _, event in ipairs(next_events) do
+			local remaining_time = event.timestamp - getEpoch()
+			if remaining_time > 0 then
+                local event_desc = event.desc .. string.rep(" ", 20 - #event.desc)
+				table.insert(events_list, string.format("  %s<%s>%s <yellow>-> <wheat>za %-10s <gray>(%s)", 
+                    calendar.get_prefix(event.type), event.color, event_desc, 
+                    calendar.resttime(remaining_time), os.date('%H:%M %d.%m', event.timestamp)))
+			end
+		end
+		events_string = table.concat(events_list, "\n")
+	else
+		events_string = "  <dim_gray>Brak nadchodzących wydarzeń do wyświetlenia."
+	end
+
+	cecho("\n" .. line_sep .. "\n" .. title .. "\n" .. subtitle .. "\n" .. line_sep .. "\n" .. line1 .. "\n" .. line2 .. "\n" .. line_sep .. "\n" .. "<light_steel_blue>NADCHODZACE WYDARZENIA:\n<reset>" .. events_string .. "\n" .. line_sep .. "\n")
+end
+
+function calendar.get_next_n_events(n, filters)
+    local now = getEpoch()
+    local union = calendar.get_events_results()
+    local next_events = {}
+    for _, event in ipairs(union) do
+        if (filters == nil or table_contains(filters, event.type)) and event.timestamp >= now then
+            table.insert(next_events, event)
+            if #next_events == n then break end
+        end
+    end
+    return next_events
+end
+
+function calendar.recalibrate_by_event(cal_name, event_type)
+	if not cal_name or not calendar[cal_name] or not calendar[cal_name].data.offset or calendar[cal_name].data.offset == 0 then return end
+	local cal = calendar[cal_name]
+	local now = getEpoch()
+	local seconds_in_game_day = 24 * calendar.gamehour_real_time
+	local elapsed_time_in_year = (now - cal.data.offset) % cal.config.year_time
+	local current_game_day = math.floor(elapsed_time_in_year / seconds_in_game_day) + 1
+	if not current_game_day then return end
+
+	local sun_times = calendar.get_sunrise_sunset(cal, current_game_day)
+	local event_time_str = (event_type == "sunrise") and sun_times.sunrise or sun_times.sunset
+	if not event_time_str then return end
+
+	local event_minutes = calendar.time_to_minutes(event_time_str)
+	local event_seconds_into_day = event_minutes * (calendar.gamehour_real_time / 60)
+	local day_start_timestamp_template = cal.data.template[current_game_day][0]
+	local new_offset = now - (day_start_timestamp_template + event_seconds_into_day)
+
+	cal.data.offset = new_offset
+	calendar[cal_name] = calendar.create_calendar(cal, new_offset)
+	cecho(string.format("\n<light_steel_blue>Kalendarz (%s) został automatycznie zsynchronizowany.<reset>", cal.config.name))
+end
+
+calendar.init()
+
+				]]>
+				</script>
+				<eventHandlerList />
+			</Script>
+		</ScriptGroup>
+	</ScriptPackage>
+	<AliasPackage>
+		<AliasGroup isActive="yes" isFolder="yes">
+			<name>Kalendarz 3.3</name>
+			<script></script>
+			<command></command>
+			<packageName>Kalendarz 3.3</packageName>
+			<regex></regex>
+			<Alias isActive="yes" isFolder="no">
+				<name>czas</name>
+				<script>calendar.show_calendar_results(
+  {
+    "new_moon_imperial", "full_moon_imperial", "season_imperial",
+    "special_imperial", "full_moon_ishtar", "season_ishtar",
+    "special_ishtar", "spy_ishtar", "fishman_ishtar",
+    "equinox_ishtar", "solstice_ishtar", "treasury_ishtar", "eys_feast_ishtar"
+  },
+  2
+)</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^\/czas$</regex>
+			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>czas+</name>
+				<script>calendar.show_calendar_results(
+  {
+    "new_moon_imperial", "season_imperial", "special_imperial",
+    "full_moon_ishtar", "season_ishtar", "special_ishtar",
+    "spy_ishtar", "fishman_ishtar", "equinox_ishtar",
+    "solstice_ishtar", "treasury_ishtar", "eys_feast_ishtar"
+  }
+)
+</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^\/czas\+$</regex>
+			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>czas w imperium</name>
+				<script>calendar.show_calendar_results(
+  {"new_moon_imperial", "season_imperial", "full_moon_imperial", "special_imperial"},
+  3
+)
+</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^/czas_imperium$</regex>
+			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>czas w imperium+</name>
+				<script>calendar.show_calendar_results(
+  {"new_moon_imperial", "season_imperial", "full_moon_imperial", "special_imperial"}
+)
+</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^\/czas_imperium\+$</regex>
+			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>czas w ishtar</name>
+				<script>calendar.show_calendar_results(
+  {
+    "full_moon_ishtar", "season_ishtar", "special_ishtar",
+    "spy_ishtar", "fishman_ishtar", "equinox_ishtar",
+    "solstice_ishtar", "eys_feast_ishtar"
+  },
+  3
+)
+</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^\/czas_ishtar$</regex>
+			</Alias>
+			<Alias isActive="yes" isFolder="no">
+				<name>czas w ishtar+</name>
+				<script>calendar.show_calendar_results(
+  {
+    "full_moon_ishtar", "season_ishtar", "special_ishtar",
+    "spy_ishtar", "fishman_ishtar", "equinox_ishtar",
+    "solstice_ishtar", "eys_feast_ishtar"
+  }
+)
+</script>
+				<command></command>
+				<packageName></packageName>
+				<regex>^\/czas_ishtar\+$</regex>
+			</Alias>
+		</AliasGroup>
+	</AliasPackage>
+	<TriggerPackage>
+		<TriggerGroup isActive="yes" isFolder="yes" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+			<name>Kalendarz 3.3</name>
+			<script></script>
+			<triggerType>0</triggerType>
+			<conditonLineDelta>0</conditonLineDelta>
+			<mStayOpen>0</mStayOpen>
+			<mCommand></mCommand>
+			<packageName>Kalendarz 3.3</packageName>
+			<mFgColor>#ff0000</mFgColor>
+			<mBgColor>#ffff00</mBgColor>
+			<mSoundFile></mSoundFile>
+			<colorTriggerFgColor>#000000</colorTriggerFgColor>
+			<colorTriggerBgColor>#000000</colorTriggerBgColor>
+			<regexCodeList />
+			<regexCodePropertyList />
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>kalendarz ishtar</name>
+				<script>
+				<![CDATA[
+local H = matches[3]
+local h = calendar.string2int[matches[3]]
+local pd = matches[4]
+local m = matches[6]
+
+if not h or not m or not calendar.string2int[matches[5]] then return end
+
+local d = calendar.string2int[matches[5]]
+local yd = calendar.ishtar.config.first_day_of_calparts[m] + d - 1
+
+if pd == "wieczorem" or pd == "poludniu" or (pd == "nocy" and h > 7) then
+  h = h + 12
+end
+
+calendar.ishtar.data.precision = 119
+calendar.ishtar = calendar.refresh_calendar(calendar.ishtar, yd, h)
+calendar.display_full_time_info(calendar.ishtar, yd, h)
+]]>
+</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>(^Jest w przyblizeniu (\w+) (?:|w|po|przed|nad|poznym)\s*(dzien|nocy|poludniu|poludniem|poludnie|rano|ranem|wieczorem).*, (.*) dzien pory (\w+))</string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>1</integer>
+				</regexCodePropertyList>
+			</Trigger>
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>kalendarz imperium</name>
+				<script>
+				<![CDATA[
+local cm = table_size(matches)
+local H = matches[3]
+local h = calendar.string2int[matches[3]]
+local pd = matches[4]
+local m = (cm > 5) and matches[6] or matches[5]
+
+if not h or not m then return end
+
+local yd
+local special_imperial_days = {"Hexentag", "Mitterfruhl", "Sonnenstill", "Geheimnistag", "Mitterherbst"}
+if table_contains(special_imperial_days, m) then 
+  yd = calendar.imperial.config.first_day_of_calparts[m]
+else
+  if not calendar.string2int[matches[5]] then return end
+  local d = calendar.string2int[matches[5]]
+  yd = calendar.imperial.config.first_day_of_calparts[m] + d - 1
+end
+
+if not yd then return end
+
+if pd == "wieczorem" or pd == "poludniu" or (pd == "nocy" and h > 8) then h = h + 12 end
+
+calendar.imperial.data.precision = 119
+calendar.imperial = calendar.refresh_calendar(calendar.imperial, yd, h)
+calendar.display_full_time_info(calendar.imperial, yd, h)
+]]>
+</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>(^Jest w przyblizeniu (\w+) (?:|w|po|przed|nad|poznym)\s*(dzien|nocy|...|wieczorem).*, (.*) dzien miesiaca (\w+))</string>
+					<string>(^Jest w przyblizeniu (\w+) ... , (.*), dzien (\w+))</string>
+					<string>(^Jest w przyblizeniu (\w+) ... , dzien (\w+))</string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>1</integer>
+					<integer>1</integer>
+					<integer>1</integer>
+				</regexCodePropertyList>
+			</Trigger>
+			<Trigger isActive="yes" isFolder="no" isTempTrigger="no" isMultiline="no" isPerlSlashGOption="no" isColorizerTrigger="no" isFilterTrigger="no" isSoundTrigger="no" isColorTrigger="no" isColorTriggerFg="no" isColorTriggerBg="no">
+				<name>kalendarz imperium eventy</name>
+				<script>
+				<![CDATA[
+if matches[2] and matches[2]:find("noc Geheimnisnacht") then
+  -- calendar.imperial = calendar.refresh_calendar(calendar.imperial, 201, 17)
+elseif matches[2] and matches[2]:find("pierwszy dzien nowego roku") then
+  calendar.imperial = calendar.refresh_calendar(calendar.imperial, 1, 8)
+elseif matches[1]:find("promienie wschodzacego slonca") then
+	calendar.recalibrate_by_event("imperial", "sunrise")
+elseif matches[1]:find("Wieczorna zorza gasnie") then
+	calendar.recalibrate_by_event("imperial", "sunset")
+end
+]]>
+</script>
+				<triggerType>0</triggerType>
+				<conditonLineDelta>0</conditonLineDelta>
+				<mStayOpen>0</mStayOpen>
+				<mCommand></mCommand>
+				<packageName></packageName>
+				<mFgColor>#ff0000</mFgColor>
+				<mBgColor>#ffff00</mBgColor>
+				<mSoundFile></mSoundFile>
+				<colorTriggerFgColor>#000000</colorTriggerFgColor>
+				<colorTriggerBgColor>#000000</colorTriggerBgColor>
+				<regexCodeList>
+					<string>^Ostatnie promienie zachodzacego slonca (.*) W Starym Swiecie rozpoczyna sie (.*)\.$</string>
+					<string>^Pierwsze promienie wschodzacego slonca (.*)\. W Starym Swiecie rozpoczyna sie (.*)\.$</string>
+					<string>^Przesiane przez geste galezie, ukosne promienie wschodzacego slonca .* kolejny dzien\.$</string>
+					<string>^Wieczorna zorza gasnie, a miedzy drzewami rozsnuwa sie calun mgly\..*$</string>
+				</regexCodeList>
+				<regexCodePropertyList>
+					<integer>1</integer>
+					<integer>1</integer>
+					<integer>1</integer>
+					<integer>1</integer>
+				</regexCodePropertyList>
+			</Trigger>
+		</TriggerGroup>
+	</TriggerPackage>
+</MudletPackage>
+" in the document abo
