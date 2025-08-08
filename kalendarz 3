@@ -88,6 +88,7 @@ calendar = {
         {day=139, hour=21, desc="Poczatek nowiu", color="slate_blue", type="new_moon_imperial"},
         {day=140, hour=5,  desc="Koniec nowiu", color="slate_blue", type="new_moon_imperial"},
         {day=151, hour=21, desc="Poczatek pelni", color="powder_blue", type="full_moon_imperial"},
+   
         {day=152, hour=5,  desc="Koniec pelni", color="powder_blue", type="full_moon_imperial"},
         {day=164, hour=21, desc="Poczatek nowiu", color="slate_blue", type="new_moon_imperial"},
         {day=165, hour=5,  desc="Koniec nowiu", color="slate_blue", type="new_moon_imperial"},
@@ -95,6 +96,7 @@ calendar = {
         {day=177, hour=4,  desc="Koniec pelni", color="powder_blue", type="full_moon_imperial"},
         {day=189, hour=22, desc="Poczatek nowiu", color="slate_blue", type="new_moon_imperial"},
         {day=190, hour=4,  desc="Koniec nowiu", color="slate_blue", type="new_moon_imperial"},
+        
         {day=201, hour=17, desc="Leci pyl", color="dodger_blue", type="special_imperial"},
         {day=202, hour=20, desc="Poczatek pelni", color="powder_blue", type="full_moon_imperial"},
         {day=203, hour=5,  desc="Koniec pelni", color="powder_blue", type="full_moon_imperial"},
@@ -103,6 +105,7 @@ calendar = {
         {day=227, hour=20, desc="Poczatek pelni", color="powder_blue", type="full_moon_imperial"},
         {day=228, hour=5,  desc="Koniec pelni", color="powder_blue", type="full_moon_imperial"},
         {day=239, hour=20, desc="Poczatek nowiu", color="slate_blue", type="new_moon_imperial"},
+ 
         {day=240, hour=5,  desc="Koniec nowiu", color="slate_blue", type="new_moon_imperial"},
         {day=251, hour=20, desc="Poczatek pelni", color="powder_blue", type="full_moon_imperial"},
         {day=252, hour=5,  desc="Koniec pelni", color="powder_blue", type="full_moon_imperial"},
@@ -110,6 +113,7 @@ calendar = {
         {day=264, hour=20, desc="Poczatek nowiu", color="slate_blue", type="new_moon_imperial"},
         {day=265, hour=5,  desc="Koniec nowiu", color="slate_blue", type="new_moon_imperial"},
         {day=276, hour=19, desc="Poczatek pelni", color="powder_blue", type="full_moon_imperial"},
+       
         {day=277, hour=6,  desc="Koniec pelni", color="powder_blue", type="full_moon_imperial"},
         {day=278, hour=19, desc="Leci pyl", color="dodger_blue", type="special_imperial"},
         {day=289, hour=19, desc="Poczatek nowiu", color="slate_blue", type="new_moon_imperial"},
@@ -125,6 +129,7 @@ calendar = {
         {day=340, hour=7,  desc="Koniec nowiu", color="slate_blue", type="new_moon_imperial"},
         {day=351, hour=17, desc="Poczatek pelni", color="powder_blue", type="full_moon_imperial"},
         {day=352, hour=7,  desc="Koniec pelni", color="powder_blue", type="full_moon_imperial"},
+  
         {day=364, hour=17, desc="Poczatek nowiu", color="slate_blue", type="new_moon_imperial"},
         {day=365, hour=7,  desc="Koniec nowiu", color="slate_blue", type="new_moon_imperial"},
         {day=376, hour=16, desc="Poczatek pelni", color="powder_blue", type="full_moon_imperial"},
@@ -132,6 +137,7 @@ calendar = {
         {day=389, hour=16, desc="Poczatek nowiu", color="slate_blue", type="new_moon_imperial"},
         {day=390, hour=8,  desc="Koniec nowiu", color="slate_blue", type="new_moon_imperial"},
         {day=18, hour=0,   desc="Poczatek wiosny", color="green", type="season_imperial"},
+      
         {day=118, hour=0,  desc="Poczatek lata", color="yellow", type="season_imperial"},
         {day=218, hour=0,  desc="Poczatek jesieni", color="brown", type="season_imperial"},
         {day=319, hour=0,  desc="Poczatek zimy", color="white", type="season_imperial"},
@@ -144,7 +150,8 @@ calendar = {
     config = {
       name = "Kalendarz ishtar",
       domain = "ishtar",
-      days_in_year = 360,
+   
+       days_in_year = 360,
       year_time = 1036680,
       first_day_of_calparts = {
         ["Yule"] = 1, ["Imbaelk"] = 46, ["Birke"] = 91, ["Blathe"] = 136, ["Feainn"] = 181, ["Lammas"] = 226, ["Velen"] = 271, ["Saovine"] = 316,
@@ -157,12 +164,14 @@ calendar = {
 		{day=181, sunrise="05:00", sunset="21:00"}, {day=271, sunrise="06:30", sunset="18:30"}
 	  },
       search_times = {
+  
         {day=1, hour=0,    desc="Poczatek zimy", color="white", type="season_ishtar"},
         {day=1, hour=0,    desc="Przesilenie zimowe", color="white", type="solstice_ishtar"},
         {day=1, hour=0,    desc="Ryboludzie", color="white", type="fishman_ishtar"},
         {day=6, hour=5,    desc="Eysenlaan festyn", color="magenta", type="eys_feast_ishtar"},
         {day=9, hour=23,   desc="Eysenlaan koniec", color="magenta", type="eys_feast_ishtar"},
         {day=4, hour=0,    desc="Poczatek pelni", color="powder_blue", type="full_moon_ishtar"},
+        
         {day=6, hour=0,    desc="Koniec pelni", color="powder_blue", type="full_moon_ishtar"},
         {day=4, hour=2,    desc="Szpiedzy wychodza", color="chocolate", type="spy_ishtar"},
         {day=4, hour=8,    desc="Szpiedzy znikaja", color="chocolate", type="spy_ishtar"},
@@ -183,6 +192,7 @@ calendar = {
         {day=55, hour=22,  desc="Szpiedzy wychodza", color="chocolate", type="spy_ishtar"},
         {day=56, hour=7,   desc="Szpiedzy znikaja", color="chocolate", type="spy_ishtar"},
         {day=76, hour=0,   desc="Poczatek pelni", color="powder_blue", type="full_moon_ishtar"},
+        
         {day=78, hour=0,   desc="Koniec pelni", color="powder_blue", type="full_moon_ishtar"},
         {day=76, hour=2,   desc="Szpiedzy wychodza", color="chocolate", type="spy_ishtar"},
         {day=76, hour=7,   desc="Szpiedzy znikaja", color="chocolate", type="spy_ishtar"},
@@ -190,6 +200,7 @@ calendar = {
         {day=80, hour=7,   desc="Szpiedzy znikaja", color="chocolate", type="spy_ishtar"},
         {day=91, hour=0,   desc="Poczatek wiosny", color="green", type="season_ishtar"},
         {day=91, hour=0,   desc="Rownonoc wiosenna", color="green", type="equinox_ishtar"},
+    
         {day=91, hour=0,   desc="Ryboludzie", color="green", type="fishman_ishtar"},
         {day=96, hour=5,  desc="Eysenlaan festyn", color="magenta", type="eys_feast_ishtar"},
         {day=99, hour=23, desc="Eysenlaan koniec", color="magenta", type="eys_feast_ishtar"},
@@ -197,6 +208,7 @@ calendar = {
         {day=102, hour=0,  desc="Koniec pelni", color="powder_blue", type="full_moon_ishtar"},
         {day=100, hour=2,  desc="Szpiedzy wychodza", color="chocolate", type="spy_ishtar"},
         {day=100, hour=6,  desc="Szpiedzy znikaja", color="chocolate", type="spy_ishtar"},
+       
         {day=103, hour=22, desc="Szpiedzy wychodza", color="chocolate", type="spy_ishtar"},
         {day=104, hour=6,  desc="Szpiedzy znikaja", color="chocolate", type="spy_ishtar"},
         {day=124, hour=0,  desc="Poczatek pelni", color="powder_blue", type="full_moon_ishtar"},
@@ -212,6 +224,7 @@ calendar = {
         {day=148, hour=2,  desc="Szpiedzy wychodza", color="chocolate", type="spy_ishtar"},
         {day=148, hour=5,  desc="Szpiedzy znikaja", color="chocolate", type="spy_ishtar"},
         {day=151, hour=22, desc="Szpiedzy wychodza", color="chocolate", type="spy_ishtar"},
+ 
         {day=152, hour=5,  desc="Szpiedzy znikaja", color="chocolate", type="spy_ishtar"},
         {day=172, hour=0,  desc="Poczatek pelni", color="powder_blue", type="full_moon_ishtar"},
         {day=174, hour=0,  desc="Koniec pelni", color="powder_blue", type="full_moon_ishtar"},
@@ -219,6 +232,7 @@ calendar = {
         {day=172, hour=5,  desc="Szpiedzy znikaja", color="chocolate", type="spy_ishtar"},
         {day=175, hour=22, desc="Szpiedzy wychodza", color="chocolate", type="spy_ishtar"},
         {day=176, hour=5,  desc="Szpiedzy znikaja", color="chocolate", type="spy_ishtar"},
+    
         {day=181, hour=0,  desc="Poczatek lata", color="yellow", type="season_ishtar"},
         {day=181, hour=0,  desc="Przesilenie letnie", color="yellow", type="solstice_ishtar"},
         {day=181, hour=0,  desc="Ryboludzie", color="yellow", type="fishman_ishtar"},
@@ -226,6 +240,7 @@ calendar = {
         {day=189, hour=23, desc="Eysenlaan koniec", color="magenta", type="eys_feast_ishtar"},
         {day=196, hour=0,  desc="Poczatek pelni", color="powder_blue", type="full_moon_ishtar"},
         {day=198, hour=0,  desc="Koniec pelni", color="powder_blue", type="full_moon_ishtar"},
+        
         {day=196, hour=2,  desc="Szpiedzy wychodza", color="chocolate", type="spy_ishtar"},
         {day=196, hour=4,  desc="Szpiedzy znikaja", color="chocolate", type="spy_ishtar"},
         {day=199, hour=22, desc="Szpiedzy wychodza", color="chocolate", type="spy_ishtar"},
@@ -241,6 +256,7 @@ calendar = {
         {day=244, hour=0,  desc="Poczatek pelni", color="powder_blue", type="full_moon_ishtar"},
         {day=246, hour=0,  desc="Koniec pelni", color="powder_blue", type="full_moon_ishtar"},
         {day=244, hour=2,  desc="Szpiedzy wychodza", color="chocolate", type="spy_ishtar"},
+ 
         {day=244, hour=5,  desc="Szpiedzy znikaja", color="chocolate", type="spy_ishtar"},
         {day=247, hour=22, desc="Szpiedzy wychodza", color="chocolate", type="spy_ishtar"},
         {day=248, hour=5,  desc="Szpiedzy znikaja", color="chocolate", type="spy_ishtar"},
@@ -248,6 +264,7 @@ calendar = {
         {day=270, hour=0,  desc="Koniec pelni", color="powder_blue", type="full_moon_ishtar"},
         {day=268, hour=2,  desc="Szpiedzy wychodza", color="chocolate", type="spy_ishtar"},
         {day=268, hour=5,  desc="Szpiedzy znikaja", color="chocolate", type="spy_ishtar"},
+    
         {day=271, hour=0,  desc="Poczatek jesieni", color="brown", type="season_ishtar"},
         {day=271, hour=0,  desc="Rownonoc jesienna", color="brown", type="equinox_ishtar"},
         {day=271, hour=0,  desc="Ryboludzie", color="brown", type="fishman_ishtar"},
@@ -270,6 +287,7 @@ calendar = {
         {day=320, hour=6,  desc="Szpiedzy znikaja", color="chocolate", type="spy_ishtar"},
         {day=321, hour=5,  desc="Eysenlaan festyn", color="magenta", type="eys_feast_ishtar"},
         {day=324, hour=23, desc="Eysenlaan koniec", color="magenta", type="eys_feast_ishtar"},
+  
         {day=340, hour=0,  desc="Poczatek pelni", color="powder_blue", type="full_moon_ishtar"},
         {day=342, hour=0,  desc="Koniec pelni", color="powder_blue", type="full_moon_ishtar"},
         {day=340, hour=2,  desc="Szpiedzy wychodza", color="chocolate", type="spy_ishtar"},
@@ -336,7 +354,8 @@ function calendar.create_calendar(cal, offset)
       end
     end
     if offset > 0 then
-      cal.data.offset = offset
+   
+       cal.data.offset = offset
       cal = calendar.reload_calendar(cal)
     end
   else
@@ -399,10 +418,14 @@ function calendar.get_events_results()
 end
 
 function calendar.resttime(time)
-  if time <= 0 then return "0s" end
-  local days = math.floor(time/86400); local rem = time % 86400
-  local hours = math.floor(rem/3600); rem = rem % 3600
-  local minutes = math.floor(rem/60); local seconds = math.floor(rem % 60)
+ 
+   if time <= 0 then return "0s" end
+  local days = math.floor(time/86400);
+  local rem = time % 86400
+  local hours = math.floor(rem/3600);
+  rem = rem % 3600
+  local minutes = math.floor(rem/60);
+  local seconds = math.floor(rem % 60)
   if days > 0 then return days.."d "..hours.."h"
   elseif hours > 0 then return hours.."h "..minutes.."m"
   else return minutes.."m "..seconds.."s" end
@@ -415,6 +438,7 @@ function calendar.format_12h(hour, with_suffix)
     local color = suffix == "am" and "light_yellow" or "light_grey"
     if with_suffix then
         return string.format("<%s>%d%s<reset>", color, h12, suffix)
+    
     else
         return string.format("<%s>%d:00<reset>", color, h12)
     end
@@ -432,6 +456,7 @@ function calendar.show_calendar_results(filters, in_real_days)
       local output_line
       local event_desc = v.desc .. string.rep(" ", 20 - #v.desc)
       
+      
       if desc_type then
         output_line = string.format("<%s>%s <yellow>-> <wheat>za %-10s <gray>(%s)\n", v["color"], event_desc, calendar.resttime(t), os.date('%H:%M %d.%m', v["timestamp"]))
       else
@@ -441,7 +466,8 @@ function calendar.show_calendar_results(filters, in_real_days)
       if time_limit > 0 then
         if t >= 0 and t <= time_limit then cecho(output_line) end
       else
-        if t >=0 then cecho(output_line) end
+     
+         if t >=0 then cecho(output_line) end
       end
     end
   end
@@ -455,14 +481,16 @@ function calendar.save_local_time_data()
   }
   local path = calendar.json_file_path
   local file, err = io.open(path, "w")
-  if file then file:write(yajl.to_string(data)); file:close()
+  if file then file:write(yajl.to_string(data));
+  file:close()
   else print_log("Nie udalo sie zapisac pliku JSON: " .. tostring(err)) end
 end
 
 function calendar.read_local_time_data()
   if io.exists(calendar.json_file_path) then
     local file, err = io.open(calendar.json_file_path, "r")
-    if not file then print_log("Nie udalo sie odczytac pliku JSON: " .. tostring(err)); return end
+    if not file then print_log("Nie udalo sie odczytac pliku JSON: " .. tostring(err));
+    return end
     local content = file:read("*a"); file:close()
     local data = yajl.to_value(content)
     if data and data["imperial_offset"] and tonumber(data["imperial_offset"]) > 0 then
@@ -479,7 +507,8 @@ end
 
 function calendar.init()
   for _, cal in pairs({calendar.imperial, calendar.ishtar}) do
-      if cal.config.seasons then
+   
+       if cal.config.seasons then
           table.sort(cal.config.seasons, function(a, b) return a.day < b.day end)
       end
       cal.config.sorted_months = {}
@@ -510,6 +539,7 @@ function calendar.handle_gmcp_time()
       local cal_name = calendar.domain
       local event_type = gmcp.room.time.daylight and "sunrise" or "sunset"
       cecho(string.format("\n<cornflower_blue>INFO: <white>Wykryto %s, synchronizowanie kalendarza...", event_type))
+  
       calendar.recalibrate_by_event(cal_name, event_type)
   end
   calendar.last_daylight_status = gmcp.room.time.daylight
@@ -531,7 +561,8 @@ function calendar.get_monthday(cal, day)
   local sorted_months = cal.config.sorted_months
   local month_info = {day=0, month="nieznany"}
   for i = #sorted_months, 1, -1 do
-    if day >= sorted_months[i].start then
+ 
+       if day >= sorted_months[i].start then
       month_info = {day = day - sorted_months[i].start + 1, month = sorted_months[i].name}
       break
     end
@@ -564,7 +595,8 @@ end
 function table_n_union(t1, t2)
   local res = {}
   for _, v in ipairs(t1) do table.insert(res, v) end
-  for _, v in ipairs(t2) do table.insert(res, v) end
+  for _, v in ipairs(t2) do 
+  table.insert(res, v) end
   return res
 end
 
@@ -581,7 +613,8 @@ function calendar.get_month_info(cal, day)
     local cache_key = cal.config.domain .. "_monthinfo_" .. tostring(day)
     if calendar.cache[cache_key] then return calendar.cache[cache_key] end
 
-    if not cal.config.sorted_months then return {name = "Błąd", day = 0, length = 0} end
+    if not cal.config.sorted_months then return {name = "Błąd", day = 0, length = 0} 
+ end
     local sorted_months = cal.config.sorted_months
     local current_month = {name = "Unknown", day = 0, length = 0}
     for i = #sorted_months, 1, -1 do
@@ -599,48 +632,81 @@ function calendar.get_month_info(cal, day)
 end
 
 function calendar.time_to_minutes(time_str)
+    if not time_str then return 0 end
     local h, m = time_str:match("(%d+):(%d+)")
     return (tonumber(h) or 0) * 60 + (tonumber(m) or 0)
 end
 
 function calendar.minutes_to_time(minutes)
     local h = math.floor(minutes / 60) % 24
-    local m = math.floor(minutes % 60)
+   
+     local m = math.floor(minutes % 60)
     return string.format("%02d:%02d", h, m)
 end
 
 function calendar.get_sunrise_sunset(cal, day)
-    -- Priorytet dla zaobserwowanych danych
-    if calendar.observed_sun_times[cal.config.domain] and calendar.observed_sun_times[cal.config.domain][tostring(day)] then
-        return calendar.observed_sun_times[cal.config.domain][tostring(day)]
+    -- Pobierz zaobserwowane dane, jeśli istnieją
+    local observed = calendar.observed_sun_times[cal.config.domain] and calendar.observed_sun_times[cal.config.domain][tostring(day)]
+
+    -- Jeśli mamy obie zaobserwowane wartości, możemy je zwrócić od razu
+    if observed and observed.sunrise and observed.sunset then
+        return observed
     end
 
-    -- Fallback do interpolacji
+    -- Fallback do interpolacji, jeśli nie ma pełnych danych zaobserwowanych
+    -- Użyj cache tylko wtedy, gdy nie ma żadnych nowych danych zaobserwowanych
     local cache_key = cal.config.domain .. "_sun_" .. tostring(day)
-    if calendar.cache[cache_key] then return calendar.cache[cache_key] end
+    if calendar.cache[cache_key] and not observed then
+        return calendar.cache[cache_key]
+    end
 
     local cycle = cal.config.sun_cycle
     table.sort(cycle, function(a,b) return a.day < b.day end)
+    
     local p1, p2
-    if day < cycle[1].day then p1, p2 = cycle[#cycle], cycle[1]
+    if day < cycle[1].day then
+        p1, p2 = cycle[#cycle], cycle[1]
     else
         for i = 1, #cycle do
             if day >= cycle[i].day then
                 p1 = cycle[i]
                 p2 = (i == #cycle) and cycle[1] or cycle[i+1]
-            else break end
+            else
+                break
+            end
         end
     end
-    if not p1 or not p2 then return { sunrise = "06:00", sunset = "18:00" } end
+
+    if not p1 or not p2 then
+        -- Zwróć domyślne wartości, jeśli coś pójdzie nie tak
+        return { sunrise = "06:00", sunset = "18:00" }
+    end
+
     local total_days = (p2.day < p1.day) and (cal.config.days_in_year - p1.day) + p2.day or p2.day - p1.day
-	if total_days == 0 then return { sunrise = p1.sunrise, sunset = p1.sunset } end
-    local days_into = (day < p1.day) and (cal.config.days_in_year - p1.day) + day or day - p1.day
-    local progress = days_into / total_days
-    local sunrise1, sunset1 = calendar.time_to_minutes(p1.sunrise), calendar.time_to_minutes(p1.sunset)
-    local sunrise2, sunset2 = calendar.time_to_minutes(p2.sunrise), calendar.time_to_minutes(p2.sunset)
-    local current_sunrise = calendar.minutes_to_time(sunrise1 + (sunrise2 - sunrise1) * progress)
-    local current_sunset = calendar.minutes_to_time(sunset1 + (sunset2 - sunset1) * progress)
-    local result = { sunrise = current_sunrise, sunset = current_sunset }
+    
+    local result
+    if total_days == 0 then
+        result = { sunrise = p1.sunrise, sunset = p1.sunset }
+    else
+        local days_into = (day < p1.day) and (cal.config.days_in_year - p1.day) + day or day - p1.day
+        local progress = days_into / total_days
+        
+        local sunrise1, sunset1 = calendar.time_to_minutes(p1.sunrise), calendar.time_to_minutes(p1.sunset)
+        local sunrise2, sunset2 = calendar.time_to_minutes(p2.sunrise), calendar.time_to_minutes(p2.sunset)
+
+        local current_sunrise = calendar.minutes_to_time(sunrise1 + (sunrise2 - sunrise1) * progress)
+        local current_sunset = calendar.minutes_to_time(sunset1 + (sunset2 - sunset1) * progress)
+        
+        result = { sunrise = current_sunrise, sunset = current_sunset }
+    end
+    
+    -- Połącz wynik interpolacji z zaobserwowanymi danymi
+    if observed then
+        if observed.sunrise then result.sunrise = observed.sunrise end
+        if observed.sunset then result.sunset = observed.sunset end
+    end
+    
+    -- Zapisz w cache i zwróć pełny wynik
     calendar.cache[cache_key] = result
     return result
 end
@@ -652,7 +718,8 @@ function calendar.get_next_sun_event_timestamp(cal, day)
     local sunrise_today_min = calendar.time_to_minutes(sun_times_today.sunrise)
     local sunset_today_min = calendar.time_to_minutes(sun_times_today.sunset)
     
-    local day_start_ts = cal.data.calendar[day][0]
+   
+     local day_start_ts = cal.data.calendar[day][0]
     local sunrise_today_ts = day_start_ts + (sunrise_today_min * (calendar.gamehour_real_time / 60))
     local sunset_today_ts = day_start_ts + (sunset_today_min * (calendar.gamehour_real_time / 60))
 
@@ -664,7 +731,8 @@ function calendar.get_next_sun_event_timestamp(cal, day)
         local next_day = (day % cal.config.days_in_year) + 1
         local sun_times_tomorrow = calendar.get_sunrise_sunset(cal, next_day)
         local sunrise_tomorrow_min = calendar.time_to_minutes(sun_times_tomorrow.sunrise)
-        local next_day_start_ts = cal.data.calendar[next_day][0]
+    
+         local next_day_start_ts = cal.data.calendar[next_day][0]
         next_sunrise_ts = next_day_start_ts + (sunrise_tomorrow_min * (calendar.gamehour_real_time / 60))
     end
 
@@ -675,6 +743,7 @@ function calendar.get_next_sun_event_timestamp(cal, day)
         local sun_times_tomorrow = calendar.get_sunrise_sunset(cal, next_day)
         local sunset_tomorrow_min = calendar.time_to_minutes(sun_times_tomorrow.sunset)
         local next_day_start_ts = cal.data.calendar[next_day][0]
+  
         next_sunset_ts = next_day_start_ts + (sunset_tomorrow_min * (calendar.gamehour_real_time / 60))
     end
     
@@ -682,19 +751,67 @@ function calendar.get_next_sun_event_timestamp(cal, day)
 end
 
 function calendar.display_full_time_info(cal, day, hour)
-	if not day or not cal or not cal.data.calendar or not cal.data.calendar[day] then return end
-	local season = calendar.get_current_season(cal, day)
-	local month_info = calendar.get_month_info(cal, day)
-	
-	local sun_timestamps = calendar.get_next_sun_event_timestamp(cal, day)
-    local time_to_sunrise = sun_timestamps.sunrise_ts - getEpoch()
-    local time_to_sunset = sun_timestamps.sunset_ts - getEpoch()
-	
-	local next_events = calendar.get_next_n_events(3)
-	
+    if not day or not cal or not cal.data.calendar or not cal.data.calendar[day] then return end
+
+    local now_ts = getEpoch()
+    local day_num = tonumber(day)
+    local next_day_num = (day_num % cal.config.days_in_year) + 1
+
+    -- Zabezpieczenie na wypadek braku danych dla następnego dnia
+    if not cal.data.calendar[next_day_num] then
+        print_log("Błąd krytyczny: brak danych dla następnego dnia w kalendarzu. Spróbuj zresetować skrypt.")
+        return
+    end
+
+    -- Pobierz czasy wschodu/zachodu ("HH:MM") dla dzisiaj i jutra
+    local sun_today = calendar.get_sunrise_sunset(cal, day_num)
+    local sun_tomorrow = calendar.get_sunrise_sunset(cal, next_day_num)
+
+    -- Konwertuj czasy na minuty od początku doby
+    local sunrise_today_min = calendar.time_to_minutes(sun_today.sunrise)
+    local sunset_today_min = calendar.time_to_minutes(sun_today.sunset)
+    local sunrise_tomorrow_min = calendar.time_to_minutes(sun_tomorrow.sunrise)
+    local sunset_tomorrow_min = calendar.time_to_minutes(sun_tomorrow.sunset)
+
+    -- Pobierz timestampy początku dnia (00:00) dla dzisiaj i jutra
+    local day_start_ts = cal.data.calendar[day_num][0]
+    local next_day_start_ts = cal.data.calendar[next_day_num][0]
+
+    -- Oblicz dokładne, bezwzględne timestampy dla każdego wydarzenia
+    local sec_per_game_min = calendar.gamehour_real_time / 60
+    local sunrise_today_ts = day_start_ts + (sunrise_today_min * sec_per_game_min)
+    local sunset_today_ts = day_start_ts + (sunset_today_min * sec_per_game_min)
+    local sunrise_tomorrow_ts = next_day_start_ts + (sunrise_tomorrow_min * sec_per_game_min)
+    local sunset_tomorrow_ts = next_day_start_ts + (sunset_tomorrow_min * sec_per_game_min)
+
+    -- Ustal, które wydarzenia (dzisiejsze czy jutrzejsze) są następne w kolejności
+    local next_sunrise_ts, next_sunset_ts
+
+    if now_ts < sunrise_today_ts then
+        -- Scenariusz 1: Przed dzisiejszym wschodem słońca
+        next_sunrise_ts = sunrise_today_ts
+        next_sunset_ts = sunset_today_ts
+    elseif now_ts >= sunrise_today_ts and now_ts < sunset_today_ts then
+        -- Scenariusz 2: Po dzisiejszym wschodzie, ale przed zachodem (w ciągu dnia)
+        next_sunrise_ts = sunrise_tomorrow_ts
+        next_sunset_ts = sunset_today_ts
+    else
+        -- Scenariusz 3: Po dzisiejszym zachodzie słońca (w nocy)
+        next_sunrise_ts = sunrise_tomorrow_ts
+        next_sunset_ts = sunset_tomorrow_ts
+    end
+
+    local time_to_sunrise = next_sunrise_ts - now_ts
+    local time_to_sunset = next_sunset_ts - now_ts
+
+    -- === Reszta funkcji formatującej (bez zmian) ===
+    local season = calendar.get_current_season(cal, day_num)
+    local month_info = calendar.get_month_info(cal, day_num)
+    local next_events = calendar.get_next_n_events(3)
+    
     local line_sep = "<slate_grey>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━<reset>"
-	local title = string.format("          <white>..:: %s ::..", cal.config.name)
-    local subtitle = string.format("          <dim_grey>(%s. %s, dzien %d/%d)<reset>", month_info.day, month_info.name, day, cal.config.days_in_year)
+    local title = string.format("           <white>..:: %s ::..", cal.config.name)
+    local subtitle = string.format("          <dim_grey>(%s. %s, dzien %d/%d)<reset>", month_info.day, month_info.name, day_num, cal.config.days_in_year)
     
     local line1_part1 = string.format("<light_steel_blue>Godzina: <white>%s", calendar.format_12h(hour, false))
     local line1_part2 = string.format("<light_steel_blue>Pora Roku: <white>%s", season)
@@ -702,35 +819,36 @@ function calendar.display_full_time_info(cal, day, hour)
     if line1_padding < 1 then line1_padding = 1 end
     local line1 = line1_part1 .. string.rep(" ", line1_padding) .. line1_part2
 
-    local line2_part1 = string.format("<gold>Nastepny swit: <white>%s", os.date("%H:%M", sun_timestamps.sunrise_ts) .. " (za " .. calendar.resttime(time_to_sunrise) .. ")")
-    local line2_part2 = string.format("<gold>Nastepny zmierzch: <white>%s", os.date("%H:%M", sun_timestamps.sunset_ts) .. " (za " .. calendar.resttime(time_to_sunset) .. ")")
+    local line2_part1 = string.format("<gold>Nastepny swit: <white>%s", os.date("%H:%M", next_sunrise_ts) .. " (za " .. calendar.resttime(time_to_sunrise) .. ")")
+    local line2_part2 = string.format("<gold>Nastepny zmierzch: <white>%s", os.date("%H:%M", next_sunset_ts) .. " (za " .. calendar.resttime(time_to_sunset) .. ")")
     local line2_padding = 35 - #calendar.strip_colors(line2_part1)
     if line2_padding < 1 then line2_padding = 1 end
     local line2 = line2_part1 .. string.rep(" ", line2_padding) .. line2_part2
 
-	local events_string = ""
-	if #next_events > 0 then
-		local events_list = {}
-		for _, event in ipairs(next_events) do
-			local remaining_time = event.timestamp - getEpoch()
-			if remaining_time > 0 then
+    local events_string = ""
+    if #next_events > 0 then
+        local events_list = {}
+        for _, event in ipairs(next_events) do
+            local remaining_time = event.timestamp - getEpoch()
+            if remaining_time > 0 then
                 local event_desc = event.desc .. string.rep(" ", 20 - #event.desc)
-				table.insert(events_list, string.format("  %s<%s>%s <yellow>-> <wheat>za %-10s <gray>(%s)", 
-                    calendar.get_prefix(event.type), event.color, event_desc, 
+                table.insert(events_list, string.format("  %s<%s>%s <yellow>-> <wheat>za %-10s <gray>(%s)", 
+                     calendar.get_prefix(event.type), event.color, event_desc, 
                     calendar.resttime(remaining_time), os.date('%H:%M %d.%m', event.timestamp)))
-			end
-		end
-		events_string = table.concat(events_list, "\n")
-	else
-		events_string = "  <dim_gray>Brak nadchodzących wydarzeń do wyświetlenia."
-	end
+            end
+        end
+        events_string = table.concat(events_list, "\n")
+    else
+        events_string = "  <dim_gray>Brak nadchodzących wydarzeń do wyświetlenia."
+    end
 
-	cecho("\n" .. line_sep .. "\n" .. title .. "\n" .. subtitle .. "\n" .. line_sep .. "\n" .. line1 .. "\n" .. line2 .. "\n" .. line_sep .. "\n" .. "<light_steel_blue>NADCHODZACE WYDARZENIA:\n<reset>" .. events_string .. "\n" .. line_sep .. "\n")
+    cecho("\n" .. line_sep .. "\n" .. title .. "\n" .. subtitle .. "\n" .. line_sep .. "\n" .. line1 .. "\n" .. line2 .. "\n" .. line_sep .. "\n" .. "<light_steel_blue>NADCHODZACE WYDARZENIA:\n<reset>" .. events_string .. "\n" .. line_sep .. "\n")
 end
 
 function calendar.get_next_n_events(n, filters)
     local now = getEpoch()
-    local union = calendar.get_events_results()
+  
+     local union = calendar.get_events_results()
     local next_events = {}
     for _, event in ipairs(union) do
         if (filters == nil or table_contains(filters, event.type)) and event.timestamp >= now then
@@ -763,7 +881,8 @@ function calendar.recalibrate_by_event(cal_name, event_type)
 	calendar[cal_name] = calendar.create_calendar(cal, new_offset)
     
     -- Zapisz zaobserwowany czas
-    if not calendar.observed_sun_times[cal.config.domain] then calendar.observed_sun_times[cal.config.domain] = {} end
+    if not calendar.observed_sun_times[cal.config.domain] then calendar.observed_sun_times[cal.config.domain] = {} 
+ end
     if not calendar.observed_sun_times[cal.config.domain][tostring(current_game_day)] then calendar.observed_sun_times[cal.config.domain][tostring(current_game_day)] = {} end
     calendar.observed_sun_times[cal.config.domain][tostring(current_game_day)][event_type] = event_time_str
     
@@ -818,7 +937,8 @@ calendar.init()
 			<Alias isActive="yes" isFolder="no">
 				<name>czas w imperium</name>
 				<script>calendar.show_calendar_results(
-  {"new_moon_imperial", "season_imperial", "full_moon_imperial", "special_imperial"},
+  
+ {"new_moon_imperial", "season_imperial", "full_moon_imperial", "special_imperial"},
   3
 )
 </script>
