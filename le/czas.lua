@@ -356,21 +356,6 @@ function le.czas.on_time_text(raw_text)
     return true
 end
 
-le.czas.last_sync_request_at = le.czas.last_sync_request_at or {}
-
-function le.czas.request_sync(domain)
-    domain = domain or le.czas.data.domain
-    if domain ~= "imperium" and domain ~= "ishtar" then return false end
-    if le.czas.get_game_sec(domain) then return true end
-
-    local last = le.czas.last_sync_request_at[domain] or 0
-    if epoch() - last < 30 then return false end
-    le.czas.last_sync_request_at[domain] = epoch()
-    send("czas", false)
-    le.czas.log("info", "Automatycznie pobieram czas dla domeny " .. domain .. ".")
-    return true
-end
-
 -- Domain -----------------------------------------------------------------
 
 local function detect_domain_from_gmcp()
@@ -388,9 +373,6 @@ function le.czas.on_room()
             le.czas.data.domain = detected
             le.czas.save()
             le.czas.log("info", "Wykryto domene: " .. detected)
-        end
-        if detected and not le.czas.get_game_sec(detected) then
-            le.czas.request_sync(detected)
         end
         le.czas.on_room_time()
     end)
@@ -671,9 +653,8 @@ function le.czas.UI.update()
     end
     local game_sec = le.czas.get_game_sec(domain)
     if not game_sec then
-        le.czas.request_sync(domain)
-        message(le.czas.UI.clock, "SYNCHRONIZACJA", "Automatycznie pobieram czas z gry")
-        message(le.czas.UI.event, "NAJBLIZSZY EVENT", "Oczekiwanie na czas")
+        message(le.czas.UI.clock, "BRAK SYNC", "Wpisz w grze: czas")
+        message(le.czas.UI.event, "NAJBLIZSZY EVENT", "Oczekiwanie na synchronizacje")
         return
     end
 
@@ -742,10 +723,9 @@ function le.czas.setup_aliases()
         local no_imperium = not le.czas.get_game_sec("imperium")
         local no_ishtar = not le.czas.get_game_sec("ishtar")
         if no_imperium and no_ishtar then
-            le.czas.request_sync()
             cecho([[
-<CadetBlue>(le.czas)<reset> Trwa automatyczna synchronizacja biezacej domeny.
-Odwiedz obie domeny, aby kalendarz mogl zapamietac ich czas.
+<CadetBlue>(le.czas)<reset> Brak synchronizacji dla obu domen.
+Wpisz <yellow>czas<reset> po odwiedzeniu kazdej domeny, aby zapisac jej zegar.
 ]])
             return
         end
