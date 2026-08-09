@@ -3,4 +3,5 @@ return {
     "version",
     "le.config",
     "le.czas",
+    "le.lecz",
 }
