@@ -136,9 +136,20 @@ function le.config.installUpdate()
     end
 
     local install_url = le.config.urls.install .. "?version=" .. remote
+    local plugin_path = getMudletHomeDir() .. "/plugins/Arka"
+    local backup_path = getMudletHomeDir() .. "/Arka_backup_" .. os.time()
+
     log("Rozpoczynam aktualizacje do wersji " .. remote .. ".", "pale_green")
-    log("Usuwam poprzednia instalacje przed wgraniem nowych plikow.", "powder_blue")
-    expandAlias("/odinstaluj_plugin Arka")
+
+    local moved, move_error = os.rename(plugin_path, backup_path)
+    if not moved then
+        log("Nie udalo sie przygotowac aktualizacji: " .. tostring(move_error), "light_pink")
+        log("Zamknij Mudlet, usun recznie katalog plugins/Arka i zainstaluj plugin ponownie.", "light_pink")
+        return
+    end
+
+    le.config.update.backup_path = backup_path
+    log("Kopia poprzedniej wersji: " .. backup_path, "powder_blue")
 
     tempTimer(1, function()
         expandAlias("/zainstaluj_plugin " .. install_url)
