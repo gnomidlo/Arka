@@ -47,16 +47,16 @@ end
 function le.config.showHelp()
     cecho([[
 <light_pink>╭────────────────────────────────────────────────────────╮
-<light_salmon>│ <light_pink>U<light_salmon>N<khaki>I<pale_green>C<pale_turquoise>O<light_sky_blue>R<plum>N  <white>le.conf<slate_gray> · pastelowe moduly dla Mudleta      <light_salmon>│
+<light_salmon>│ <light_pink>U<light_salmon>N<khaki>I<pale_green>C<pale_turquoise>O<light_sky_blue>R<plum>N  <white>le.conf<slate_gray> · pastelowe moduly dla Mudleta        <light_salmon>│
 <khaki>├────────────────────────────────────────────────────────┤
-<pale_green>│ <light_pink>/le.config<reset>              <slate_gray>pomoc i lista komend               <pale_green>│
-<pale_turquoise>│ <light_salmon>/le.config wersja<reset>       <slate_gray>zainstalowana wersja               <pale_turquoise>│
-<light_sky_blue>│ <khaki>/le.config aktualizacja<reset> <slate_gray>sprawdz dostepna aktualizacje      <light_sky_blue>│
-<plum>│ <pale_green>/le.config aktualizuj<reset>   <slate_gray>pobierz znaleziona aktualizacje    <plum>│
+<pale_green>│ <light_pink>/le.config<reset>              <slate_gray>pomoc i lista komend           <pale_green>│
+<pale_turquoise>│ <light_salmon>/le.config wersja<reset>       <slate_gray>zainstalowana wersja           <pale_turquoise>│
+<light_sky_blue>│ <khaki>/le.config aktualizacja<reset> <slate_gray>sprawdz dostepna aktualizacje  <light_sky_blue>│
+<plum>│ <pale_green>/le.config aktualizuj<reset>   <slate_gray>pobierz znaleziona aktualizacje<plum>│
 <light_pink>├────────────────────────────────────────────────────────┤
-<light_salmon>│ <pale_turquoise>/le.czas<reset>                <slate_gray>zegar i synchronizacja czasu       <light_salmon>│
-<khaki>│ <light_sky_blue>/le.kal [liczba]<reset>        <slate_gray>najblizsze wydarzenia              <khaki>│
-<pale_green>│ <plum>/le.kal tydzien<reset>         <slate_gray>pastelowa agenda na 7 dni          <pale_green>│
+<light_salmon>│ <pale_turquoise>/le.czas<reset>                <slate_gray>zegar i synchronizacja czasu   <light_salmon>│
+<khaki>│ <light_sky_blue>/le.kal [liczba]<reset>        <slate_gray>najblizsze wydarzenia          <khaki>│
+<pale_green>│ <plum>/le.kal tydzien<reset>         <slate_gray>pastelowa agenda na 7 dni      <pale_green>│
 <pale_turquoise>╰────────────────────────────────────────────────────────╯<reset>
 ]])
 end
