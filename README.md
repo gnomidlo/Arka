@@ -1,4 +1,4 @@
-# Arka
+# UNICORN
 
 Niezależna konfiguracja i zestaw pluginów dla Mudleta.
 
@@ -12,7 +12,7 @@ Niezależna konfiguracja i zestaw pluginów dla Mudleta.
 Po udostępnieniu repozytorium wykonaj w Mudlecie:
 
 ```text
-/zainstaluj_plugin https://raw.githubusercontent.com/gnomidlo/Arka/main/dist/Arka.zip?version=0.1.3
+/zainstaluj_plugin https://raw.githubusercontent.com/gnomidlo/Arka/main/dist/UNICORN.zip?version=0.2.0
 ```
 
 Po instalacji sprawdź listę pluginów:
@@ -21,15 +21,17 @@ Po instalacji sprawdź listę pluginów:
 /plugins
 ```
 
-Plugin powinien pojawić się na liście jako `Arka`.
+Plugin powinien pojawić się na liście jako `UNICORN`.
 
-Jeżeli wcześniejsza instalacja pozostawiła niepełny katalog pluginu, zamknij Mudlet i usuń ręcznie katalog `plugins/Arka` z katalogu profilu. Następnie uruchom Mudlet i wykonaj:
+### Przejscie z poprzedniej nazwy
+
+Zmiana nazwy pluginu wymaga jednorazowego usuniecia starego katalogu. Zamknij Mudlet, usun katalog `plugins/Arka`, uruchom Mudlet i zainstaluj nowa paczke:
 
 ```text
-/zainstaluj_plugin https://raw.githubusercontent.com/gnomidlo/Arka/main/dist/Arka.zip?version=0.1.3
+/zainstaluj_plugin https://raw.githubusercontent.com/gnomidlo/Arka/main/dist/UNICORN.zip?version=0.2.0
 ```
 
-Od wersji `0.1.2` instalacja korzysta z przygotowanego archiwum `dist/Arka.zip`, w którym pliki pluginu znajduja sie bezposrednio w katalogu glownym. Dzieki temu instalator Arkadii uzywa bezpiecznej sciezki wymiany calego katalogu pluginu.
+Od wersji `0.2.0` plugin jest instalowany i wyswietlany na liscie jako `UNICORN`. Paczka ma pliki bezposrednio w katalogu glownym ZIP-a, zgodnie z formatem instalatora Arkadii.
 
 ## Komendy
 
@@ -57,7 +59,7 @@ Moduł nie wysyła żadnych komend. Gdy użytkownik wpisze w grze `czas`, moduł
 
 ## Struktura pluginu
 
-- `init.lua` — punkt wejścia dla loadera pluginów Arkadii,
+- `init.lua` — punkt wejścia pluginu `UNICORN`,
 - `le/config.lua` — moduł pomocy i alias `/le.config`,
 - `le/czas.lua` — niezależny zegar, kalendarz, wydarzenia i interfejs.
 
@@ -79,4 +81,4 @@ Skroty dni zajmuja stale pole trzech znakow: `pn`, `wt`, `sr`, `czw`, `pt`, `sob
 
 Aktualna wersja projektu jest zapisana w `version.lua`. Przed opublikowaniem nowej wersji nalezy podbic ten numer zgodnie z formatem `MAJOR.MINOR.PATCH`.
 
-Sprawdzanie wersji uruchamia sie automatycznie 6 sekund po zaladowaniu pluginu i korzysta z zadania HTTP bez plikow tymczasowych. Instalacja aktualizacji jest wykonywana dopiero po swiadomym wywolaniu `/le.config aktualizuj` i pobiera przygotowane archiwum `dist/Arka.zip`. Po aktualizacji nalezy zrestartowac Mudlet.
+Sprawdzanie wersji uruchamia sie automatycznie 6 sekund po zaladowaniu pluginu i korzysta z zadania HTTP bez plikow tymczasowych. Instalacja aktualizacji jest wykonywana dopiero po swiadomym wywolaniu `/le.config aktualizuj` i pobiera przygotowane archiwum `dist/UNICORN.zip`. Po aktualizacji nalezy zrestartowac Mudlet.

@@ -8,11 +8,11 @@ le.config.update = le.config.update or {}
 
 le.config.urls = {
     version = "https://raw.githubusercontent.com/gnomidlo/Arka/main/version.lua",
-    install = "https://raw.githubusercontent.com/gnomidlo/Arka/main/dist/Arka.zip",
+    install = "https://raw.githubusercontent.com/gnomidlo/Arka/main/dist/UNICORN.zip",
 }
 
 local function log(text, color)
-    cecho(string.format("\n<sky_blue>[<%s>config<sky_blue>]<reset> %s\n",
+    cecho(string.format("\n<light_sky_blue>[<%s> conf <light_sky_blue>]<reset> %s\n",
         color or "powder_blue", tostring(text or "")))
 end
 
@@ -46,18 +46,18 @@ end
 
 function le.config.showHelp()
     cecho([[
-<sky_blue>╔══════════════════════════════════════════════╗
-<sky_blue>║<white>                  le.conf                     <sky_blue>║
-<sky_blue>╚══════════════════════════════════════════════╝<reset>
-
-<white>Dostepne komendy:<reset>
-  <yellow>/le.config<reset>              - wyswietla te pomoc
-  <yellow>/le.config wersja<reset>       - pokazuje zainstalowana wersje
-  <yellow>/le.config aktualizacja<reset> - sprawdza dostepnosc aktualizacji
-  <yellow>/le.config aktualizuj<reset>   - instaluje znaleziona aktualizacje
-  <yellow>/le.czas<reset>                - pomoc zegara i synchronizacji czasu
-  <yellow>/le.kal [liczba]<reset>        - najblizsze wydarzenia z obu domen
-  <yellow>/le.kal tydzien<reset>         - agenda na najblizsze 7 dni
+<light_pink>╭────────────────────────────────────────────────────────╮
+<light_salmon>│ <light_pink>U<light_salmon>N<khaki>I<pale_green>C<pale_turquoise>O<light_sky_blue>R<plum>N  <white>le.conf<slate_gray> · pastelowe moduly dla Mudleta        <light_salmon>│
+<khaki>├────────────────────────────────────────────────────────┤
+<pale_green>│ <light_pink>/le.config<reset>              <slate_gray>pomoc i lista komend           <pale_green>│
+<pale_turquoise>│ <light_salmon>/le.config wersja<reset>       <slate_gray>zainstalowana wersja           <pale_turquoise>│
+<light_sky_blue>│ <khaki>/le.config aktualizacja<reset> <slate_gray>sprawdz dostepna aktualizacje  <light_sky_blue>│
+<plum>│ <pale_green>/le.config aktualizuj<reset>   <slate_gray>pobierz aktualizacje           <plum>│
+<light_pink>├────────────────────────────────────────────────────────┤
+<light_salmon>│ <pale_turquoise>/le.czas<reset>                <slate_gray>zegar i synchronizacja czasu   <light_salmon>│
+<khaki>│ <light_sky_blue>/le.kal [liczba]<reset>        <slate_gray>najblizsze wydarzenia          <khaki>│
+<pale_green>│ <plum>/le.kal tydzien<reset>         <slate_gray>pastelowa agenda na 7 dni      <pale_green>│
+<pale_turquoise>╰────────────────────────────────────────────────────────╯<reset>
 ]])
 end
 
