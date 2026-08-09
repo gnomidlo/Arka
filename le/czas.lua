@@ -682,14 +682,21 @@ local function domain_display(event)
     return "IMPERIUM", "#b9d3df"
 end
 
+local function decho_rgb(hex_color)
+    local red, green, blue = tostring(hex_color):match("^#(%x%x)(%x%x)(%x%x)$")
+    if not red then return "255,255,255" end
+    return string.format("%d,%d,%d",
+        tonumber(red, 16), tonumber(green, 16), tonumber(blue, 16))
+end
+
 local function echo_calendar_event(event)
     local timestamp = epoch() + event.offset
     local domain, domain_color = domain_display(event)
-    cecho(string.format(
-        "<#ead9a6>%s<reset> <#686b72>·<reset> <%s>%s<reset> <#686b72>·<reset> <%s>%s<reset> <#686b72>·<reset> <#b8bbc2>%s<reset> <#686b72>·<reset> <#d7d9de>%s<reset>\n",
+    decho(string.format(
+        "<234,217,166>%s<r> <104,107,114>|<r> <%s>%s<r> <104,107,114>|<r> <%s>%s<r> <104,107,114>|<r> <184,187,194>%s<r> <104,107,114>|<r> <215,217,222>%s<r>\n",
         fit_text(calendar_countdown(event.offset), 10),
-        domain_color, fit_text(domain, 8),
-        pastel_event_color(event), fit_text(event.desc, 28),
+        decho_rgb(domain_color), fit_text(domain, 8),
+        decho_rgb(pastel_event_color(event)), fit_text(event.desc, 28),
         fit_text(real_date(timestamp), 18),
         os.date("%H:%M", timestamp)))
 end
@@ -705,8 +712,8 @@ function le.czas.show_calendar(count)
         for _, event in ipairs(events) do echo_calendar_event(event) end
     end
 
-    cecho("<#55585f>" .. string.rep("-", 83) .. "<reset>\n")
-    cechoLink("<powder_blue>>> Pokaz agende na najblizsze 7 dni<reset>\n",
+    decho("<85,88,95>" .. string.rep("-", 83) .. "<r>\n")
+    dechoLink("<176,224,230>>> Pokaz agende na najblizsze 7 dni<r>\n",
         [[le.czas.show_week_agenda()]], "Pokaz agende 7-dniowa", true)
 end
 
@@ -740,7 +747,7 @@ function le.czas.show_week_agenda()
         end
     end
 
-    cecho("\n<sky_blue>[<powder_blue> kal  <sky_blue>]<reset> Agenda · najblizsze 7 dni\n")
+    cecho("\n<sky_blue>[<powder_blue> kal  <sky_blue>]<reset> Agenda | najblizsze 7 dni\n")
     for index = 0, 6 do
         local timestamp = os.time({
             year = now.year, month = now.month, day = now.day + index,
@@ -750,7 +757,7 @@ function le.czas.show_week_agenda()
         local key = os.date("%Y-%m-%d", timestamp)
         local group = groups[key]
 
-        cecho(string.format("\n<powder_blue>%s · %02d %s<reset>\n",
+        cecho(string.format("\n<powder_blue>%s | %02d %s<reset>\n",
             WEEKDAY_FULL[value.wday], value.day, MONTH_NAMES[value.month]:upper()))
         if #group.events == 0 then
             cecho("<slate_gray>Brak wydarzen<reset>\n")
@@ -758,18 +765,18 @@ function le.czas.show_week_agenda()
             for _, event in ipairs(group.events) do
                 local event_time = epoch() + event.offset
                 local domain, domain_color = domain_display(event)
-                cecho(string.format(
-                    "<#d7d9de>%s<reset> <#686b72>·<reset> <%s>%s<reset> <#686b72>·<reset> <%s>%s<reset> <#686b72>·<reset> <#ead9a6>%s<reset>\n",
+                decho(string.format(
+                    "<215,217,222>%s<r> <104,107,114>|<r> <%s>%s<r> <104,107,114>|<r> <%s>%s<r> <104,107,114>|<r> <234,217,166>%s<r>\n",
                     os.date("%H:%M", event_time),
-                    domain_color, fit_text(domain, 8),
-                    pastel_event_color(event), fit_text(event.desc, 28),
+                    decho_rgb(domain_color), fit_text(domain, 8),
+                    decho_rgb(pastel_event_color(event)), fit_text(event.desc, 28),
                     calendar_countdown(event.offset)))
             end
         end
     end
 
-    cecho("<#55585f>" .. string.rep("-", 60) .. "<reset>\n")
-    cechoLink("<powder_blue>>> Powrot do najblizszych wydarzen<reset>\n",
+    decho("<85,88,95>" .. string.rep("-", 60) .. "<r>\n")
+    dechoLink("<176,224,230>>> Powrot do najblizszych wydarzen<r>\n",
         [[le.czas.show_calendar()]], "Pokaz najblizsze wydarzenia", true)
 end
 
