@@ -35,6 +35,10 @@ Plugin powinien pojawić się na liście jako `Arka`.
 - `/le.czas` — pomoc zegara i synchronizacji,
 - `/le.kal` — lista najbliższych wydarzeń z obu domen.
 
+### Automatyczna synchronizacja czasu
+
+Po wejściu do domeny bez zapisanej kotwicy moduł sam wysyła komendę `czas` i odczytuje odpowiedź gry. Obsługiwane są zarówno dokładne godziny i numery dni, jak i starszy format opisowy. Ręczne `/le.czas sync` pozostaje awaryjną możliwością korekty.
+
 ## Struktura pluginu
 
 - `init.lua` — punkt wejścia dla loadera pluginów Arkadii,
