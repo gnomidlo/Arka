@@ -135,8 +135,14 @@ function le.config.installUpdate()
         return
     end
 
+    local install_url = le.config.urls.install .. "?version=" .. remote
     log("Rozpoczynam aktualizacje do wersji " .. remote .. ".", "pale_green")
-    expandAlias("/zainstaluj_plugin " .. le.config.urls.install)
+    log("Usuwam poprzednia instalacje przed wgraniem nowych plikow.", "powder_blue")
+    expandAlias("/odinstaluj_plugin Arka")
+
+    tempTimer(1, function()
+        expandAlias("/zainstaluj_plugin " .. install_url)
+    end)
 end
 
 function le.config.cleanup()
