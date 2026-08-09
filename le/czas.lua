@@ -247,6 +247,115 @@ function le.czas.seed_ishtar_sun()
     end
 end
 
+-- Automatic synchronization ---------------------------------------------
+
+local ORDINAL_UNITS = {
+    pierwszy = 1, drugi = 2, trzeci = 3, czwarty = 4, piaty = 5,
+    szosty = 6, siodmy = 7, osmy = 8, dziewiaty = 9,
+    dziesiaty = 10, jedenasty = 11, dwunasty = 12, trzynasty = 13,
+    czternasty = 14, pietnasty = 15, szesnasty = 16, siedemnasty = 17,
+    osiemnasty = 18, dziewietnasty = 19,
+}
+
+local ORDINAL_TENS = {
+    dwudziesty = 20,
+    trzydziesty = 30,
+    czterdziesty = 40,
+}
+
+local CLOCK_HOURS = {
+    pierwsza = 1, druga = 2, trzecia = 3, czwarta = 4,
+    piata = 5, szosta = 6, siodma = 7, osma = 8,
+    dziewiata = 9, dziesiata = 10, jedenasta = 11, dwunasta = 12,
+}
+
+local function normalize_game_text(value)
+    value = tostring(value or ""):lower()
+    local replacements = {
+        ["ą"] = "a", ["ć"] = "c", ["ę"] = "e", ["ł"] = "l",
+        ["ń"] = "n", ["ó"] = "o", ["ś"] = "s", ["ź"] = "z", ["ż"] = "z",
+    }
+    return (value:gsub("[ąćęłńóśźż]", replacements))
+end
+
+local function parse_ordinal_day(text)
+    local numeric = text:match("(%d+)%.%s+dzien%s+pory")
+    if numeric then return tonumber(numeric) end
+
+    local first, second = text:match("([%a]+)%s*([%a]*)%s+dzien%s+pory")
+    if not first then return nil end
+    if ORDINAL_TENS[first] then
+        return ORDINAL_TENS[first] + (ORDINAL_UNITS[second] or 0)
+    end
+    return ORDINAL_UNITS[first]
+end
+
+local function parse_game_clock(text)
+    local hour, minute = text:match("^jest%s+.-(%d+):(%d+)")
+    if hour then
+        hour, minute = tonumber(hour), tonumber(minute)
+        if hour and minute and hour >= 0 and hour <= 23 and minute >= 0 and minute <= 59 then
+            return hour, minute
+        end
+        return nil
+    end
+
+    local phrase = text:match("^jest%s+w%s+przyblizeniu%s+([^,]+)")
+    if not phrase then return nil end
+    if phrase:find("polnoc", 1, true) then return 0, 0 end
+    if phrase:find("poludnie", 1, true) then return 12, 0 end
+
+    local word = phrase:match("^(%a+)")
+    hour = CLOCK_HOURS[word]
+    if not hour then return nil end
+    if (phrase:find("po poludniu", 1, true) or phrase:find("wieczorem", 1, true)) and hour < 12 then
+        hour = hour + 12
+    end
+    return hour, 0
+end
+
+local function find_calendar_period(period_name)
+    local wanted = normalize_game_text(period_name)
+    for _, domain in ipairs({ "imperium", "ishtar" }) do
+        local periods = le.czas.cal[domain].seasonMap
+        for index, item in ipairs(periods) do
+            if normalize_game_text(item.name) == wanted then
+                local next_item = periods[index + 1]
+                local length = next_item and (next_item.startDay - item.startDay)
+                    or (le.czas.cal[domain].totalDays - item.startDay + 1)
+                return domain, item.startDay, length
+            end
+        end
+    end
+    return nil
+end
+
+function le.czas.parse_time_text(raw_text)
+    local text = normalize_game_text(raw_text)
+    local period_name = text:match("dzien%s+pory%s+([%a]+)")
+    local period_day = parse_ordinal_day(text)
+    local hour, minute = parse_game_clock(text)
+    if not period_name or not period_day or hour == nil then return nil end
+
+    local domain, start_day, period_length = find_calendar_period(period_name)
+    if not domain or period_day < 1 or period_day > period_length then return nil end
+    return domain, start_day + period_day - 1, hour, minute
+end
+
+function le.czas.on_time_text(raw_text)
+    local domain, day, hour, minute = le.czas.parse_time_text(raw_text)
+    if not domain then
+        le.czas.log("rejected", "Nie udalo sie odczytac czasu z odpowiedzi gry.")
+        return false
+    end
+
+    le.czas.data.domain = domain
+    le.czas.sync(domain, day, hour, minute, true)
+    le.czas.log("saved", string.format(
+        "Automatyczna synchronizacja %s: dzien %d, %02d:%02d.", domain, day, hour, minute))
+    return true
+end
+
 -- Domain -----------------------------------------------------------------
 
 local function detect_domain_from_gmcp()
@@ -272,7 +381,7 @@ end
 
 -- Sync -----------------------------------------------------------------
 
-function le.czas.sync(domain, day, hour, minute)
+function le.czas.sync(domain, day, hour, minute, quiet)
     if domain ~= "imperium" and domain ~= "ishtar" then
         le.czas.log("rejected", "Nieznana domena: " .. tostring(domain))
         return
@@ -284,7 +393,9 @@ function le.czas.sync(domain, day, hour, minute)
     local game_sec = (day - 1) * 2880 + hour * 120 + minute * 2
     le.czas.data.anchors[domain] = { game_sec = game_sec, real_ts = epoch() }
     le.czas.save()
-    le.czas.log("saved", string.format("Zsynchronizowano %s: dzien %d, %02d:%02d.", domain, day, hour, minute))
+    if not quiet then
+        le.czas.log("saved", string.format("Zsynchronizowano %s: dzien %d, %02d:%02d.", domain, day, hour, minute))
+    end
 end
 
 function le.czas.get_game_sec(domain)
@@ -542,8 +653,8 @@ function le.czas.UI.update()
     end
     local game_sec = le.czas.get_game_sec(domain)
     if not game_sec then
-        message(le.czas.UI.clock, "BRAK SYNC", "/le.czas sync " .. domain .. " <dzien> <godzina> <minuta>")
-        message(le.czas.UI.event, "NAJBLIZSZY EVENT", "Brak synchronizacji")
+        message(le.czas.UI.clock, "BRAK SYNC", "Wpisz w grze: czas")
+        message(le.czas.UI.event, "NAJBLIZSZY EVENT", "Oczekiwanie na synchronizacje")
         return
     end
 
@@ -614,7 +725,7 @@ function le.czas.setup_aliases()
         if no_imperium and no_ishtar then
             cecho([[
 <CadetBlue>(le.czas)<reset> Brak synchronizacji dla obu domen.
-Wpisz w grze <yellow>czas<reset>, a potem: <yellow>/le.czas sync <ishtar|imperium> <dzien> <godzina> <minuta><reset>
+Wpisz <yellow>czas<reset> po odwiedzeniu kazdej domeny, aby zapisac jej zegar.
 ]])
             return
         end
@@ -639,6 +750,7 @@ function le.czas.cleanup()
     if le.czas.room_handler then pcall(killAnonymousEventHandler, le.czas.room_handler); le.czas.room_handler = nil end
     if le.czas.time_handler then pcall(killAnonymousEventHandler, le.czas.time_handler); le.czas.time_handler = nil end
     if le.czas.exit_handler then pcall(killAnonymousEventHandler, le.czas.exit_handler); le.czas.exit_handler = nil end
+    if le.czas.time_trigger then pcall(killTrigger, le.czas.time_trigger); le.czas.time_trigger = nil end
     if le.czas.aliases then
         for _, id in pairs(le.czas.aliases) do pcall(killAlias, id) end
     end
@@ -656,6 +768,10 @@ function le.czas.init()
     le.czas.UI.event = Geyser.Label:new(le.czas.config.event)
     le.czas.UI.event:setStyleSheet(le.czas.config.style)
     le.czas.setup_aliases()
+    le.czas.time_trigger = tempRegexTrigger(
+        [[^Jest (?:dokladnie|w przyblizeniu) .+ dzien pory .+ wedlug rachuby czasu Starszego Ludu\.$]],
+        function() le.czas.on_time_text(matches[1]) end
+    )
     le.czas.room_handler = registerAnonymousEventHandler("gmcp.room", le.czas.on_room)
     le.czas.time_handler = registerAnonymousEventHandler("gmcp.room.time", le.czas.on_room_time)
     le.czas.exit_handler = registerAnonymousEventHandler("sysExitEvent", le.czas.save)
@@ -663,6 +779,7 @@ function le.czas.init()
         local ok, err = pcall(le.czas.UI.update)
         if not ok and le.czas.UI.clock then message(le.czas.UI.clock, "BLAD", tostring(err)) end
     end, true)
+    le.czas.on_room()
     le.czas.UI.update()
     le.czas.log("info", "le.czas zaladowany. Wpisz /le.czas po pomoc.")
 end
