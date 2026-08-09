@@ -54,8 +54,8 @@ Moduł nie wysyła żadnych komend. Gdy użytkownik wpisze w grze `czas`, moduł
 Zwykly widok kalendarza pokazuje kazde wydarzenie w jednej, wyrownanej linii:
 
 ```text
-ZA 02h 14m · ISHTAR   · Poczatek pelni              · pn  10 sierpnia · 21:34
-ZA 05h 48m · IMPERIUM · Poczatek nowiu              · wt  11 sierpnia · 01:08
+ZA 02h 14m | ISHTAR   | Poczatek pelni              | pn  10 sierpnia | 21:34
+ZA 05h 48m | IMPERIUM | Poczatek nowiu              | wt  11 sierpnia | 01:08
 ```
 
 Skroty dni zajmuja stale pole trzech znakow: `pn`, `wt`, `sr`, `czw`, `pt`, `sob`, `n`. Widok zawiera klikalne przejscie do agendy siedmiodniowej.
