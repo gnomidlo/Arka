@@ -8,7 +8,7 @@ le.config.update = le.config.update or {}
 
 le.config.urls = {
     version = "https://raw.githubusercontent.com/gnomidlo/Arka/main/version.lua",
-    install = "https://codeload.github.com/gnomidlo/Arka/zip/main",
+    install = "https://raw.githubusercontent.com/gnomidlo/Arka/main/dist/Arka.zip",
 }
 
 local function log(text, color)
@@ -33,13 +33,13 @@ local function compare_versions(left, right)
 end
 
 local function cleanup_update_resources()
-    if le.config.update.download_handler then
-        pcall(killAnonymousEventHandler, le.config.update.download_handler)
-        le.config.update.download_handler = nil
+    if le.config.update.done_handler then
+        pcall(killAnonymousEventHandler, le.config.update.done_handler)
+        le.config.update.done_handler = nil
     end
-    if le.config.update.timeout then
-        pcall(killTimer, le.config.update.timeout)
-        le.config.update.timeout = nil
+    if le.config.update.error_handler then
+        pcall(killAnonymousEventHandler, le.config.update.error_handler)
+        le.config.update.error_handler = nil
     end
     le.config.update.checking = false
 end
@@ -65,30 +65,29 @@ function le.config.showVersion()
     log("Zainstalowana wersja: " .. tostring(le.version or "nieznana") .. ".", "pale_green")
 end
 
-function le.config.checkUpdate()
+function le.config.checkUpdate(options)
+    options = options or {}
     if le.config.update.checking then
-        log("Sprawdzanie aktualizacji juz trwa.", "slate_gray")
+        if not options.automatic then
+            log("Sprawdzanie aktualizacji juz trwa.", "slate_gray")
+        end
         return
     end
 
     cleanup_update_resources()
     le.config.update.checking = true
     le.config.update.remote_version = nil
-    local path = getMudletHomeDir() .. "/le_config_remote_version.lua"
-    le.config.update.path = path
-    pcall(os.remove, path)
 
-    le.config.update.download_handler = registerAnonymousEventHandler(
-        "sysDownloadDone",
-        function(_, filename)
-            if filename ~= path then return end
-            local file = io.open(path, "r")
-            local content = file and file:read("*a") or ""
-            if file then file:close() end
-            pcall(os.remove, path)
+    local request_url = le.config.urls.version .. "?time=" .. os.time()
+    le.config.update.request_url = request_url
+
+    le.config.update.done_handler = registerAnonymousEventHandler(
+        "sysGetHttpDone",
+        function(_, url, response)
+            if url ~= request_url then return true end
             cleanup_update_resources()
 
-            local remote = content:match([[return%s+["']([%d%.]+)["']]])
+            local remote = tostring(response or ""):match("return%s+[\"']([%d%.]+)[\"']")
             if not remote then
                 log("Nie udalo sie odczytac wersji z GitHuba.", "light_pink")
                 return
@@ -99,28 +98,35 @@ function le.config.checkUpdate()
             if compare_versions(current, remote) < 0 then
                 log(string.format("Dostepna aktualizacja: %s -> %s.", current, remote), "pale_green")
                 cechoLink("<yellow>>> /le.config aktualizuj<reset>\n",
-                    [[expandAlias("/le.config aktualizuj")]],
+                    function() expandAlias("/le.config aktualizuj") end,
                     "Zainstaluj aktualizacje le.conf", true)
-            else
+            elseif not options.automatic then
                 log("Masz najnowsza wersje: " .. current .. ".", "pale_green")
             end
-        end
+        end,
+        true
     )
 
-    le.config.update.timeout = tempTimer(30, function()
-        if not le.config.update.checking then return end
-        cleanup_update_resources()
-        pcall(os.remove, path)
-        log("Przekroczono czas sprawdzania aktualizacji.", "light_pink")
-    end)
+    le.config.update.error_handler = registerAnonymousEventHandler(
+        "sysGetHttpError",
+        function(_, response, url)
+            if url ~= request_url then return true end
+            cleanup_update_resources()
+            log("Nie udalo sie sprawdzic aktualizacji: " .. tostring(response or "blad HTTP"), "light_pink")
+        end,
+        true
+    )
 
-    local ok, err = pcall(downloadFile, path, le.config.urls.version)
+    local ok, err = pcall(getHTTP, request_url)
     if not ok then
         cleanup_update_resources()
         log("Nie udalo sie rozpoczac sprawdzania: " .. tostring(err), "light_pink")
         return
     end
-    log("Sprawdzam dostepnosc aktualizacji...", "powder_blue")
+
+    if not options.automatic then
+        log("Sprawdzam dostepnosc aktualizacji...", "powder_blue")
+    end
 end
 
 function le.config.installUpdate()
@@ -136,28 +142,25 @@ function le.config.installUpdate()
     end
 
     local install_url = le.config.urls.install .. "?version=" .. remote
-    local plugin_path = getMudletHomeDir() .. "/plugins/Arka"
-    local backup_path = getMudletHomeDir() .. "/Arka_backup_" .. os.time()
-
     log("Rozpoczynam aktualizacje do wersji " .. remote .. ".", "pale_green")
 
-    local moved, move_error = os.rename(plugin_path, backup_path)
-    if not moved then
-        log("Nie udalo sie przygotowac aktualizacji: " .. tostring(move_error), "light_pink")
-        log("Zamknij Mudlet, usun recznie katalog plugins/Arka i zainstaluj plugin ponownie.", "light_pink")
-        return
+    if scripts and scripts.plugins_installer and scripts.plugins_installer.install_from_url then
+        scripts.plugins_installer:install_from_url(install_url)
+    else
+        expandAlias("/zainstaluj_plugin " .. install_url)
     end
 
-    le.config.update.backup_path = backup_path
-    log("Kopia poprzedniej wersji: " .. backup_path, "powder_blue")
-
-    tempTimer(1, function()
-        expandAlias("/zainstaluj_plugin " .. install_url)
+    tempTimer(5, function()
+        log("Aktualizacja pobrana. Zrestartuj Mudlet, aby zaladowac wszystkie zmiany.", "pale_green")
     end)
 end
 
 function le.config.cleanup()
     cleanup_update_resources()
+    if le.config.update.startup_timer then
+        pcall(killTimer, le.config.update.startup_timer)
+        le.config.update.startup_timer = nil
+    end
     if le.config.aliases then
         for _, id in pairs(le.config.aliases) do pcall(killAlias, id) end
     end
@@ -165,6 +168,11 @@ function le.config.cleanup()
 end
 
 function le.config.setupAliases()
+
+le.config.update.startup_timer = tempTimer(6, function()
+    le.config.update.startup_timer = nil
+    le.config.checkUpdate({ automatic = true })
+end)
     le.config.cleanup()
 
     le.config.aliases.help = tempAlias([[^/le\.config$]], le.config.showHelp)
