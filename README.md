@@ -12,7 +12,7 @@ Niezależna konfiguracja i zestaw pluginów dla Mudleta.
 Po udostępnieniu repozytorium wykonaj w Mudlecie:
 
 ```text
-/zainstaluj_plugin https://raw.githubusercontent.com/gnomidlo/Arka/main/dist/UNICORN.zip?version=0.2.0
+/zainstaluj_plugin https://raw.githubusercontent.com/gnomidlo/Arka/main/dist/UNICORN.zip?version=0.2.1
 ```
 
 Po instalacji sprawdź listę pluginów:
@@ -23,12 +23,14 @@ Po instalacji sprawdź listę pluginów:
 
 Plugin powinien pojawić się na liście jako `UNICORN`.
 
+Po pierwszej instalacji pliki sa juz na dysku, ale plugin moze nie byc jeszcze widoczny w `/plugins`. To ograniczenie instalatora Arkadii. Zrestartuj Mudlet, aby standardowy loader dodal `UNICORN` do listy i uruchomil wszystkie aliasy.
+
 ### Przejscie z poprzedniej nazwy
 
 Zmiana nazwy pluginu wymaga jednorazowego usuniecia starego katalogu. Zamknij Mudlet, usun katalog `plugins/Arka`, uruchom Mudlet i zainstaluj nowa paczke:
 
 ```text
-/zainstaluj_plugin https://raw.githubusercontent.com/gnomidlo/Arka/main/dist/UNICORN.zip?version=0.2.0
+/zainstaluj_plugin https://raw.githubusercontent.com/gnomidlo/Arka/main/dist/UNICORN.zip?version=0.2.1
 ```
 
 Od wersji `0.2.0` plugin jest instalowany i wyswietlany na liscie jako `UNICORN`. Paczka ma pliki bezposrednio w katalogu glownym ZIP-a, zgodnie z formatem instalatora Arkadii.
