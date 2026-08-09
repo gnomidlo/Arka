@@ -35,9 +35,9 @@ Plugin powinien pojawić się na liście jako `Arka`.
 - `/le.czas` — pomoc zegara i synchronizacji,
 - `/le.kal` — lista najbliższych wydarzeń z obu domen.
 
-### Automatyczna synchronizacja czasu
+### Synchronizacja czasu
 
-Po wejściu do domeny bez zapisanej kotwicy moduł sam wysyła komendę `czas` i odczytuje odpowiedź gry. Obsługiwane są zarówno dokładne godziny i numery dni, jak i starszy format opisowy. Ręczne `/le.czas sync` pozostaje awaryjną możliwością korekty.
+Moduł nie wysyła żadnych komend. Gdy użytkownik wpisze w grze `czas`, moduł odczytuje odpowiedź i synchronizuje lub aktualizuje zegar właściwej domeny. Obsługiwane są zarówno dokładne godziny i numery dni, jak i starszy format opisowy. `/le.czas sync` pozostaje awaryjną możliwością ręcznej korekty.
 
 ## Struktura pluginu
 
