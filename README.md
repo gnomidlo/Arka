@@ -27,13 +27,18 @@ Plugin powinien pojawić się na liście jako `Arka`.
 
 ```text
 /le.config
+/le.czas
+/le.kal [liczba]
 ```
 
-Wyświetla pomoc konfiguracji `le.conf`.
+- `/le.config` — pomoc konfiguracji `le.conf`,
+- `/le.czas` — pomoc zegara i synchronizacji,
+- `/le.kal` — lista najbliższych wydarzeń z obu domen.
 
 ## Struktura pluginu
 
 - `init.lua` — punkt wejścia dla loadera pluginów Arkadii,
-- `le/config.lua` — moduł pomocy i alias `/le.config`.
+- `le/config.lua` — moduł pomocy i alias `/le.config`,
+- `le/czas.lua` — niezależny zegar, kalendarz, wydarzenia i interfejs.
 
 Projekt nie zależy od `msconfig` ani `msmudlet`.
