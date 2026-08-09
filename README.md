@@ -29,11 +29,13 @@ Plugin powinien pojawić się na liście jako `Arka`.
 /le.config
 /le.czas
 /le.kal [liczba]
+/le.kal tydzien
 ```
 
 - `/le.config` — pomoc konfiguracji `le.conf`,
 - `/le.czas` — pomoc zegara i synchronizacji,
-- `/le.kal` — lista najbliższych wydarzeń z obu domen.
+- `/le.kal` — jednoliniowa lista najbliższych wydarzen z obu domen,
+- `/le.kal tydzien` — agenda wydarzen na najblizsze 7 dni.
 
 ### Synchronizacja czasu
 
@@ -45,3 +47,15 @@ Moduł nie wysyła żadnych komend. Gdy użytkownik wpisze w grze `czas`, moduł
 - `le/config.lua` — moduł pomocy i alias `/le.config`,
 - `le/czas.lua` — niezależny zegar, kalendarz, wydarzenia i interfejs.
 
+
+
+## Kalendarz
+
+Zwykly widok kalendarza pokazuje kazde wydarzenie w jednej, wyrownanej linii:
+
+```text
+ZA 02h 14m · ISHTAR   · Poczatek pelni              · pn  10 sierpnia · 21:34
+ZA 05h 48m · IMPERIUM · Poczatek nowiu              · wt  11 sierpnia · 01:08
+```
+
+Skróty dni zajmuja stale pole trzech znakow: `pn`, `wt`, `sr`, `czw`, `pt`, `sob`, `n`. Widok zawiera klikalne przejscie do agendy siedmiodniowej.
