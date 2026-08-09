@@ -12,7 +12,7 @@ Niezależna konfiguracja i zestaw pluginów dla Mudleta.
 Po udostępnieniu repozytorium wykonaj w Mudlecie:
 
 ```text
-/zainstaluj_plugin https://raw.githubusercontent.com/gnomidlo/Arka/main/dist/UNICORN.zip?version=0.3.1
+/zainstaluj_plugin https://raw.githubusercontent.com/gnomidlo/Arka/main/dist/UNICORN.zip?version=0.3.2
 ```
 
 Po instalacji sprawdź listę pluginów:
@@ -30,7 +30,7 @@ Po pierwszej instalacji pliki sa juz na dysku, ale plugin moze nie byc jeszcze w
 Zmiana nazwy pluginu wymaga jednorazowego usuniecia starego katalogu. Zamknij Mudlet, usun katalog `plugins/Arka`, uruchom Mudlet i zainstaluj nowa paczke:
 
 ```text
-/zainstaluj_plugin https://raw.githubusercontent.com/gnomidlo/Arka/main/dist/UNICORN.zip?version=0.3.1
+/zainstaluj_plugin https://raw.githubusercontent.com/gnomidlo/Arka/main/dist/UNICORN.zip?version=0.3.2
 ```
 
 Od wersji `0.2.0` plugin jest instalowany i wyswietlany na liscie jako `UNICORN`. Paczka ma pliki bezposrednio w katalogu glownym ZIP-a, zgodnie z formatem instalatora Arkadii.
@@ -85,13 +85,13 @@ ZA 02h 14m | ISHTAR   | Poczatek pelni              | pn  10 sierpnia | 21:34
 ZA 05h 48m | IMPERIUM | Poczatek nowiu              | wt  11 sierpnia | 01:08
 ```
 
-Skroty dni zajmuja stale pole trzech znakow: `pn`, `wt`, `sr`, `czw`, `pt`, `sob`, `n`. Widok zawiera klikalne przejscie do agendy siedmiodniowej. Panel najblizszego wydarzenia pokazuje domene przed odliczaniem, np. `Imperium | zacznie sie za 02h 14m`.
+Skroty dni zajmuja stale pole trzech znakow: `pn`, `wt`, `sr`, `czw`, `pt`, `sob`, `n`. Widok zawiera klikalne przejscie do agendy siedmiodniowej. Panel najblizszego wydarzenia pokazuje kolejno nazwe wydarzenia oraz `Imperium | zacznie sie za 02h 14m`.
 
 ## Leczenie
 
 Po wpisaniu w grze `stan` modul dopisuje pod rozpoznanym zatruciem, choroba lub pasozytami pasujace ziola. Klikniecie nazwy ziola wykonuje `/wezz`, a klikniecie sposobu uzycia opuszcza bron i uruchamia odpowiedni alias `/z_...`.
 
-Informacje o posiadanych ziolach pochodza z globalnej bazy `herbs.counts`, budowanej komenda `/ziola_buduj`.
+Informacje o posiadanych ziolach pochodza z globalnej bazy `herbs.counts`, budowanej komenda `/ziola_buduj`. Kategorie sa pogrupowane jako: toksyny, choroby, inne oraz odtrutki ogolne. Dawne skroty kategorii nadal dzialaja.
 
 
 ## Wersje i aktualizacje
@@ -100,4 +100,9 @@ Aktualna wersja projektu jest zapisana w `version.lua`. Przed opublikowaniem now
 
 Sprawdzanie wersji uruchamia sie automatycznie 6 sekund po zaladowaniu pluginu i korzysta z zadania HTTP bez plikow tymczasowych. Instalacja aktualizacji jest wykonywana dopiero po swiadomym wywolaniu `/le.config aktualizuj`. Od wersji `0.3.1` paczka jest rozpakowywana poza katalogiem pluginow, weryfikowana i kopiowana bezposrednio do `plugins/UNICORN`, dlatego instalator nie tworzy katalogow o nazwach typu `1786310551UNICORN`.
 
-`/le.config napraw` usuwa pozostalosci `UNICORN_todelete` oraz katalogi tymczasowe zakonczone nazwa `UNICORN`. Po aktualizacji lub naprawie nalezy zrestartowac Mudlet.
+`/le.config napraw` usuwa pozostalosci `UNICORN_todelete` oraz katalogi tymczasowe zakonczone nazwa `UNICORN`. Jesli system blokuje usuniecie, katalog jest przenoszony poza `plugins`, aby loader nie traktowal go jako pluginu. Po aktualizacji lub naprawie nalezy zrestartowac Mudlet.
+
+
+## Interfejs 0.3.2
+
+Ekrany pomocy UNICORN nie uzywaja ramek ani tabel o stalej szerokosci. Komendy sa prezentowane jako kolorowe, klikalne pozycje z opisem w osobnej linii, dzieki czemu uklad nie zalezy od szerokosci czcionki.
