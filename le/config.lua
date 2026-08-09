@@ -51,6 +51,126 @@ local function cleanup_update_resources()
     le.config.update.checking = false
 end
 
+local function kill_update_handler(key)
+    if le.config.update[key] then
+        pcall(killAnonymousEventHandler, le.config.update[key])
+        le.config.update[key] = nil
+    end
+end
+
+local function cleanup_install_resources()
+    for _, key in ipairs({
+        "download_done_handler", "download_error_handler",
+        "unzip_done_handler", "unzip_error_handler",
+    }) do
+        kill_update_handler(key)
+    end
+    le.config.update.installing = false
+end
+
+local function normalized_path(path)
+    return tostring(path or ""):gsub("\\", "/"):gsub("/+$", "")
+end
+
+local function remove_path(path)
+    path = normalized_path(path)
+    local mode = lfs.attributes(path, "mode")
+    if not mode then return true end
+    if mode ~= "directory" then return os.remove(path) end
+
+    for entry in lfs.dir(path) do
+        if entry ~= "." and entry ~= ".." then
+            local success, err = remove_path(path .. "/" .. entry)
+            if not success then return nil, err end
+        end
+    end
+    return lfs.rmdir(path)
+end
+
+local function copy_file(source, target)
+    local input, read_error = io.open(source, "rb")
+    if not input then return nil, read_error end
+    local content = input:read("*a")
+    input:close()
+
+    local output, write_error = io.open(target, "wb")
+    if not output then return nil, write_error end
+    local success, error_message = output:write(content)
+    output:close()
+    if not success then return nil, error_message end
+    return true
+end
+
+local function copy_tree(source, target)
+    source, target = normalized_path(source), normalized_path(target)
+    local mode = lfs.attributes(source, "mode")
+    if mode == "file" then return copy_file(source, target) end
+    if mode ~= "directory" then return nil, "brak katalogu " .. source end
+
+    if lfs.attributes(target, "mode") ~= "directory" then
+        local success, err = lfs.mkdir(target)
+        if not success then return nil, err end
+    end
+    for entry in lfs.dir(source) do
+        if entry ~= "." and entry ~= ".." then
+            local success, err = copy_tree(source .. "/" .. entry, target .. "/" .. entry)
+            if not success then return nil, err end
+        end
+    end
+    return true
+end
+
+local function read_version(path)
+    local file = io.open(path, "rb")
+    if not file then return nil end
+    local content = file:read("*a")
+    file:close()
+    return content:match("le%.version%s*=%s*[\"']([%d%.]+)[\"']")
+end
+
+local function install_paths()
+    local home = normalized_path(getMudletHomeDir())
+    return {
+        archive = home .. "/UNICORN-update.zip",
+        staging = home .. "/UNICORN-update",
+        plugin = home .. "/plugins/UNICORN",
+        plugins = home .. "/plugins",
+    }
+end
+
+function le.config.cleanupArtifacts(options)
+    options = options or {}
+    local paths = install_paths()
+    local removed, failed = 0, {}
+    if lfs.attributes(paths.plugins, "mode") == "directory" then
+        for name in lfs.dir(paths.plugins) do
+            if name == "UNICORN_todelete" or name:match("^%d+UNICORN$") then
+                local target = paths.plugins .. "/" .. name
+                local ok, success, err = pcall(remove_path, target)
+                if ok and success then
+                    removed = removed + 1
+                    if scripts and scripts.plugins then
+                        for index = #scripts.plugins, 1, -1 do
+                            if scripts.plugins[index] == name then table.remove(scripts.plugins, index) end
+                        end
+                    end
+                else
+                    failed[#failed + 1] = name .. ": " .. tostring(err or success)
+                end
+            end
+        end
+    end
+
+    if not options.quiet then
+        if #failed == 0 then
+            log("Usunieto pozostalosci instalatora: " .. removed .. ". Zrestartuj Mudlet.", "pale_green")
+        else
+            log("Nie udalo sie usunac: " .. table.concat(failed, ", "), "light_pink")
+        end
+    end
+    return #failed == 0
+end
+
 function le.config.showHelp()
     cecho("\n<light_pink>╭────────────────────────────────────────────────────────╮\n")
     cecho("<light_salmon>│ <light_pink>U<light_salmon>N<khaki>I<pale_green>C<pale_turquoise>O<light_sky_blue>R<plum>N  <white>le.conf<slate_gray> · kliknij wybrana komende              <light_salmon>│\n")
@@ -65,6 +185,7 @@ function le.config.showHelp()
     command_row("light_sky_blue", "light_sky_blue", "/le.config wersja", "/le.config wersja", "pokaz zainstalowana wersje")
     command_row("plum", "plum", "/le.config aktualizacja", "/le.config aktualizacja", "sprawdz dostepna wersje")
     command_row("light_pink", "light_pink", "/le.config aktualizuj", "/le.config aktualizuj", "pobierz i zainstaluj")
+    command_row("light_salmon", "light_salmon", "/le.config napraw", "/le.config napraw", "usun duplikaty instalatora")
     cecho("<pale_turquoise>╰────────────────────────────────────────────────────────╯<reset>\n")
 end
 
@@ -149,23 +270,101 @@ function le.config.installUpdate()
         log("Masz juz najnowsza wersje: " .. current .. ".", "pale_green")
         return
     end
-
-    local install_url = le.config.urls.install .. "?version=" .. remote
-    log("Rozpoczynam aktualizacje do wersji " .. remote .. ".", "pale_green")
-
-    if scripts and scripts.plugins_installer and scripts.plugins_installer.install_from_url then
-        scripts.plugins_installer:install_from_url(install_url)
-    else
-        expandAlias("/zainstaluj_plugin " .. install_url)
+    if le.config.update.installing then
+        log("Instalacja aktualizacji juz trwa.", "slate_gray")
+        return
     end
 
-    tempTimer(5, function()
-        log("Plugin UNICORN zostal zainstalowany lub zaktualizowany. Zrestartuj Mudlet.", "pale_green")
-    end)
+    cleanup_install_resources()
+    local paths = install_paths()
+    pcall(os.remove, paths.archive)
+    pcall(remove_path, paths.staging)
+    le.config.cleanupArtifacts({ quiet = true })
+
+    local install_url = le.config.urls.install .. "?version=" .. remote .. "&time=" .. os.time()
+    le.config.update.installing = true
+    le.config.update.install_url = install_url
+    log("Rozpoczynam aktualizacje do wersji " .. remote .. ".", "pale_green")
+
+    le.config.update.download_done_handler = registerAnonymousEventHandler(
+        "sysDownloadDone",
+        function(_, filename)
+            if normalized_path(filename) ~= normalized_path(paths.archive) then return true end
+            kill_update_handler("download_done_handler")
+            kill_update_handler("download_error_handler")
+
+            le.config.update.unzip_done_handler = registerAnonymousEventHandler(
+                "sysUnzipDone",
+                function()
+                    kill_update_handler("unzip_done_handler")
+                    kill_update_handler("unzip_error_handler")
+
+                    local staged_version = read_version(paths.staging .. "/version.lua")
+                    if staged_version ~= remote then
+                        cleanup_install_resources()
+                        pcall(remove_path, paths.staging)
+                        pcall(os.remove, paths.archive)
+                        log("Paczka aktualizacji ma nieprawidlowa wersje.", "light_pink")
+                        return
+                    end
+
+                    local ok, success, err = pcall(copy_tree, paths.staging, paths.plugin)
+                    if not ok or not success then
+                        cleanup_install_resources()
+                        log("Nie udalo sie zapisac aktualizacji: " .. tostring(err or success), "light_pink")
+                        return
+                    end
+
+                    local installed_version = read_version(paths.plugin .. "/version.lua")
+                    pcall(remove_path, paths.staging)
+                    pcall(os.remove, paths.archive)
+                    le.config.cleanupArtifacts({ quiet = true })
+                    cleanup_install_resources()
+
+                    if installed_version ~= remote then
+                        log("Weryfikacja zapisanej wersji nie powiodla sie.", "light_pink")
+                        return
+                    end
+                    log("UNICORN " .. remote .. " zapisany bez tworzenia nowej instancji. Zrestartuj Mudlet.", "pale_green")
+                end,
+                true
+            )
+            le.config.update.unzip_error_handler = registerAnonymousEventHandler(
+                "sysUnzipError",
+                function()
+                    cleanup_install_resources()
+                    pcall(remove_path, paths.staging)
+                    pcall(os.remove, paths.archive)
+                    log("Nie udalo sie rozpakowac aktualizacji.", "light_pink")
+                end,
+                true
+            )
+            unzipAsync(paths.archive, paths.staging)
+        end,
+        true
+    )
+
+    le.config.update.download_error_handler = registerAnonymousEventHandler(
+        "sysDownloadError",
+        function(_, response, url)
+            if url and url ~= install_url then return true end
+            cleanup_install_resources()
+            pcall(os.remove, paths.archive)
+            log("Nie udalo sie pobrac aktualizacji: " .. tostring(response or "blad pobierania"), "light_pink")
+        end,
+        true
+    )
+
+    local ok, err = pcall(downloadFile, paths.archive, install_url)
+    if not ok then
+        cleanup_install_resources()
+        log("Nie udalo sie rozpoczac aktualizacji: " .. tostring(err), "light_pink")
+    end
 end
 
 function le.config.cleanup()
     cleanup_update_resources()
+    cleanup_install_resources()
     if le.config.update.startup_timer then
         pcall(killTimer, le.config.update.startup_timer)
         le.config.update.startup_timer = nil
@@ -183,6 +382,7 @@ function le.config.setupAliases()
     le.config.aliases.version = tempAlias([[^/le\.config wersja$]], le.config.showVersion)
     le.config.aliases.check = tempAlias([[^/le\.config aktualizacja$]], le.config.checkUpdate)
     le.config.aliases.install = tempAlias([[^/le\.config aktualizuj$]], le.config.installUpdate)
+    le.config.aliases.repair = tempAlias([[^/le\.config napraw$]], le.config.cleanupArtifacts)
 end
 
 le.config.setupAliases()
