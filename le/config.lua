@@ -52,7 +52,7 @@ function le.config.showHelp()
 <pale_green>│ <light_pink>/le.config<reset>              <slate_gray>pomoc i lista komend           <pale_green>│
 <pale_turquoise>│ <light_salmon>/le.config wersja<reset>       <slate_gray>zainstalowana wersja           <pale_turquoise>│
 <light_sky_blue>│ <khaki>/le.config aktualizacja<reset> <slate_gray>sprawdz dostepna aktualizacje  <light_sky_blue>│
-<plum>│ <pale_green>/le.config aktualizuj<reset>   <slate_gray>pobierz znaleziona aktualizacje<plum>│
+<plum>│ <pale_green>/le.config aktualizuj<reset>   <slate_gray>pobierz aktualizacje           <plum>│
 <light_pink>├────────────────────────────────────────────────────────┤
 <light_salmon>│ <pale_turquoise>/le.czas<reset>                <slate_gray>zegar i synchronizacja czasu   <light_salmon>│
 <khaki>│ <light_sky_blue>/le.kal [liczba]<reset>        <slate_gray>najblizsze wydarzenia          <khaki>│
