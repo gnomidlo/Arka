@@ -153,7 +153,7 @@ function le.config.installUpdate()
     end
 
     tempTimer(5, function()
-        log("Aktualizacja pobrana. Zrestartuj Mudlet, aby zaladowac wszystkie zmiany.", "pale_green")
+        log("Plugin UNICORN zostal zainstalowany lub zaktualizowany. Zrestartuj Mudlet.", "pale_green")
     end)
 end
 
@@ -183,4 +183,8 @@ le.config.setupAliases()
 le.config.update.startup_timer = tempTimer(6, function()
     le.config.update.startup_timer = nil
     le.config.checkUpdate({ automatic = true })
+end)
+
+tempTimer(1, function()
+    log("UNICORN " .. tostring(le.version or "") .. " zaladowany. Pomoc: /le.config.", "plum")
 end)
