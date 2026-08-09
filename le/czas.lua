@@ -729,8 +729,8 @@ function le.czas.show_calendar(count)
     end
 
     decho("<85,88,95>" .. string.rep("-", 83) .. "<r>\n")
-    dechoLink("<176,224,230>>> Pokaz agende na najblizsze 7 dni<r>\n",
-        [[le.czas.show_week_agenda()]], "Pokaz agende 7-dniowa", true)
+    dechoLink("<176,224,230>>> /le.kal tydzien<r> <184,187,194>- pokaz agende na 7 dni<r>\n",
+        function() expandAlias("/le.kal tydzien") end, "Pokaz agende 7-dniowa", true)
 end
 
 function le.czas.show_week_agenda()
@@ -792,8 +792,8 @@ function le.czas.show_week_agenda()
     end
 
     decho("<85,88,95>" .. string.rep("-", 60) .. "<r>\n")
-    dechoLink("<176,224,230>>> Powrot do najblizszych wydarzen<r>\n",
-        [[le.czas.show_calendar()]], "Pokaz najblizsze wydarzenia", true)
+    dechoLink("<176,224,230>>> /le.kal<r> <184,187,194>- powrot do najblizszych wydarzen<r>\n",
+        function() expandAlias("/le.kal") end, "Pokaz najblizsze wydarzenia", true)
 end
 
 function le.czas.UI.update()
@@ -837,15 +837,30 @@ function le.czas.UI.update()
     local event = le.czas.next_event(domain, game_sec)
     if event then
         local pastel = pastel_event_color(event)
-        local domain_name = domain == "ishtar" and "ISHTAR" or "IMPERIUM"
-        le.czas.UI.event:echo(string.format([[<div style='background-color:rgba(255,255,255,0.025);border-radius:4px;padding:3px 6px'><div style='font-size:9px;color:#8f9299;letter-spacing:1px'>◆ %s · NAJBLIZSZE WYDARZENIE</div><div style='font-size:12px;color:%s;font-weight:bold;white-space:nowrap'>%s</div><div style='font-size:10px;color:#aeb1b7'>rozpocznie sie <span style='color:%s;font-weight:bold'>za %s</span></div></div>]],
-            domain_name, pastel, event.desc, pastel, duration(event.offset)))
+        local domain_name = domain == "ishtar" and "Ishtar" or "Imperium"
+        local domain_color = le.czas.config.domain_colors[domain] or "#d7d9de"
+        le.czas.UI.event:echo(string.format([[<div style='background-color:rgba(255,255,255,0.025);border-radius:4px;padding:3px 6px'><div style='font-size:9px;color:#8f9299;letter-spacing:1px'>NAJBLIZSZE WYDARZENIE</div><div style='font-size:10px;color:#aeb1b7;white-space:nowrap'><span style='color:%s;font-weight:bold'>%s</span> <span style='color:#666'>|</span> zacznie sie za <span style='color:%s;font-weight:bold'>%s</span></div><div style='font-size:12px;color:%s;font-weight:bold;white-space:nowrap'>%s</div></div>]],
+            domain_color, domain_name, pastel, duration(event.offset), pastel, event.desc))
     else
         le.czas.UI.event:echo([[<center><div style='font-size:9px;color:#8f9299;letter-spacing:1px'>NAJBLIZSZE WYDARZENIE</div><div style='font-size:12px;color:#b8bbc2'>Brak danych</div></center>]])
     end
 end
 
 -- Aliases ---------------------------------------------------------------
+
+local function help_alias(label, command, description, fill_only)
+    cecho("  ")
+    cechoLink(string.format("<pale_turquoise>%-58s<reset>", label),
+        function()
+            if fill_only and type(setCmdLine) == "function" then
+                setCmdLine(command)
+            else
+                expandAlias(command)
+            end
+        end,
+        fill_only and "Uzupelnij komende i zatwierdz" or description, true)
+    cecho("<slate_gray>- " .. description .. "<reset>\n")
+end
 
 function le.czas.setup_aliases()
     le.czas.aliases = le.czas.aliases or {}
@@ -861,13 +876,13 @@ function le.czas.setup_aliases()
     end)
 
     le.czas.aliases.help = tempAlias("^/le\\.czas$", function()
-        cecho([[
-<sky_blue>[<powder_blue> czas <sky_blue>]<reset> Komendy:
-  /le.czas sync <ishtar|imperium> <dzien> <godzina> <minuta>  - zsynchronizuj zegar
-  /le.czas domena <ishtar|imperium>                            - ustaw domene recznie
-  /le.kal [x]                                                  - x najblizszych wydarzen (domyslnie 20)
-  /le.kal tydzien                                              - agenda na najblizsze 7 dni
-]])
+        cecho("\n<sky_blue>[<powder_blue> czas <sky_blue>]<reset> Komendy (kliknij):\n")
+        help_alias("/le.czas sync <domena> <dzien> <godzina> <minuta>", "/le.czas sync ",
+            "reczna synchronizacja zegara", true)
+        help_alias("/le.czas domena <ishtar|imperium>", "/le.czas domena ",
+            "ustaw domene recznie", true)
+        help_alias("/le.kal [liczba]", "/le.kal", "najblizsze wydarzenia", false)
+        help_alias("/le.kal tydzien", "/le.kal tydzien", "agenda na najblizsze 7 dni", false)
     end)
 
     le.czas.aliases.ev = tempAlias("^/le\\.kal(?: (\\d+))?$", function()

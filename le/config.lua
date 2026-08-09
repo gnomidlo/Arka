@@ -16,6 +16,13 @@ local function log(text, color)
         color or "powder_blue", tostring(text or "")))
 end
 
+local function command_row(border_color, command_color, label, command, description)
+    cecho(string.format("<%s>│ ", border_color))
+    cechoLink(string.format("<%s>%-24s<reset>", command_color, label),
+        function() expandAlias(command) end, description, true)
+    cecho(string.format(" <slate_gray>%-28s <%s>│\n", description, border_color))
+end
+
 local function compare_versions(left, right)
     local left_parts, right_parts = {}, {}
     for value in tostring(left or ""):gmatch("%d+") do
@@ -45,20 +52,20 @@ local function cleanup_update_resources()
 end
 
 function le.config.showHelp()
-    cecho([[
-<light_pink>╭────────────────────────────────────────────────────────╮
-<light_salmon>│ <light_pink>U<light_salmon>N<khaki>I<pale_green>C<pale_turquoise>O<light_sky_blue>R<plum>N  <white>le.conf<slate_gray> · pastelowe moduly dla Mudleta        <light_salmon>│
-<khaki>├────────────────────────────────────────────────────────┤
-<pale_green>│ <light_pink>/le.config<reset>              <slate_gray>pomoc i lista komend           <pale_green>│
-<pale_turquoise>│ <light_salmon>/le.config wersja<reset>       <slate_gray>zainstalowana wersja           <pale_turquoise>│
-<light_sky_blue>│ <khaki>/le.config aktualizacja<reset> <slate_gray>sprawdz dostepna aktualizacje  <light_sky_blue>│
-<plum>│ <pale_green>/le.config aktualizuj<reset>   <slate_gray>pobierz aktualizacje           <plum>│
-<light_pink>├────────────────────────────────────────────────────────┤
-<light_salmon>│ <pale_turquoise>/le.czas<reset>                <slate_gray>zegar i synchronizacja czasu   <light_salmon>│
-<khaki>│ <light_sky_blue>/le.kal [liczba]<reset>        <slate_gray>najblizsze wydarzenia          <khaki>│
-<pale_green>│ <plum>/le.kal tydzien<reset>         <slate_gray>pastelowa agenda na 7 dni      <pale_green>│
-<pale_turquoise>╰────────────────────────────────────────────────────────╯<reset>
-]])
+    cecho("\n<light_pink>╭────────────────────────────────────────────────────────╮\n")
+    cecho("<light_salmon>│ <light_pink>U<light_salmon>N<khaki>I<pale_green>C<pale_turquoise>O<light_sky_blue>R<plum>N  <white>le.conf<slate_gray> · kliknij wybrana komende              <light_salmon>│\n")
+    cecho("<khaki>├────────────────────────────────────────────────────────┤\n")
+    cecho("<khaki>│ <white>MODULY                                                 <khaki>│\n")
+    command_row("light_pink", "light_pink", "/le.config", "/le.config", "centrum pomocy UNICORN")
+    command_row("light_salmon", "light_salmon", "/le.czas", "/le.czas", "zegar i synchronizacja")
+    command_row("khaki", "khaki", "/le.kal", "/le.kal", "kalendarz i agenda 7 dni")
+    command_row("pale_green", "pale_green", "/le.lecz", "/le.lecz", "dobor ziol do przypadlosci")
+    cecho("<pale_turquoise>├────────────────────────────────────────────────────────┤\n")
+    cecho("<pale_turquoise>│ <white>KONFIGURACJA                                           <pale_turquoise>│\n")
+    command_row("light_sky_blue", "light_sky_blue", "/le.config wersja", "/le.config wersja", "pokaz zainstalowana wersje")
+    command_row("plum", "plum", "/le.config aktualizacja", "/le.config aktualizacja", "sprawdz dostepna wersje")
+    command_row("light_pink", "light_pink", "/le.config aktualizuj", "/le.config aktualizuj", "pobierz i zainstaluj")
+    cecho("<pale_turquoise>╰────────────────────────────────────────────────────────╯<reset>\n")
 end
 
 function le.config.showVersion()

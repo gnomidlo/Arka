@@ -12,7 +12,7 @@ Niezależna konfiguracja i zestaw pluginów dla Mudleta.
 Po udostępnieniu repozytorium wykonaj w Mudlecie:
 
 ```text
-/zainstaluj_plugin https://raw.githubusercontent.com/gnomidlo/Arka/main/dist/UNICORN.zip?version=0.2.2
+/zainstaluj_plugin https://raw.githubusercontent.com/gnomidlo/Arka/main/dist/UNICORN.zip?version=0.3.0
 ```
 
 Po instalacji sprawdź listę pluginów:
@@ -30,7 +30,7 @@ Po pierwszej instalacji pliki sa juz na dysku, ale plugin moze nie byc jeszcze w
 Zmiana nazwy pluginu wymaga jednorazowego usuniecia starego katalogu. Zamknij Mudlet, usun katalog `plugins/Arka`, uruchom Mudlet i zainstaluj nowa paczke:
 
 ```text
-/zainstaluj_plugin https://raw.githubusercontent.com/gnomidlo/Arka/main/dist/UNICORN.zip?version=0.2.2
+/zainstaluj_plugin https://raw.githubusercontent.com/gnomidlo/Arka/main/dist/UNICORN.zip?version=0.3.0
 ```
 
 Od wersji `0.2.0` plugin jest instalowany i wyswietlany na liscie jako `UNICORN`. Paczka ma pliki bezposrednio w katalogu glownym ZIP-a, zgodnie z formatem instalatora Arkadii.
@@ -45,6 +45,8 @@ Od wersji `0.2.0` plugin jest instalowany i wyswietlany na liscie jako `UNICORN`
 /le.czas
 /le.kal [liczba]
 /le.kal tydzien
+/le.lecz
+/le.lecz <kategoria>
 ```
 
 - `/le.config` — pomoc konfiguracji `le.conf`,
@@ -53,7 +55,11 @@ Od wersji `0.2.0` plugin jest instalowany i wyswietlany na liscie jako `UNICORN`
 - `/le.config aktualizuj` — instaluje wykryta aktualizacje,
 - `/le.czas` — pomoc zegara i synchronizacji,
 - `/le.kal` — jednoliniowa lista najbliższych wydarzen z obu domen,
-- `/le.kal tydzien` — agenda wydarzen na najblizsze 7 dni.
+- `/le.kal tydzien` — agenda wydarzen na najblizsze 7 dni,
+- `/le.lecz` — pomoc i klikalne kategorie leczenia,
+- `/le.lecz <kategoria>` — lista ziol dla wybranej przypadlosci.
+
+Komendy wyswietlane w pomocy modulow sa klikalne. Szablony wymagajace parametrow w `/le.czas` uzupelniaja linie polecen zamiast wykonywac niepelna komende.
 
 ### Synchronizacja czasu
 
@@ -63,7 +69,8 @@ Moduł nie wysyła żadnych komend. Gdy użytkownik wpisze w grze `czas`, moduł
 
 - `init.lua` — punkt wejścia pluginu `UNICORN`,
 - `le/config.lua` — moduł pomocy i alias `/le.config`,
-- `le/czas.lua` — niezależny zegar, kalendarz, wydarzenia i interfejs.
+- `le/czas.lua` — niezależny zegar, kalendarz, wydarzenia i interfejs,
+- `le/lecz.lua` — dobor ziol i klikalne leczenie.
 
 
 
@@ -76,7 +83,13 @@ ZA 02h 14m | ISHTAR   | Poczatek pelni              | pn  10 sierpnia | 21:34
 ZA 05h 48m | IMPERIUM | Poczatek nowiu              | wt  11 sierpnia | 01:08
 ```
 
-Skroty dni zajmuja stale pole trzech znakow: `pn`, `wt`, `sr`, `czw`, `pt`, `sob`, `n`. Widok zawiera klikalne przejscie do agendy siedmiodniowej.
+Skroty dni zajmuja stale pole trzech znakow: `pn`, `wt`, `sr`, `czw`, `pt`, `sob`, `n`. Widok zawiera klikalne przejscie do agendy siedmiodniowej. Panel najblizszego wydarzenia pokazuje domene przed odliczaniem, np. `Imperium | zacznie sie za 02h 14m`.
+
+## Leczenie
+
+Po wpisaniu w grze `stan` modul dopisuje pod rozpoznanym zatruciem, choroba lub pasozytami pasujace ziola. Klikniecie nazwy ziola wykonuje `/wezz`, a klikniecie sposobu uzycia opuszcza bron i uruchamia odpowiedni alias `/z_...`.
+
+Informacje o posiadanych ziolach pochodza z globalnej bazy `herbs.counts`, budowanej komenda `/ziola_buduj`.
 
 
 ## Wersje i aktualizacje
