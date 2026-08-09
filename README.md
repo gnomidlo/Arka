@@ -12,7 +12,7 @@ Niezależna konfiguracja i zestaw pluginów dla Mudleta.
 Po udostępnieniu repozytorium wykonaj w Mudlecie:
 
 ```text
-/zainstaluj_plugin https://raw.githubusercontent.com/gnomidlo/Arka/main/dist/Arka.zip?version=0.1.2
+/zainstaluj_plugin https://raw.githubusercontent.com/gnomidlo/Arka/main/dist/Arka.zip?version=0.1.3
 ```
 
 Po instalacji sprawdź listę pluginów:
@@ -23,10 +23,10 @@ Po instalacji sprawdź listę pluginów:
 
 Plugin powinien pojawić się na liście jako `Arka`.
 
-Jeżeli aktualizacja z wersji `0.1.1` pozostawiła niepełny katalog pluginu, zamknij Mudlet i usuń ręcznie katalog `plugins/Arka` z katalogu profilu. Następnie uruchom Mudlet i wykonaj:
+Jeżeli wcześniejsza instalacja pozostawiła niepełny katalog pluginu, zamknij Mudlet i usuń ręcznie katalog `plugins/Arka` z katalogu profilu. Następnie uruchom Mudlet i wykonaj:
 
 ```text
-/zainstaluj_plugin https://raw.githubusercontent.com/gnomidlo/Arka/main/dist/Arka.zip?version=0.1.2
+/zainstaluj_plugin https://raw.githubusercontent.com/gnomidlo/Arka/main/dist/Arka.zip?version=0.1.3
 ```
 
 Od wersji `0.1.2` instalacja korzysta z przygotowanego archiwum `dist/Arka.zip`, w którym pliki pluginu znajduja sie bezposrednio w katalogu glownym. Dzieki temu instalator Arkadii uzywa bezpiecznej sciezki wymiany calego katalogu pluginu.
