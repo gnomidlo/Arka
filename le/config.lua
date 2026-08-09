@@ -1,6 +1,5 @@
 -- le.config
 -- Główny moduł pomocy konfiguracji le.conf.
--- Moduł korzysta wyłącznie z API Mudleta i nie zależy od msconfig/msmudlet.
 
 le = le or {}
 le.config = le.config or {}
