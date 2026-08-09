@@ -1,4 +1,4 @@
 le = le or {}
-le.version = "0.2.1"
+le.version = "0.2.2"
 
 return le.version

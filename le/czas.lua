@@ -280,11 +280,16 @@ local function normalize_game_text(value)
 end
 
 local function parse_ordinal_day(text)
-    local numeric = text:match("(%d+)%.%s+dzien%s+pory")
+    local numeric = text:match("(%d+)%.?%s+dzien%s+pory")
+        or text:match("(%d+)%.?%s+dzien%s+miesiaca")
     if numeric then return tonumber(numeric) end
 
     local first, second = text:match("([%a]+)%s*([%a]*)%s+dzien%s+pory")
+    if not first then
+        first, second = text:match("([%a]+)%s*([%a]*)%s+dzien%s+miesiaca")
+    end
     if not first then return nil end
+
     if ORDINAL_TENS[first] then
         return ORDINAL_TENS[first] + (ORDINAL_UNITS[second] or 0)
     end
@@ -301,7 +306,8 @@ local function parse_game_clock(text)
         return nil
     end
 
-    local phrase = text:match("^jest%s+w%s+przyblizeniu%s+([^,]+)")
+    local phrase = text:match("^jest%s+dokladnie%s+([^,]+)")
+        or text:match("^jest%s+w%s+przyblizeniu%s+([^,]+)")
     if not phrase then return nil end
     if phrase:find("polnoc", 1, true) then return 0, 0 end
     if phrase:find("poludnie", 1, true) then return 12, 0 end
@@ -334,12 +340,19 @@ end
 function le.czas.parse_time_text(raw_text)
     local text = normalize_game_text(raw_text)
     local period_name = text:match("dzien%s+pory%s+([%a]+)")
+    local expected_domain = "ishtar"
+
+    if not period_name then
+        period_name = text:match("dzien%s+miesiaca%s+([%a]+)")
+        expected_domain = "imperium"
+    end
+
     local period_day = parse_ordinal_day(text)
     local hour, minute = parse_game_clock(text)
     if not period_name or not period_day or hour == nil then return nil end
 
     local domain, start_day, period_length = find_calendar_period(period_name)
-    if not domain or period_day < 1 or period_day > period_length then return nil end
+    if domain ~= expected_domain or period_day < 1 or period_day > period_length then return nil end
     return domain, start_day + period_day - 1, hour, minute
 end
 
@@ -901,7 +914,7 @@ function le.czas.init()
     le.czas.UI.event:setStyleSheet(le.czas.config.style)
     le.czas.setup_aliases()
     le.czas.time_trigger = tempRegexTrigger(
-        [[^Jest (?:dokladnie|w przyblizeniu) .+ dzien pory .+ wedlug rachuby czasu Starszego Ludu\.$]],
+        [[^Jest (?:dokladnie|w przyblizeniu) .+ wedlug (?:rachuby czasu Starszego Ludu|Kalendarza Imperialnego)\.$]],
         function() le.czas.on_time_text(matches[1]) end
     )
     le.czas.room_handler = registerAnonymousEventHandler("gmcp.room", le.czas.on_room)
