@@ -13,9 +13,9 @@ function le.config.showHelp()
 <sky_blue>╚══════════════════════════════════════════════╝<reset>
 
 <white>Dostępne komendy:<reset>
-  <yellow>/le.config<reset>  - wyświetla tę pomoc
-
-<gray>Kolejne moduły i komendy będą dodawane wraz z rozwojem konfiguracji.<reset>
+  <yellow>/le.config<reset>      - wyświetla tę pomoc
+  <yellow>/le.czas<reset>        - pomoc zegara i synchronizacji czasu
+  <yellow>/le.kal [liczba]<reset> - najbliższe wydarzenia z obu domen
 ]])
 end
 
