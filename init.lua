@@ -1,4 +1,4 @@
--- Punkt wejscia pluginu Arka dla loadera konfiguracji Arkadii.
+-- Punkt wejscia pluginu UNICORN dla loadera konfiguracji Arkadii.
 return {
     "version",
     "le.config",
