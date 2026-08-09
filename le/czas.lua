@@ -839,8 +839,8 @@ function le.czas.UI.update()
         local pastel = pastel_event_color(event)
         local domain_name = domain == "ishtar" and "Ishtar" or "Imperium"
         local domain_color = le.czas.config.domain_colors[domain] or "#d7d9de"
-        le.czas.UI.event:echo(string.format([[<div style='background-color:rgba(255,255,255,0.025);border-radius:4px;padding:3px 6px'><div style='font-size:9px;color:#8f9299;letter-spacing:1px'>NAJBLIZSZE WYDARZENIE</div><div style='font-size:10px;color:#aeb1b7;white-space:nowrap'><span style='color:%s;font-weight:bold'>%s</span> <span style='color:#666'>|</span> zacznie sie za <span style='color:%s;font-weight:bold'>%s</span></div><div style='font-size:12px;color:%s;font-weight:bold;white-space:nowrap'>%s</div></div>]],
-            domain_color, domain_name, pastel, duration(event.offset), pastel, event.desc))
+        le.czas.UI.event:echo(string.format([[<div style='background-color:rgba(255,255,255,0.025);border-radius:4px;padding:3px 6px'><div style='font-size:9px;color:#8f9299;letter-spacing:1px'>NAJBLIZSZE WYDARZENIE</div><div style='font-size:12px;color:%s;font-weight:bold;white-space:nowrap'>%s</div><div style='font-size:10px;color:#aeb1b7;white-space:nowrap'><span style='color:%s;font-weight:bold'>%s</span> <span style='color:#666'>|</span> zacznie sie za <span style='color:%s;font-weight:bold'>%s</span></div></div>]],
+            pastel, event.desc, domain_color, domain_name, pastel, duration(event.offset)))
     else
         le.czas.UI.event:echo([[<center><div style='font-size:9px;color:#8f9299;letter-spacing:1px'>NAJBLIZSZE WYDARZENIE</div><div style='font-size:12px;color:#b8bbc2'>Brak danych</div></center>]])
     end
@@ -850,7 +850,7 @@ end
 
 local function help_alias(label, command, description, fill_only)
     cecho("  ")
-    cechoLink(string.format("<pale_turquoise>%-58s<reset>", label),
+    cechoLink(string.format("<pale_turquoise>◆ %s<reset>", label),
         function()
             if fill_only and type(setCmdLine) == "function" then
                 setCmdLine(command)
@@ -859,7 +859,7 @@ local function help_alias(label, command, description, fill_only)
             end
         end,
         fill_only and "Uzupelnij komende i zatwierdz" or description, true)
-    cecho("<slate_gray>- " .. description .. "<reset>\n")
+    cecho("\n    <slate_gray>" .. description .. "<reset>\n")
 end
 
 function le.czas.setup_aliases()

@@ -56,14 +56,21 @@ le.lecz.categories = {
     { token = "gad", key = "gadzi_jad" },
     { token = "insekt", key = "jad_insekta" },
     { token = "roslinna", key = "toksyna_roslinna" },
-    { token = "pokarm", key = "choroba_pokarmowa" },
+    { token = "pokarmowe", key = "choroba_pokarmowa", aliases = { "pokarm" } },
     { token = "pluc", key = "choroba_pluc" },
-    { token = "skora", key = "choroba_skory" },
+    { token = "skory", key = "choroba_skory", aliases = { "skora" } },
     { token = "zakazna", key = "choroba_zakazna" },
     { token = "pasozyty", key = "pasozyty" },
     { token = "pchly", key = "pchly" },
-    { token = "odtrutka", key = "odtr_ogolne" },
     { token = "wij", key = "jad_wija" },
+    { token = "ogolne", key = "odtr_ogolne", aliases = { "odtrutka", "odtrutki" } },
+}
+
+le.lecz.category_groups = {
+    { title = "TOKSYNY", color = "light_salmon", tokens = { "gad", "insekt", "roslinna" } },
+    { title = "CHOROBY", color = "khaki", tokens = { "pokarmowe", "pluc", "skory", "zakazna" } },
+    { title = "INNE", color = "pale_turquoise", tokens = { "pasozyty", "pchly", "wij" } },
+    { title = "ODTRUTKI OGOLNE", color = "plum", tokens = { "ogolne" } },
 }
 
 le.lecz.detectors = {
@@ -264,6 +271,9 @@ function le.lecz.resolve_category(argument)
     argument = string.lower(argument or "")
     for _, category in ipairs(le.lecz.categories) do
         if category.token == argument or category.key == argument then return category.key end
+        for _, alias in ipairs(category.aliases or {}) do
+            if alias == argument then return category.key end
+        end
     end
 end
 
@@ -300,27 +310,35 @@ function le.lecz.show_category(argument)
 end
 
 function le.lecz.show_help()
-    cecho("\n<light_pink>╭────────────────────────────────────────────────────────╮\n")
-    cecho("<light_salmon>│ <light_pink>U<light_salmon>N<khaki>I<pale_green>C<pale_turquoise>O<light_sky_blue>R<plum>N  <white>le.lecz<slate_gray> · ziola dopasowane do stanu           <light_salmon>│\n")
-    cecho("<khaki>├────────────────────────────────────────────────────────┤\n")
-    cecho("<pale_green>│ <slate_gray>Wpisz <white>stan<slate_gray>. Pod wynikiem pojawi sie leczenie.       <pale_green>│\n")
-    cecho("<pale_turquoise>│ <slate_gray>Kliknij ziolo, aby je wziac; kliknij akcje, aby uzyc. <pale_turquoise>│\n")
-    cecho("<light_sky_blue>│ <slate_gray>Ilosci pochodza z klikalnego <light_sky_blue>")
+    cecho("\n<light_sky_blue>[<thistle> lecz <light_sky_blue>]<reset> ")
+    cecho("<light_pink>U<light_salmon>N<khaki>I<pale_green>C<pale_turquoise>O<light_sky_blue>R<plum>N")
+    cecho("  <white>le.lecz<reset>\n")
+    cecho("<slate_gray>Wpisz <white>stan<slate_gray>, a pod wynikiem pojawi sie leczenie.<reset>\n")
+    cecho("<slate_gray>Kliknij ziolo, aby je wziac; kliknij akcje, aby jej uzyc.<reset>\n")
+    cecho("<slate_gray>Ilosci pochodza z klikalnego <light_sky_blue>")
     cechoLink("/ziola_buduj", function() expandAlias("/ziola_buduj") end, "Zbuduj baze ziol", true)
-    cecho("<slate_gray>.                 <light_sky_blue>│\n")
-    cecho("<plum>├────────────────────────────────────────────────────────┤\n")
-    cecho("<plum>│ <white>KATEGORIE                                              <plum>│\n")
-    cecho("<light_pink>│ ")
-    for index, category in ipairs(le.lecz.categories) do
-        local token = category.token
-        local color = ({ "light_pink", "light_salmon", "khaki", "pale_green", "pale_turquoise", "light_sky_blue", "plum" })[((index - 1) % 7) + 1]
-        cechoLink(string.format("<%s>%s", color, category.token),
-            function() expandAlias("/le.lecz " .. token) end,
-            "Pokaz: " .. (le.lecz.names[category.key] or category.key), true)
-        if index < #le.lecz.categories then cecho("<slate_gray> | ") end
-        if index == 6 then cecho("\n<light_salmon>│ ") end
+    cecho("<slate_gray>.<reset>\n")
+
+    local by_token = {}
+    for _, category in ipairs(le.lecz.categories) do by_token[category.token] = category end
+    local link_colors = { "light_pink", "light_salmon", "khaki", "pale_green", "pale_turquoise", "light_sky_blue", "plum" }
+
+    cecho("\n<white>KATEGORIE<reset>\n")
+    local color_index = 1
+    for _, group in ipairs(le.lecz.category_groups) do
+        cecho(string.format("\n<%s>%s<reset>\n  ", group.color, group.title))
+        for index, token in ipairs(group.tokens) do
+            local category = by_token[token]
+            local selected_token = token
+            local color = link_colors[color_index]
+            color_index = color_index % #link_colors + 1
+            cechoLink(string.format("<%s>◆ %s", color, token),
+                function() expandAlias("/le.lecz " .. selected_token) end,
+                "Pokaz: " .. (le.lecz.names[category.key] or category.key), true)
+            if index < #group.tokens then cecho("<slate_gray>   ") end
+        end
+        cecho("\n")
     end
-    cecho("\n<pale_turquoise>╰────────────────────────────────────────────────────────╯<reset>\n")
 end
 
 function le.lecz.cleanup()

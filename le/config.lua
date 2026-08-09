@@ -16,11 +16,11 @@ local function log(text, color)
         color or "powder_blue", tostring(text or "")))
 end
 
-local function command_row(border_color, command_color, label, command, description)
-    cecho(string.format("<%s>│ ", border_color))
-    cechoLink(string.format("<%s>%-24s<reset>", command_color, label),
+local function command_item(command_color, label, command, description)
+    cecho("  ")
+    cechoLink(string.format("<%s>◆ %s<reset>", command_color, label),
         function() expandAlias(command) end, description, true)
-    cecho(string.format(" <slate_gray>%-28s <%s>│\n", description, border_color))
+    cecho(string.format("\n    <slate_gray>%s<reset>\n", description))
 end
 
 local function compare_versions(left, right)
@@ -131,6 +131,7 @@ end
 local function install_paths()
     local home = normalized_path(getMudletHomeDir())
     return {
+        home = home,
         archive = home .. "/UNICORN-update.zip",
         staging = home .. "/UNICORN-update",
         plugin = home .. "/plugins/UNICORN",
@@ -141,21 +142,40 @@ end
 function le.config.cleanupArtifacts(options)
     options = options or {}
     local paths = install_paths()
-    local removed, failed = 0, {}
+    local removed, quarantined, failed = 0, 0, {}
+
+    if lfs.attributes(paths.home, "mode") == "directory" then
+        for name in lfs.dir(paths.home) do
+            if name:match("^UNICORN%-cleanup%-%d+") then
+                pcall(remove_path, paths.home .. "/" .. name)
+            end
+        end
+    end
+
     if lfs.attributes(paths.plugins, "mode") == "directory" then
         for name in lfs.dir(paths.plugins) do
             if name == "UNICORN_todelete" or name:match("^%d+UNICORN$") then
                 local target = paths.plugins .. "/" .. name
+                local cleared = false
                 local ok, success, err = pcall(remove_path, target)
                 if ok and success then
                     removed = removed + 1
-                    if scripts and scripts.plugins then
-                        for index = #scripts.plugins, 1, -1 do
-                            if scripts.plugins[index] == name then table.remove(scripts.plugins, index) end
-                        end
-                    end
+                    cleared = true
                 else
-                    failed[#failed + 1] = name .. ": " .. tostring(err or success)
+                    local quarantine = paths.home .. "/UNICORN-cleanup-" .. os.time() .. "-" .. name
+                    local moved, move_error = os.rename(target, quarantine)
+                    if moved then
+                        quarantined = quarantined + 1
+                        cleared = true
+                    else
+                        failed[#failed + 1] = name .. ": " .. tostring(move_error or err or success)
+                    end
+                end
+
+                if cleared and scripts and scripts.plugins then
+                    for index = #scripts.plugins, 1, -1 do
+                        if scripts.plugins[index] == name then table.remove(scripts.plugins, index) end
+                    end
                 end
             end
         end
@@ -163,7 +183,12 @@ function le.config.cleanupArtifacts(options)
 
     if not options.quiet then
         if #failed == 0 then
-            log("Usunieto pozostalosci instalatora: " .. removed .. ". Zrestartuj Mudlet.", "pale_green")
+            if quarantined > 0 then
+                log(string.format("Usunieto %d, odizolowano poza plugins %d. Zrestartuj Mudlet.",
+                    removed, quarantined), "pale_green")
+            else
+                log("Usunieto pozostalosci instalatora: " .. removed .. ". Zrestartuj Mudlet.", "pale_green")
+            end
         else
             log("Nie udalo sie usunac: " .. table.concat(failed, ", "), "light_pink")
         end
@@ -172,21 +197,21 @@ function le.config.cleanupArtifacts(options)
 end
 
 function le.config.showHelp()
-    cecho("\n<light_pink>╭────────────────────────────────────────────────────────╮\n")
-    cecho("<light_salmon>│ <light_pink>U<light_salmon>N<khaki>I<pale_green>C<pale_turquoise>O<light_sky_blue>R<plum>N  <white>le.conf<slate_gray> · kliknij wybrana komende              <light_salmon>│\n")
-    cecho("<khaki>├────────────────────────────────────────────────────────┤\n")
-    cecho("<khaki>│ <white>MODULY                                                 <khaki>│\n")
-    command_row("light_pink", "light_pink", "/le.config", "/le.config", "centrum pomocy UNICORN")
-    command_row("light_salmon", "light_salmon", "/le.czas", "/le.czas", "zegar i synchronizacja")
-    command_row("khaki", "khaki", "/le.kal", "/le.kal", "kalendarz i agenda 7 dni")
-    command_row("pale_green", "pale_green", "/le.lecz", "/le.lecz", "dobor ziol do przypadlosci")
-    cecho("<pale_turquoise>├────────────────────────────────────────────────────────┤\n")
-    cecho("<pale_turquoise>│ <white>KONFIGURACJA                                           <pale_turquoise>│\n")
-    command_row("light_sky_blue", "light_sky_blue", "/le.config wersja", "/le.config wersja", "pokaz zainstalowana wersje")
-    command_row("plum", "plum", "/le.config aktualizacja", "/le.config aktualizacja", "sprawdz dostepna wersje")
-    command_row("light_pink", "light_pink", "/le.config aktualizuj", "/le.config aktualizuj", "pobierz i zainstaluj")
-    command_row("light_salmon", "light_salmon", "/le.config napraw", "/le.config napraw", "usun duplikaty instalatora")
-    cecho("<pale_turquoise>╰────────────────────────────────────────────────────────╯<reset>\n")
+    cecho("\n<light_pink>U<light_salmon>N<khaki>I<pale_green>C<pale_turquoise>O<light_sky_blue>R<plum>N")
+    cecho("  <white>le.conf<reset>\n")
+    cecho("<slate_gray>Pastelowe moduly. Kliknij komende, ktora chcesz uruchomic.<reset>\n")
+
+    cecho("\n<khaki>MODULY<reset>\n")
+    command_item("light_pink", "/le.config", "/le.config", "centrum pomocy UNICORN")
+    command_item("light_salmon", "/le.czas", "/le.czas", "zegar i synchronizacja")
+    command_item("khaki", "/le.kal", "/le.kal", "kalendarz i agenda 7 dni")
+    command_item("pale_green", "/le.lecz", "/le.lecz", "dobor ziol do przypadlosci")
+
+    cecho("\n<pale_turquoise>KONFIGURACJA<reset>\n")
+    command_item("light_sky_blue", "/le.config wersja", "/le.config wersja", "pokaz zainstalowana wersje")
+    command_item("plum", "/le.config aktualizacja", "/le.config aktualizacja", "sprawdz dostepna wersje")
+    command_item("light_pink", "/le.config aktualizuj", "/le.config aktualizuj", "pobierz i zainstaluj")
+    command_item("light_salmon", "/le.config napraw", "/le.config napraw", "usun lub odizoluj pozostalosci instalatora")
 end
 
 function le.config.showVersion()
