@@ -41,4 +41,3 @@ Plugin powinien pojawić się na liście jako `Arka`.
 - `le/config.lua` — moduł pomocy i alias `/le.config`,
 - `le/czas.lua` — niezależny zegar, kalendarz, wydarzenia i interfejs.
 
-Projekt nie zależy od `msconfig` ani `msmudlet`.
