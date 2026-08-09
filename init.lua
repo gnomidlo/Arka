@@ -1,8 +1,6 @@
 -- Punkt wejscia pluginu Arka dla loadera konfiguracji Arkadii.
-le = le or {}
-le.version = require("Arka.version")
-
 return {
+    "version",
     "le.config",
     "le.czas",
 }
