@@ -58,4 +58,4 @@ ZA 02h 14m · ISHTAR   · Poczatek pelni              · pn  10 sierpnia · 21:3
 ZA 05h 48m · IMPERIUM · Poczatek nowiu              · wt  11 sierpnia · 01:08
 ```
 
-Skróty dni zajmuja stale pole trzech znakow: `pn`, `wt`, `sr`, `czw`, `pt`, `sob`, `n`. Widok zawiera klikalne przejscie do agendy siedmiodniowej.
+Skroty dni zajmuja stale pole trzech znakow: `pn`, `wt`, `sr`, `czw`, `pt`, `sob`, `n`. Widok zawiera klikalne przejscie do agendy siedmiodniowej.
