@@ -87,7 +87,9 @@ function le.config.checkUpdate(options)
             if url ~= request_url then return true end
             cleanup_update_resources()
 
-            local remote = tostring(response or ""):match("return%s+[\"']([%d%.]+)[\"']")
+            local content = tostring(response or "")
+            local remote = content:match("le%.version%s*=%s*[\"\']([%d%.]+)[\"\']")
+                or content:match("return%s+[\"\']([%d%.]+)[\"\']")
             if not remote then
                 log("Nie udalo sie odczytac wersji z GitHuba.", "light_pink")
                 return
