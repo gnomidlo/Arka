@@ -196,7 +196,7 @@ end
 
 -- Persistent storage --------------------------------------------------------
 
-le.czas.path = getMudletHomeDir() .. "/le.czas_data.json"
+le.czas.path = getMudletHomeDir() .. "/le_czas_data.json"
 le.czas.data = le.czas.data or {
     domain = nil,
     anchors = {},         -- [domain] = { game_sec, real_ts }
