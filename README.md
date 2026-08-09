@@ -12,7 +12,7 @@ Niezależna konfiguracja i zestaw pluginów dla Mudleta.
 Po udostępnieniu repozytorium wykonaj w Mudlecie:
 
 ```text
-/zainstaluj_plugin https://codeload.github.com/gnomidlo/Arka/zip/main?version=0.1.1
+/zainstaluj_plugin https://raw.githubusercontent.com/gnomidlo/Arka/main/dist/Arka.zip?version=0.1.2
 ```
 
 Po instalacji sprawdź listę pluginów:
@@ -23,12 +23,13 @@ Po instalacji sprawdź listę pluginów:
 
 Plugin powinien pojawić się na liście jako `Arka`.
 
-Jeżeli `Arka` była już wcześniej instalowana, usuń najpierw jej katalog przez wbudowaną komendę. Instalator Arkadii nie zastępuje poprawnie istniejącego katalogu przy archiwach GitHuba:
+Jeżeli aktualizacja z wersji `0.1.1` pozostawiła niepełny katalog pluginu, zamknij Mudlet i usuń ręcznie katalog `plugins/Arka` z katalogu profilu. Następnie uruchom Mudlet i wykonaj:
 
 ```text
-/odinstaluj_plugin Arka
-/zainstaluj_plugin https://codeload.github.com/gnomidlo/Arka/zip/main?version=0.1.1
+/zainstaluj_plugin https://raw.githubusercontent.com/gnomidlo/Arka/main/dist/Arka.zip?version=0.1.2
 ```
+
+Od wersji `0.1.2` instalacja korzysta z przygotowanego archiwum `dist/Arka.zip`, w którym pliki pluginu znajduja sie bezposrednio w katalogu glownym. Dzieki temu instalator Arkadii uzywa bezpiecznej sciezki wymiany calego katalogu pluginu.
 
 ## Komendy
 
@@ -78,4 +79,4 @@ Skroty dni zajmuja stale pole trzech znakow: `pn`, `wt`, `sr`, `czw`, `pt`, `sob
 
 Aktualna wersja projektu jest zapisana w `version.lua`. Przed opublikowaniem nowej wersji nalezy podbic ten numer zgodnie z formatem `MAJOR.MINOR.PATCH`.
 
-Sprawdzanie wersji pobiera publiczny plik `version.lua` z galezi `main`. Instalacja aktualizacji jest wykonywana dopiero po swiadomym wywolaniu `/le.config aktualizuj`. Aktualizator najpierw odinstalowuje poprzedni katalog `Arka`, a nastepnie pobiera archiwum ZIP z parametrem wersji, aby instalator wgral rzeczywiscie nowe pliki.
+Sprawdzanie wersji uruchamia sie automatycznie 6 sekund po zaladowaniu pluginu i korzysta z zadania HTTP bez plikow tymczasowych. Instalacja aktualizacji jest wykonywana dopiero po swiadomym wywolaniu `/le.config aktualizuj` i pobiera przygotowane archiwum `dist/Arka.zip`. Po aktualizacji nalezy zrestartowac Mudlet.
