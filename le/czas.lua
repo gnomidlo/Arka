@@ -154,7 +154,7 @@ function le.czas.log(level, text)
     local colors = le.czas.config.log_colors or {}
     local color = colors[level] or "white"
     local bracket = le.czas.config.log_bracket_color or "sky_blue"
-    cecho(string.format("\n<%s>[<%s>le.czas<%s>]<reset> %s\n", bracket, color, bracket, tostring(text or "")))
+    cecho(string.format("\n<%s>[<%s> czas <%s>]<reset> %s\n", bracket, color, bracket, tostring(text or "")))
 end
 
 local function duration(seconds)
@@ -247,7 +247,7 @@ function le.czas.seed_ishtar_sun()
     end
 end
 
--- Automatic synchronization ---------------------------------------------
+-- Time response parsing -------------------------------------------------
 
 local ORDINAL_UNITS = {
     pierwszy = 1, drugi = 2, trzeci = 3, czwarty = 4, piaty = 5,
@@ -506,19 +506,20 @@ end
 
 function le.czas.store_sun(domain, period, kind, minute)
     if not period or not plausible_sun_minute(kind, minute) then return end
+    local kind_label = kind == "sunrise" and "swit" or "zmierzch"
     local dom = le.czas.data.sun[domain]
     dom[period] = dom[period] or { sunrise = {}, sunset = {} }
     local samples = dom[period][kind]
     local center = median(samples)
     if center and #samples >= 3 and circular_difference(center, minute) > le.czas.config.outlier_minutes then
         le.czas.log("rejected", string.format("Odrzucono %s w %s: %s vs mediana %s.",
-            kind, period, game_clock(minute), game_clock(center)))
+            kind_label, period, game_clock(minute), game_clock(center)))
         return
     end
     samples[#samples + 1] = { minute = minute }
     while #samples > le.czas.config.maximum_samples do table.remove(samples, 1) end
     le.czas.save()
-    le.czas.log("saved", string.format("Zapisano %s: %s, okres %s, %s.", kind, domain, period, game_clock(minute)))
+    le.czas.log("saved", string.format("Zapisano %s: %s, okres %s, %s.", kind_label, domain, period, game_clock(minute)))
 end
 
 le.czas.last_event_at = le.czas.last_event_at or {}
@@ -533,6 +534,7 @@ function le.czas.on_room_time()
     if previous == nil or previous == daylight then return end
 
     local kind = daylight and "sunrise" or "sunset"
+    local kind_label = kind == "sunrise" and "swit" or "zmierzch"
     local last = le.czas.last_event_at[domain .. kind] or 0
     if epoch() - last < le.czas.config.minimum_event_gap then return end
     le.czas.last_event_at[domain .. kind] = epoch()
@@ -540,7 +542,7 @@ function le.czas.on_room_time()
     local game_sec = le.czas.get_game_sec(domain)
     if not game_sec then
         le.czas.log("skipped", string.format(
-            "Wykryto %s, ale brak synchronizacji. Wpisz: /le.czas sync %s <dzien> <godzina> <minuta>", kind, domain))
+            "Wykryto %s, ale brak synchronizacji. Wpisz w grze: czas", kind_label))
         return
     end
     local day, hour, minute = sec_to_date(game_sec, domain)
@@ -644,6 +646,133 @@ local function pastel_event_color(event)
     return "#d8d0b8"
 end
 
+local WEEKDAY_SHORT = { "n", "pn", "wt", "sr", "czw", "pt", "sob" }
+local WEEKDAY_FULL = {
+    "NIEDZIELA", "PONIEDZIALEK", "WTOREK", "SRODA",
+    "CZWARTEK", "PIATEK", "SOBOTA",
+}
+local MONTH_NAMES = {
+    "stycznia", "lutego", "marca", "kwietnia", "maja", "czerwca",
+    "lipca", "sierpnia", "wrzesnia", "pazdziernika", "listopada", "grudnia",
+}
+
+local function fit_text(value, width)
+    value = tostring(value or "")
+    if #value > width then return value:sub(1, width - 1) .. "~" end
+    return value .. string.rep(" ", width - #value)
+end
+
+local function calendar_countdown(seconds)
+    seconds = math.max(0, math.floor(tonumber(seconds) or 0))
+    local days = math.floor(seconds / 86400)
+    local hours = math.floor((seconds % 86400) / 3600)
+    local minutes = math.floor((seconds % 3600) / 60)
+    if days > 0 then return string.format("ZA %02dd %02dh", days, hours) end
+    return string.format("ZA %02dh %02dm", hours, minutes)
+end
+
+local function real_date(timestamp)
+    local value = os.date("*t", timestamp)
+    return string.format("%-3s %02d %-11s",
+        WEEKDAY_SHORT[value.wday], value.day, MONTH_NAMES[value.month])
+end
+
+local function domain_display(event)
+    if event.domain == "ishtar" then return "ISHTAR", "#c9c3e6" end
+    return "IMPERIUM", "#b9d3df"
+end
+
+local function echo_calendar_event(event)
+    local timestamp = epoch() + event.offset
+    local domain, domain_color = domain_display(event)
+    cecho(string.format(
+        "<#ead9a6>%s<reset> <#686b72>·<reset> <%s>%s<reset> <#686b72>·<reset> <%s>%s<reset> <#686b72>·<reset> <#b8bbc2>%s<reset> <#686b72>·<reset> <#d7d9de>%s<reset>\n",
+        fit_text(calendar_countdown(event.offset), 10),
+        domain_color, fit_text(domain, 8),
+        pastel_event_color(event), fit_text(event.desc, 28),
+        fit_text(real_date(timestamp), 18),
+        os.date("%H:%M", timestamp)))
+end
+
+function le.czas.show_calendar(count)
+    count = math.max(1, math.min(100, tonumber(count) or 20))
+    local events = le.czas.get_upcoming_events_both(count)
+
+    cecho("\n<sky_blue>[<powder_blue> kal  <sky_blue>]<reset> Najblizsze wydarzenia\n\n")
+    if #events == 0 then
+        cecho("<slate_gray>Brak nadchodzacych wydarzen.<reset>\n")
+    else
+        for _, event in ipairs(events) do echo_calendar_event(event) end
+    end
+
+    cecho("<#55585f>" .. string.rep("-", 83) .. "<reset>\n")
+    cechoLink("<powder_blue>>> Pokaz agende na najblizsze 7 dni<reset>\n",
+        [[le.czas.show_week_agenda()]], "Pokaz agende 7-dniowa", true)
+end
+
+function le.czas.show_week_agenda()
+    local now = os.date("*t")
+    local start_time = os.time({
+        year = now.year, month = now.month, day = now.day,
+        hour = 0, min = 0, sec = 0,
+    })
+    local end_time = os.time({
+        year = now.year, month = now.month, day = now.day + 7,
+        hour = 0, min = 0, sec = 0,
+    })
+    local groups = {}
+    for index = 0, 6 do
+        local timestamp = os.time({
+            year = now.year, month = now.month, day = now.day + index,
+            hour = 12, min = 0, sec = 0,
+        })
+        local key = os.date("%Y-%m-%d", timestamp)
+        groups[key] = { timestamp = timestamp, events = {} }
+    end
+
+    for _, event in ipairs(le.czas.get_upcoming_events_both(100)) do
+        local timestamp = epoch() + event.offset
+        if timestamp >= start_time and timestamp < end_time then
+            local key = os.date("%Y-%m-%d", timestamp)
+            if groups[key] then
+                groups[key].events[#groups[key].events + 1] = event
+            end
+        end
+    end
+
+    cecho("\n<sky_blue>[<powder_blue> kal  <sky_blue>]<reset> Agenda · najblizsze 7 dni\n")
+    for index = 0, 6 do
+        local timestamp = os.time({
+            year = now.year, month = now.month, day = now.day + index,
+            hour = 12, min = 0, sec = 0,
+        })
+        local value = os.date("*t", timestamp)
+        local key = os.date("%Y-%m-%d", timestamp)
+        local group = groups[key]
+
+        cecho(string.format("\n<powder_blue>%s · %02d %s<reset>\n",
+            WEEKDAY_FULL[value.wday], value.day, MONTH_NAMES[value.month]:upper()))
+        if #group.events == 0 then
+            cecho("<slate_gray>Brak wydarzen<reset>\n")
+        else
+            for _, event in ipairs(group.events) do
+                local event_time = epoch() + event.offset
+                local domain, domain_color = domain_display(event)
+                cecho(string.format(
+                    "<#d7d9de>%s<reset> <#686b72>·<reset> <%s>%s<reset> <#686b72>·<reset> <%s>%s<reset> <#686b72>·<reset> <#ead9a6>%s<reset>\n",
+                    os.date("%H:%M", event_time),
+                    domain_color, fit_text(domain, 8),
+                    pastel_event_color(event), fit_text(event.desc, 28),
+                    calendar_countdown(event.offset)))
+            end
+        end
+    end
+
+    cecho("<#55585f>" .. string.rep("-", 60) .. "<reset>\n")
+    cechoLink("<powder_blue>>> Powrot do najblizszych wydarzen<reset>\n",
+        [[le.czas.show_calendar()]], "Pokaz najblizsze wydarzenia", true)
+end
+
 function le.czas.UI.update()
     local domain = le.czas.data.domain
     if domain ~= "imperium" and domain ~= "ishtar" then
@@ -686,10 +815,10 @@ function le.czas.UI.update()
     if event then
         local pastel = pastel_event_color(event)
         local domain_name = domain == "ishtar" and "ISHTAR" or "IMPERIUM"
-        le.czas.UI.event:echo(string.format([[<div style='background-color:rgba(255,255,255,0.025);border-radius:4px;padding:3px 6px'><div style='font-size:9px;color:#8f9299;letter-spacing:1px'>◆ %s · NAJBLIŻSZE WYDARZENIE</div><div style='font-size:12px;color:%s;font-weight:bold;white-space:nowrap'>%s</div><div style='font-size:10px;color:#aeb1b7'>rozpocznie się <span style='color:%s;font-weight:bold'>za %s</span></div></div>]],
+        le.czas.UI.event:echo(string.format([[<div style='background-color:rgba(255,255,255,0.025);border-radius:4px;padding:3px 6px'><div style='font-size:9px;color:#8f9299;letter-spacing:1px'>◆ %s · NAJBLIZSZE WYDARZENIE</div><div style='font-size:12px;color:%s;font-weight:bold;white-space:nowrap'>%s</div><div style='font-size:10px;color:#aeb1b7'>rozpocznie sie <span style='color:%s;font-weight:bold'>za %s</span></div></div>]],
             domain_name, pastel, event.desc, pastel, duration(event.offset)))
     else
-        le.czas.UI.event:echo([[<center><div style='font-size:9px;color:#8f9299;letter-spacing:1px'>NAJBLIŻSZE WYDARZENIE</div><div style='font-size:12px;color:#b8bbc2'>Brak danych</div></center>]])
+        le.czas.UI.event:echo([[<center><div style='font-size:9px;color:#8f9299;letter-spacing:1px'>NAJBLIZSZE WYDARZENIE</div><div style='font-size:12px;color:#b8bbc2'>Brak danych</div></center>]])
     end
 end
 
@@ -710,36 +839,29 @@ function le.czas.setup_aliases()
 
     le.czas.aliases.help = tempAlias("^/le\\.czas$", function()
         cecho([[
-<CadetBlue>(le.czas) Komendy:<reset>
+<sky_blue>[<powder_blue> czas <sky_blue>]<reset> Komendy:
   /le.czas sync <ishtar|imperium> <dzien> <godzina> <minuta>  - zsynchronizuj zegar
   /le.czas domena <ishtar|imperium>                            - ustaw domene recznie
-  /le.kal [x]                                                  - x najblizszych eventow z obu domen (domyslnie 20)
+  /le.kal [x]                                                  - x najblizszych wydarzen (domyslnie 20)
+  /le.kal tydzien                                              - agenda na najblizsze 7 dni
 ]])
     end)
 
-    -- /le.kal [x] - x najblizszych eventow z OBU domen naraz, domyslnie 20
     le.czas.aliases.ev = tempAlias("^/le\\.kal(?: (\\d+))?$", function()
-        local count = tonumber(matches[2]) or 20
         local no_imperium = not le.czas.get_game_sec("imperium")
         local no_ishtar = not le.czas.get_game_sec("ishtar")
         if no_imperium and no_ishtar then
             cecho([[
-<CadetBlue>(le.czas)<reset> Brak synchronizacji dla obu domen.
+<sky_blue>[<powder_blue> kal  <sky_blue>]<reset> Brak synchronizacji dla obu domen.
 Wpisz <yellow>czas<reset> po odwiedzeniu kazdej domeny, aby zapisac jej zegar.
 ]])
             return
         end
-        local events = le.czas.get_upcoming_events_both(count)
-        if #events == 0 then
-            cecho("<CadetBlue>(le.czas)<reset> Brak nadchodzacych eventow.\n")
-            return
-        end
-        cecho(string.format("\n<CadetBlue>(le.czas) %d najblizszych eventow:<reset>\n", #events))
-        for _, e in ipairs(events) do
-            local domain_label = e.domain == "ishtar" and "Ishtar  " or "Imperium"
-            cecho(string.format("<gray>[%s]<reset> <%s>%-28s<reset> za %s\n",
-                domain_label, e.color or "white", e.desc, duration(e.offset)))
-        end
+        le.czas.show_calendar(tonumber(matches[2]) or 20)
+    end)
+
+    le.czas.aliases.agenda = tempAlias("^/le\\.kal (?:tydzien|agenda)$", function()
+        le.czas.show_week_agenda()
     end)
 end
 
