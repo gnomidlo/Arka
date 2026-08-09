@@ -19,6 +19,7 @@ le.czas.config = {
     outlier_minutes = 180,
     sun_colors = { sunrise = "#e6c34f", sunset = "#8e94aa" },
     sky_icon_colors = { sun = "#e6c34f", moon = "#747b87", unknown = "#9297a0" },
+    domain_colors = { imperium = "#eedd82", ishtar = "#afeeee" },
     log_bracket_color = "sky_blue",
     log_colors = { detected = "steel_blue", saved = "powder_blue", skipped = "slate_gray", rejected = "light_pink", info = "pale_green" },
 }
@@ -678,8 +679,10 @@ local function real_date(timestamp)
 end
 
 local function domain_display(event)
-    if event.domain == "ishtar" then return "ISHTAR", "#c9c3e6" end
-    return "IMPERIUM", "#b9d3df"
+    if event.domain == "ishtar" then
+        return "ISHTAR", le.czas.config.domain_colors.ishtar
+    end
+    return "IMPERIUM", le.czas.config.domain_colors.imperium
 end
 
 local function decho_rgb(hex_color)
