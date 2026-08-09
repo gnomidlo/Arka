@@ -12,7 +12,7 @@ Niezależna konfiguracja i zestaw pluginów dla Mudleta.
 Po udostępnieniu repozytorium wykonaj w Mudlecie:
 
 ```text
-/zainstaluj_plugin https://raw.githubusercontent.com/gnomidlo/Arka/main/dist/UNICORN.zip?version=0.3.0
+/zainstaluj_plugin https://raw.githubusercontent.com/gnomidlo/Arka/main/dist/UNICORN.zip?version=0.3.1
 ```
 
 Po instalacji sprawdź listę pluginów:
@@ -30,7 +30,7 @@ Po pierwszej instalacji pliki sa juz na dysku, ale plugin moze nie byc jeszcze w
 Zmiana nazwy pluginu wymaga jednorazowego usuniecia starego katalogu. Zamknij Mudlet, usun katalog `plugins/Arka`, uruchom Mudlet i zainstaluj nowa paczke:
 
 ```text
-/zainstaluj_plugin https://raw.githubusercontent.com/gnomidlo/Arka/main/dist/UNICORN.zip?version=0.3.0
+/zainstaluj_plugin https://raw.githubusercontent.com/gnomidlo/Arka/main/dist/UNICORN.zip?version=0.3.1
 ```
 
 Od wersji `0.2.0` plugin jest instalowany i wyswietlany na liscie jako `UNICORN`. Paczka ma pliki bezposrednio w katalogu glownym ZIP-a, zgodnie z formatem instalatora Arkadii.
@@ -42,6 +42,7 @@ Od wersji `0.2.0` plugin jest instalowany i wyswietlany na liscie jako `UNICORN`
 /le.config wersja
 /le.config aktualizacja
 /le.config aktualizuj
+/le.config napraw
 /le.czas
 /le.kal [liczba]
 /le.kal tydzien
@@ -52,7 +53,8 @@ Od wersji `0.2.0` plugin jest instalowany i wyswietlany na liscie jako `UNICORN`
 - `/le.config` — pomoc konfiguracji `le.conf`,
 - `/le.config wersja` — pokazuje wersje lokalna,
 - `/le.config aktualizacja` — sprawdza nowsza wersje na GitHubie,
-- `/le.config aktualizuj` — instaluje wykryta aktualizacje,
+- `/le.config aktualizuj` — instaluje wykryta aktualizacje bez tworzenia nowej instancji,
+- `/le.config napraw` — usuwa pozostawione katalogi instalatora i duplikaty UNICORN,
 - `/le.czas` — pomoc zegara i synchronizacji,
 - `/le.kal` — jednoliniowa lista najbliższych wydarzen z obu domen,
 - `/le.kal tydzien` — agenda wydarzen na najblizsze 7 dni,
@@ -96,4 +98,6 @@ Informacje o posiadanych ziolach pochodza z globalnej bazy `herbs.counts`, budow
 
 Aktualna wersja projektu jest zapisana w `version.lua`. Przed opublikowaniem nowej wersji nalezy podbic ten numer zgodnie z formatem `MAJOR.MINOR.PATCH`.
 
-Sprawdzanie wersji uruchamia sie automatycznie 6 sekund po zaladowaniu pluginu i korzysta z zadania HTTP bez plikow tymczasowych. Instalacja aktualizacji jest wykonywana dopiero po swiadomym wywolaniu `/le.config aktualizuj` i pobiera przygotowane archiwum `dist/UNICORN.zip`. Po aktualizacji nalezy zrestartowac Mudlet.
+Sprawdzanie wersji uruchamia sie automatycznie 6 sekund po zaladowaniu pluginu i korzysta z zadania HTTP bez plikow tymczasowych. Instalacja aktualizacji jest wykonywana dopiero po swiadomym wywolaniu `/le.config aktualizuj`. Od wersji `0.3.1` paczka jest rozpakowywana poza katalogiem pluginow, weryfikowana i kopiowana bezposrednio do `plugins/UNICORN`, dlatego instalator nie tworzy katalogow o nazwach typu `1786310551UNICORN`.
+
+`/le.config napraw` usuwa pozostalosci `UNICORN_todelete` oraz katalogi tymczasowe zakonczone nazwa `UNICORN`. Po aktualizacji lub naprawie nalezy zrestartowac Mudlet.
