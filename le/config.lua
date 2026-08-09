@@ -168,11 +168,6 @@ function le.config.cleanup()
 end
 
 function le.config.setupAliases()
-
-le.config.update.startup_timer = tempTimer(6, function()
-    le.config.update.startup_timer = nil
-    le.config.checkUpdate({ automatic = true })
-end)
     le.config.cleanup()
 
     le.config.aliases.help = tempAlias([[^/le\.config$]], le.config.showHelp)
@@ -182,3 +177,8 @@ end)
 end
 
 le.config.setupAliases()
+
+le.config.update.startup_timer = tempTimer(6, function()
+    le.config.update.startup_timer = nil
+    le.config.checkUpdate({ automatic = true })
+end)
