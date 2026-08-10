@@ -399,6 +399,7 @@ function le.zlecenia.order_time_core(timePhrase)
     le.zlecenia.save()
 
     local remaining = order.completionAt - epoch()
+    echo("\n")
     if estimated then
         le.zlecenia.output(dc(le.zlecenia.config.colors.urgent_mid,
             "Nie rozpoznano terminu „" .. tostring(timePhrase) .. "” · przyjęto 1 dzień gry."))
