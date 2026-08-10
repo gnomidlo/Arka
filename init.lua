@@ -3,6 +3,7 @@ return {
     "version",
     "le.ui",
     "le.config",
+    "le.mowa",
     "le.czas",
     "le.lecz",
     "le.zlecenia",

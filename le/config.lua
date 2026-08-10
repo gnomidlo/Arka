@@ -214,6 +214,7 @@ function le.config.showHelp()
     command_item("kal", "/le.kal", "/le.kal", "kalendarz i agenda 7 dni")
     command_item("lecz", "/le.lecz", "/le.lecz", "dobór ziół do przypadłości")
     command_item("zlec", "/le.zlecenia", "/le.zlecenia", "dostawy od NPC")
+    command_item("mowa", "/le.mowa", "/le.mowa", "oznaczenia mowy, szeptu i krzyku")
 
     if le.ui and le.ui.output then le.ui.output("config", "KONFIGURACJA") end
     command_item("config", "/le.config wersja", "/le.config wersja", "pokaż zainstalowaną wersję")

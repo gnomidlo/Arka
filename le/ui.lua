@@ -21,6 +21,9 @@ le.ui.modules = {
     kal = { accent = "#B6A2E1" },
     zlec = { accent = "#D7A84D" },
     lecz = { accent = "#82C9A5" },
+    mowa = { accent = "#7FAFC0" },
+    szept = { accent = "#A39CBC" },
+    krzyk = { accent = "#C88478" },
 }
 
 function le.ui.module(name)
