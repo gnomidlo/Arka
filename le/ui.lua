@@ -44,6 +44,13 @@ end
 
 function le.ui.prefix(module_name)
     local module = le.ui.module(module_name)
+    -- Trigger moze odpalic na niedomknietej linii serwera (np. mowa NPC bez
+    -- konca linii) — wstaw znak nowej linii tylko wtedy, gdy kursor nie jest
+    -- juz na jej poczatku, zeby belka nigdy nie doklejala sie do tekstu gry.
+    local ok, column = pcall(getColumnNumber)
+    if ok and column and column > 0 then
+        echo("\n")
+    end
     decho(le.ui.dc(module.accent, "▎"))
     decho("  ")
 end
