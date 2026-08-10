@@ -71,7 +71,7 @@ Komendy wyswietlane w pomocy modulow sa klikalne. Szablony wymagajace parametrow
 
 ### Synchronizacja czasu
 
-Moduł nie wysyła żadnych komend. Gdy użytkownik wpisze w grze `czas`, moduł odczytuje odpowiedź i synchronizuje lub aktualizuje zegar właściwej domeny. Obsługiwane są zarówno dokładne godziny i numery dni, jak i starszy format opisowy — dla pór Starszego Ludu oraz miesięcy Kalendarza Imperialnego. `/le.czas sync` pozostaje awaryjną możliwością ręcznej korekty.
+Moduł nie wysyła żadnych komend. Gdy użytkownik wpisze w grze `czas`, moduł odczytuje odpowiedź i synchronizuje lub aktualizuje zegar właściwej domeny. Obsługiwane są zarówno dokładne godziny i numery dni, jak i starszy format opisowy — dla pór Starszego Ludu oraz miesięcy Kalendarza Imperialnego. Moduł nie wymaga ręcznej synchronizacji.
 
 ## Struktura pluginu
 
@@ -112,11 +112,11 @@ Sprawdzanie wersji uruchamia sie automatycznie 6 sekund po zaladowaniu pluginu i
 
 ## Interfejs 0.4.0
 
-UNICORN używa jednego minimalistycznego systemu wizualnego. Komunikaty konsoli zaczynają się od cienkiej belki i tagu modułu, na przykład:
+UNICORN używa jednego minimalistycznego systemu wizualnego. Komunikaty konsoli zaczynają się od cienkiej belki w kolorze modułu, na przykład:
 
 ```text
-▎ [ czas ] Zapisano świt · Imperium · Sommerzeit · 03:22
-▎ [ zlec ] Dodano zlecenie · 80 kg mięsa żubra
+▎  Zapisano świt · Imperium · Sommerzeit · 03:22
+▎  Dodano zlecenie · 80 kg mięsa żubra
 ```
 
 Panel boczny nie używa ikon ani pełnych ramek. Moduły rozpoznaje się po kolorze lewej krawędzi:
