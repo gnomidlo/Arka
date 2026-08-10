@@ -150,7 +150,7 @@ end
 function le.mowa.show_help()
     output("Pomoc · mowa")
     note("Wypowiedzi są oznaczane samą belką; treść i kolor gry pozostają bez zmian.")
-    if le.ui and le.ui.command me
+    if le.ui and le.ui.command then
         le.ui.command("mowa", "/le.mowa ustaw", "/le.mowa ustaw",
             "ustaw w grze kolory 153, 160 i 117", false)
         le.ui.command("mowa", "/le.mowa podglad", "/le.mowa podglad",
