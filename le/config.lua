@@ -12,15 +12,18 @@ le.config.urls = {
 }
 
 local function log(text, color)
-    cecho(string.format("\n<light_sky_blue>[<%s> conf <light_sky_blue>]<reset> %s\n",
-        color or "powder_blue", tostring(text or "")))
+    if le.ui and le.ui.output then
+        le.ui.output("config", text)
+        return
+    end
+    cecho(string.format("\n<light_pink>▎ [ config ]<reset> %s\n", tostring(text or "")))
 end
 
 local function command_item(command_color, label, command, description)
     cecho("  ")
-    cechoLink(string.format("<%s>◆ %s<reset>", command_color, label),
+    cechoLink(string.format("<%s>%s<reset>", command_color, label),
         function() expandAlias(command) end, description, true)
-    cecho(string.format("\n    <slate_gray>%s<reset>\n", description))
+    cecho(string.format("<slate_gray> · %s<reset>\n", description))
 end
 
 local function compare_versions(left, right)
@@ -197,9 +200,12 @@ function le.config.cleanupArtifacts(options)
 end
 
 function le.config.showHelp()
-    cecho("\n<light_pink>U<light_salmon>N<khaki>I<pale_green>C<pale_turquoise>O<light_sky_blue>R<plum>N")
-    cecho("  <white>le.conf<reset>\n")
-    cecho("<slate_gray>Pastelowe moduly. Kliknij komende, ktora chcesz uruchomic.<reset>\n")
+    if le.ui and le.ui.output then
+        le.ui.output("config", "UNICORN " .. tostring(le.version or ""))
+    else
+        cecho("\n<light_pink>▎ [ config ]<reset> UNICORN\n")
+    end
+    cecho("<slate_gray>Kliknij komendę, aby ją uruchomić.<reset>\n")
 
     cecho("\n<khaki>MODULY<reset>\n")
     command_item("light_pink", "/le.config", "/le.config", "centrum pomocy UNICORN")
