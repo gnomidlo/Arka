@@ -93,8 +93,11 @@ local polish = {
 }
 
 local function log(text, color)
-    cecho(string.format("\n<light_sky_blue>[<%s> lecz <light_sky_blue>]<reset> %s\n",
-        color or le.lecz.colors.tag, tostring(text or "")))
+    if le.ui and le.ui.output then
+        le.ui.output("lecz", text)
+        return
+    end
+    cecho(string.format("\n<pale_green>▎ [ lecz ]<reset> %s\n", tostring(text or "")))
 end
 
 local function herb_count(herb)
@@ -157,8 +160,8 @@ end
 local function render_special(key, prefix)
     local colors = le.lecz.colors
     local special = le.lecz.special[key]
-    cecho(string.format("\n%s<%s>%s<%s> -> <%s>%s<%s>: ",
-        prefix or "   |- ", colors.title, le.lecz.names[key], colors.separator,
+    cecho(string.format("\n%s<%s>%s<%s> · <%s>%s<%s>: ",
+        prefix or "<pale_green>▎ [ lecz ]<reset> ", colors.title, le.lecz.names[key], colors.separator,
         colors.warning, special.info, colors.separator))
     for index, command in ipairs(special.commands) do
         local selected_command = command
@@ -182,8 +185,8 @@ function le.lecz.render_condition(key)
         if item.count > 0 then owned[#owned + 1] = item else missing[#missing + 1] = item end
     end
 
-    cecho(string.format("\n   <%s>|- <%s>%s<%s> -> ",
-        colors.separator, colors.title, le.lecz.names[key] or key, colors.separator))
+    cecho(string.format("\n<pale_green>▎ [ lecz ]<reset> <%s>%s<%s> · ",
+        colors.title, le.lecz.names[key] or key, colors.separator))
     if #owned > 0 then
         cecho(string.format("<%s>wylecz: ", colors.separator))
         for index, item in ipairs(owned) do
@@ -228,8 +231,8 @@ function le.lecz.render_recommendation(found)
     if #choices == 0 then return end
 
     local colors = le.lecz.colors
-    cecho(string.format("\n   <%s>|= <%s>leczy kilka na raz<%s>:\n",
-        colors.separator, colors.tag, colors.separator))
+    cecho(string.format("\n<pale_green>▎ [ lecz ]<reset> <%s>leczy kilka na raz<%s>:\n",
+        colors.tag, colors.separator))
     for _, item in ipairs(choices) do
         local names = {}
         for _, key in ipairs(found) do
@@ -245,7 +248,7 @@ end
 function le.lecz.report(found)
     if #found == 0 then return end
     if not inventory_ready() then
-        cecho(string.format("\n   <%s>|- <%s>brak danych o ziolach, kliknij ",
+        cecho(string.format("\n<pale_green>▎ [ lecz ]<reset> <%s>brak danych o ziołach, kliknij ",
             le.lecz.colors.separator, le.lecz.colors.warning))
         cechoLink("<pale_turquoise>/ziola_buduj",
             function() expandAlias("/ziola_buduj") end, "Zbuduj baze ziol", true)
@@ -310,9 +313,11 @@ function le.lecz.show_category(argument)
 end
 
 function le.lecz.show_help()
-    cecho("\n<light_sky_blue>[<thistle> lecz <light_sky_blue>]<reset> ")
-    cecho("<light_pink>U<light_salmon>N<khaki>I<pale_green>C<pale_turquoise>O<light_sky_blue>R<plum>N")
-    cecho("  <white>le.lecz<reset>\n")
+    if le.ui and le.ui.output then
+        le.ui.output("lecz", "Pomoc · leczenie")
+    else
+        cecho("\n<pale_green>▎ [ lecz ]<reset> Pomoc · leczenie\n")
+    end
     cecho("<slate_gray>Wpisz <white>stan<slate_gray>, a pod wynikiem pojawi sie leczenie.<reset>\n")
     cecho("<slate_gray>Kliknij ziolo, aby je wziac; kliknij akcje, aby jej uzyc.<reset>\n")
     cecho("<slate_gray>Ilosci pochodza z klikalnego <light_sky_blue>")
@@ -332,7 +337,7 @@ function le.lecz.show_help()
             local selected_token = token
             local color = link_colors[color_index]
             color_index = color_index % #link_colors + 1
-            cechoLink(string.format("<%s>◆ %s", color, token),
+            cechoLink(string.format("<%s>%s", color, token),
                 function() expandAlias("/le.lecz " .. selected_token) end,
                 "Pokaz: " .. (le.lecz.names[category.key] or category.key), true)
             if index < #group.tokens then cecho("<slate_gray>   ") end

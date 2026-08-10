@@ -12,7 +12,7 @@ Niezależna konfiguracja i zestaw pluginów dla Mudleta.
 Po udostępnieniu repozytorium wykonaj w Mudlecie:
 
 ```text
-/zainstaluj_plugin https://raw.githubusercontent.com/gnomidlo/Arka/main/dist/UNICORN.zip?version=0.3.2
+/zainstaluj_plugin https://raw.githubusercontent.com/gnomidlo/Arka/main/dist/UNICORN.zip?version=0.4.0
 ```
 
 Po instalacji sprawdź listę pluginów:
@@ -30,7 +30,7 @@ Po pierwszej instalacji pliki sa juz na dysku, ale plugin moze nie byc jeszcze w
 Zmiana nazwy pluginu wymaga jednorazowego usuniecia starego katalogu. Zamknij Mudlet, usun katalog `plugins/Arka`, uruchom Mudlet i zainstaluj nowa paczke:
 
 ```text
-/zainstaluj_plugin https://raw.githubusercontent.com/gnomidlo/Arka/main/dist/UNICORN.zip?version=0.3.2
+/zainstaluj_plugin https://raw.githubusercontent.com/gnomidlo/Arka/main/dist/UNICORN.zip?version=0.4.0
 ```
 
 Od wersji `0.2.0` plugin jest instalowany i wyswietlany na liscie jako `UNICORN`. Paczka ma pliki bezposrednio w katalogu glownym ZIP-a, zgodnie z formatem instalatora Arkadii.
@@ -48,6 +48,9 @@ Od wersji `0.2.0` plugin jest instalowany i wyswietlany na liscie jako `UNICORN`
 /le.kal tydzien
 /le.lecz
 /le.lecz <kategoria>
+/le.zlecenia
+/le.zlecenia lista
+/le.zlecenia sprawdz
 ```
 
 - `/le.config` — pomoc konfiguracji `le.conf`,
@@ -59,7 +62,10 @@ Od wersji `0.2.0` plugin jest instalowany i wyswietlany na liscie jako `UNICORN`
 - `/le.kal` — jednoliniowa lista najbliższych wydarzen z obu domen,
 - `/le.kal tydzien` — agenda wydarzen na najblizsze 7 dni,
 - `/le.lecz` — pomoc i klikalne kategorie leczenia,
-- `/le.lecz <kategoria>` — lista ziol dla wybranej przypadlosci.
+- `/le.lecz <kategoria>` — lista ziół dla wybranej przypadłości,
+- `/le.zlecenia` — pomoc modułu dostaw od NPC,
+- `/le.zlecenia lista` — szczegółowa lista aktywnych dostaw,
+- `/le.zlecenia sprawdz` — pyta NPC o dostępne zlecenie.
 
 Komendy wyswietlane w pomocy modulow sa klikalne. Szablony wymagajace parametrow w `/le.czas` uzupelniaja linie polecen zamiast wykonywac niepelna komende.
 
@@ -72,7 +78,8 @@ Moduł nie wysyła żadnych komend. Gdy użytkownik wpisze w grze `czas`, moduł
 - `init.lua` — punkt wejścia pluginu `UNICORN`,
 - `le/config.lua` — moduł pomocy i alias `/le.config`,
 - `le/czas.lua` — niezależny zegar, kalendarz, wydarzenia i interfejs,
-- `le/lecz.lua` — dobor ziol i klikalne leczenie.
+- `le/lecz.lua` — dobór ziół i klikalne leczenie,
+- `le/zlecenia.lua` — dostawy od NPC, zapis terminów i panel Geyser.
 
 
 
@@ -103,6 +110,22 @@ Sprawdzanie wersji uruchamia sie automatycznie 6 sekund po zaladowaniu pluginu i
 `/le.config napraw` usuwa pozostalosci `UNICORN_todelete` oraz katalogi tymczasowe zakonczone nazwa `UNICORN`. Jesli system blokuje usuniecie, katalog jest przenoszony poza `plugins`, aby loader nie traktowal go jako pluginu. Po aktualizacji lub naprawie nalezy zrestartowac Mudlet.
 
 
-## Interfejs 0.3.2
+## Interfejs 0.4.0
 
-Ekrany pomocy UNICORN nie uzywaja ramek ani tabel o stalej szerokosci. Komendy sa prezentowane jako kolorowe, klikalne pozycje z opisem w osobnej linii, dzieki czemu uklad nie zalezy od szerokosci czcionki.
+UNICORN używa jednego minimalistycznego systemu wizualnego. Komunikaty konsoli zaczynają się od cienkiej belki i tagu modułu, na przykład:
+
+```text
+▎ [ czas ] Zapisano świt · Imperium · Sommerzeit · 03:22
+▎ [ zlec ] Dodano zlecenie · 80 kg mięsa żubra
+```
+
+Panel boczny nie używa ikon ani pełnych ramek. Moduły rozpoznaje się po kolorze lewej krawędzi:
+
+- cyjan — czas,
+- lawenda — kalendarz i wydarzenia,
+- bursztyn — zlecenia,
+- mięta — leczenie.
+
+Zegar pokazuje dużą, pogrubioną godzinę, domenę, porę roku i okres kalendarza oraz odliczanie do najbliższego świtu albo zmierzchu.
+
+Zwarty panel zleceń pokazuje wyłącznie przedmiot, ilość i pozostały czas. Kliknięcie dostawy rozwija odbiorcę, miejsce oraz tekstowe akcje `PROWADŹ` i `USUŃ`.

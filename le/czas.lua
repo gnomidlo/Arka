@@ -5,14 +5,23 @@ le.czas = le.czas or {}
 le.czas.UI = le.czas.UI or {}
 
 le.czas.config = {
-    clock = { name = "LeCzasClockLabel", x = "-280px", y = "-790px", width = "260px", height = "156px" },
-    event = { name = "LeCzasEventLabel", x = "-280px", y = "-630px", width = "260px", height = "58px" },
-    style = [[
-        background-color: rgba(10, 10, 10, 220);
-        border: 1px solid #555;
-        border-radius: 6px;
-        padding: 6px;
-        font-family: 'Verdana', sans-serif;
+    clock = { name = "LeCzasClockLabel", x = "-280px", y = "-790px", width = "260px", height = "158px" },
+    event = { name = "LeCzasEventLabel", x = "-280px", y = "-628px", width = "260px", height = "64px" },
+    clock_style = [[
+        background-color: rgba(12, 14, 18, 220);
+        border: none;
+        border-left: 3px solid #79C9D3;
+        border-radius: 0px;
+        padding: 8px 10px;
+        font-family: 'DejaVu Sans Mono', 'Consolas', monospace;
+    ]],
+    event_style = [[
+        background-color: rgba(12, 14, 18, 220);
+        border: none;
+        border-left: 3px solid #B6A2E1;
+        border-radius: 0px;
+        padding: 6px 10px;
+        font-family: 'DejaVu Sans Mono', 'Consolas', monospace;
     ]],
     minimum_event_gap = 600,
     maximum_samples = 10,
@@ -152,10 +161,11 @@ le.czas.cal = {
 local function epoch() return os.time() end
 
 function le.czas.log(level, text)
-    local colors = le.czas.config.log_colors or {}
-    local color = colors[level] or "white"
-    local bracket = le.czas.config.log_bracket_color or "sky_blue"
-    cecho(string.format("\n<%s>[<%s> czas <%s>]<reset> %s\n", bracket, color, bracket, tostring(text or "")))
+    if le.ui and le.ui.output then
+        le.ui.output("czas", text)
+        return
+    end
+    cecho(string.format("\n<sky_blue>▎ [ czas ]<reset> %s\n", tostring(text or "")))
 end
 
 local function duration(seconds)
@@ -633,7 +643,10 @@ end
 -- UI -------------------------------------------------------------------
 
 local function message(label, title, description)
-    label:echo(string.format([[<center><br><span style='color:orangered;font-size:14px'><b>%s</b></span><br><span style='color:#888;font-size:10px'>%s</span></center>]], title, description))
+    label:echo(string.format([[<div style='font-family:DejaVu Sans Mono,Consolas,monospace'>
+        <div style='font-size:11px;color:#D98282;font-weight:bold'>%s</div>
+        <div style='font-size:10px;color:#8B909A;margin-top:5px'>%s</div>
+    </div>]], title, description))
 end
 
 local function season_html(season)
@@ -721,7 +734,7 @@ function le.czas.show_calendar(count)
     count = math.max(1, math.min(100, tonumber(count) or 20))
     local events = le.czas.get_upcoming_events_both(count)
 
-    cecho("\n<sky_blue>[<powder_blue> kal  <sky_blue>]<reset> Najblizsze wydarzenia\n\n")
+    if le.ui and le.ui.output then le.ui.output("kal", "Najbliższe wydarzenia") else cecho("\nNajbliższe wydarzenia\n") end
     if #events == 0 then
         cecho("<slate_gray>Brak nadchodzacych wydarzen.<reset>\n")
     else
@@ -763,7 +776,7 @@ function le.czas.show_week_agenda()
         end
     end
 
-    cecho("\n<sky_blue>[<powder_blue> kal  <sky_blue>]<reset> Agenda | najblizsze 7 dni\n")
+    if le.ui and le.ui.output then le.ui.output("kal", "Agenda · najbliższe 7 dni") else cecho("\nAgenda · najbliższe 7 dni\n") end
     for index = 0, 6 do
         local timestamp = os.time({
             year = now.year, month = now.month, day = now.day + index,
@@ -799,50 +812,55 @@ end
 function le.czas.UI.update()
     local domain = le.czas.data.domain
     if domain ~= "imperium" and domain ~= "ishtar" then
-        message(le.czas.UI.clock, "BRAK DOMENY", "Wejdz na zmapowana lokacje lub /le.czas domena ishtar|imperium")
-        message(le.czas.UI.event, "NAJBLIZSZY EVENT", "Brak danych")
+        message(le.czas.UI.clock, "BRAK DOMENY", "Wejdź na zmapowaną lokację")
+        message(le.czas.UI.event, "NAJBLIŻSZE WYDARZENIE", "Brak danych")
         return
     end
+
     local game_sec = le.czas.get_game_sec(domain)
     if not game_sec then
-        message(le.czas.UI.clock, "BRAK SYNC", "Wpisz w grze: czas")
-        message(le.czas.UI.event, "NAJBLIZSZY EVENT", "Oczekiwanie na synchronizacje")
+        message(le.czas.UI.clock, "BRAK SYNCHRONIZACJI", "Wpisz w grze: czas")
+        message(le.czas.UI.event, "NAJBLIŻSZE WYDARZENIE", "Oczekiwanie na synchronizację")
         return
     end
 
     local day, hour, minute = sec_to_date(game_sec, domain)
-    local day_in_period, period = period_info(domain, day)
+    local _, period = period_info(domain, day)
     local season = season_info(domain, day, game_sec)
-    local daylight = le.czas.data.daylight[domain]
-    local icon = daylight == true and "&#9728;" or daylight == false and "&#9790;" or "&#9687;"
-    local icon_color = daylight == true and le.czas.config.sky_icon_colors.sun
-        or daylight == false and le.czas.config.sky_icon_colors.moon
-        or le.czas.config.sky_icon_colors.unknown
+    local domain_name = domain == "ishtar" and "ISHTAR" or "IMPERIUM"
+    local season_name = season and string.upper(season.name) or "BRAK PORY ROKU"
 
     local sun = le.czas.next_sun(domain, day, game_sec)
-    local sun_html
+    local sun_line
     if sun then
-        local name = sun.kind == "sunrise" and "Swit" or "Zmierzch"
-        local color = le.czas.config.sun_colors[sun.kind] or "#e6c200"
-        sun_html = string.format([[<div style='font-size:12px;color:%s;font-weight:bold'>%s: <span style='color:#fff'>%s</span></div><div style='font-size:11px;color:#bbb'>za %s <span style='color:#666'>(%s)</span></div>]],
-            color, name, game_clock(sun.minute), duration(sun.offset), os.date("%H:%M", epoch() + sun.offset))
+        local name = sun.kind == "sunrise" and "Świt" or "Zmierzch"
+        sun_line = string.format(
+            [[<span style='color:#D8DBE2'>%s %s</span> <span style='color:#666B75'>·</span> <span style='color:#79C9D3;font-weight:bold'>za %s</span>]],
+            name, game_clock(sun.minute), season_duration(sun.offset))
     else
-        sun_html = [[<div style='font-size:12px;color:#aaa'>Brak danych o sloncu</div>]]
+        sun_line = [[<span style='color:#8B909A'>Świt i zmierzch · brak danych</span>]]
     end
 
-    le.czas.UI.clock:echo(string.format([[<center>%s<div style='font-size:22px;color:%s;line-height:1'>%s</div><div style='font-size:32px;color:#fff;font-weight:bold;line-height:1.05'>%02d:%02d</div><div style='font-size:11px;color:#aaa;margin-bottom:4px'>%d. %s <span style='color:#666'>|</span> %s</div><div style='border-top:1px solid #444;margin-bottom:5px'></div>%s</center>]],
-        season_html(season), icon_color, icon, hour, minute, day_in_period, period,
-        domain == "ishtar" and "Ishtar" or "Imperium", sun_html))
+    le.czas.UI.clock:echo(string.format([[
+      <div style='font-family:DejaVu Sans Mono,Consolas,monospace'>
+        <div style='font-size:34px;line-height:1;color:#F1F2F4;font-weight:900'>%02d:%02d</div>
+        <div style='font-size:11px;color:#D8DBE2;margin-top:8px'>%s</div>
+        <div style='font-size:11px;color:#D8DBE2;margin-top:3px'><span style='font-weight:bold'>%s</span> <span style='color:#666B75'>·</span> %s</div>
+        <div style='font-size:10px;margin-top:8px'>%s</div>
+      </div>]],
+        hour, minute, domain_name, season_name, period, sun_line))
 
     local event = le.czas.next_event(domain, game_sec)
     if event then
-        local pastel = pastel_event_color(event)
-        local domain_name = domain == "ishtar" and "Ishtar" or "Imperium"
-        local domain_color = le.czas.config.domain_colors[domain] or "#d7d9de"
-        le.czas.UI.event:echo(string.format([[<div style='background-color:rgba(255,255,255,0.025);border-radius:4px;padding:3px 6px'><div style='font-size:9px;color:#8f9299;letter-spacing:1px'>NAJBLIZSZE WYDARZENIE</div><div style='font-size:12px;color:%s;font-weight:bold;white-space:nowrap'>%s</div><div style='font-size:10px;color:#aeb1b7;white-space:nowrap'><span style='color:%s;font-weight:bold'>%s</span> <span style='color:#666'>|</span> zacznie sie za <span style='color:%s;font-weight:bold'>%s</span></div></div>]],
-            pastel, event.desc, domain_color, domain_name, pastel, duration(event.offset)))
+        le.czas.UI.event:echo(string.format([[
+          <div style='font-family:DejaVu Sans Mono,Consolas,monospace'>
+            <div style='font-size:9px;color:#8B909A;letter-spacing:1px'>NAJBLIŻSZE WYDARZENIE</div>
+            <div style='font-size:12px;color:#D8DBE2;font-weight:bold;margin-top:4px'>%s</div>
+            <div style='font-size:10px;color:#8B909A;margin-top:3px'>za <span style='color:#B6A2E1;font-weight:bold'>%s</span> <span style='color:#666B75'>·</span> %s</div>
+          </div>]],
+            event.desc, season_duration(event.offset), os.date("%H:%M", epoch() + event.offset)))
     else
-        le.czas.UI.event:echo([[<center><div style='font-size:9px;color:#8f9299;letter-spacing:1px'>NAJBLIZSZE WYDARZENIE</div><div style='font-size:12px;color:#b8bbc2'>Brak danych</div></center>]])
+        message(le.czas.UI.event, "NAJBLIŻSZE WYDARZENIE", "Brak danych")
     end
 end
 
@@ -850,7 +868,7 @@ end
 
 local function help_alias(label, command, description, fill_only)
     cecho("  ")
-    cechoLink(string.format("<pale_turquoise>◆ %s<reset>", label),
+    cechoLink(string.format("<pale_turquoise>%s<reset>", label),
         function()
             if fill_only and type(setCmdLine) == "function" then
                 setCmdLine(command)
@@ -858,8 +876,8 @@ local function help_alias(label, command, description, fill_only)
                 expandAlias(command)
             end
         end,
-        fill_only and "Uzupelnij komende i zatwierdz" or description, true)
-    cecho("\n    <slate_gray>" .. description .. "<reset>\n")
+        fill_only and "Uzupełnij komendę i zatwierdź" or description, true)
+    cecho("<slate_gray> · " .. description .. "<reset>\n")
 end
 
 function le.czas.setup_aliases()
@@ -876,7 +894,7 @@ function le.czas.setup_aliases()
     end)
 
     le.czas.aliases.help = tempAlias("^/le\\.czas$", function()
-        cecho("\n<sky_blue>[<powder_blue> czas <sky_blue>]<reset> Komendy (kliknij):\n")
+        if le.ui and le.ui.output then le.ui.output("czas", "Komendy") else cecho("\nKomendy czasu\n") end
         help_alias("/le.czas sync <domena> <dzien> <godzina> <minuta>", "/le.czas sync ",
             "reczna synchronizacja zegara", true)
         help_alias("/le.czas domena <ishtar|imperium>", "/le.czas domena ",
@@ -924,9 +942,9 @@ function le.czas.init()
     le.czas.seed_ishtar_sun()
     le.czas.save()
     le.czas.UI.clock = Geyser.Label:new(le.czas.config.clock)
-    le.czas.UI.clock:setStyleSheet(le.czas.config.style)
+    le.czas.UI.clock:setStyleSheet(le.czas.config.clock_style)
     le.czas.UI.event = Geyser.Label:new(le.czas.config.event)
-    le.czas.UI.event:setStyleSheet(le.czas.config.style)
+    le.czas.UI.event:setStyleSheet(le.czas.config.event_style)
     le.czas.setup_aliases()
     le.czas.time_trigger = tempRegexTrigger(
         [[^Jest (?:dokladnie|w przyblizeniu) .+ wedlug (?:rachuby czasu Starszego Ludu|Kalendarza Imperialnego)\.$]],
