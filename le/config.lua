@@ -259,10 +259,10 @@ function le.config.checkUpdate(options)
             le.config.update.remote_version = remote
             local current = tostring(le.version or "0.0.0")
             if compare_versions(current, remote) < 0 then
-                log(string.format("Dostepna aktualizacja: %s -> %s.", current, remote), "pale_green")
-                cechoLink("<yellow>>> /le.config aktualizuj<reset>\n",
-                    function() expandAlias("/le.config aktualizuj") end,
-                    "Zainstaluj aktualizacje le.conf", true)
+                log(string.format("Dostępna aktualizacja · %s → %s.", current, remote), "pale_green")
+                if le.ui and le.ui.command then
+                    le.ui.command("config", "/le.config aktualizuj", "/le.config aktualizuj", "zainstaluj aktualizację", false)
+                end
             elseif not options.automatic then
                 log("Masz najnowsza wersje: " .. current .. ".", "pale_green")
             end
