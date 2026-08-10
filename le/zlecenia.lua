@@ -268,13 +268,22 @@ end
 
 -- Komunikaty w oknie tekstowym --------------------------------------------
 
+local function console_prefix()
+    if le.ui and le.ui.prefix then
+        le.ui.prefix("zlec")
+    else
+        decho(dc(le.zlecenia.config.colors.accent, "▎"))
+        decho("  ")
+    end
+end
+
 function le.zlecenia.output(message)
-    local col = le.zlecenia.config.colors
-    decho("\n")
-    decho(dc(col.accent, "▎"))
-    decho(" ")
-    dechoLink(dc(col.accent, "[ zlec ]"), [[le.zlecenia.show_help()]], "Kliknij, aby wyświetlić pomoc", true)
-    decho(" " .. tostring(message or "") .. "\n")
+    if le.ui and le.ui.output then
+        le.ui.output("zlec", message)
+        return
+    end
+    console_prefix()
+    decho(tostring(message or "") .. "\n")
 end
 
 -- Obsługa triggerów gry: zlecenia trzymane pod kluczem ID lokacji NPC -----
@@ -311,13 +320,15 @@ function le.zlecenia.handle_new_order_gnome()
     local orderDetails, ok = le.zlecenia.desquash(matches[4])
     le.zlecenia.new_order_core(matches[2]:gsub("%s*$", ""), matches[3], orderDetails)
     if not ok then
-        decho(dc(le.zlecenia.config.colors.muted, "(gnomia mowa nie w pełni rozpoznana, dodaj brakujące słowa do słownika: /le.zlecenia slowo <słowo>)\n"))
+        le.zlecenia.output(dc(le.zlecenia.config.colors.muted,
+            "Gnomia mowa nie w pełni rozpoznana · /le.zlecenia slowo <słowo>"))
     end
 end
 
 function le.zlecenia.order_time_core(timePhrase)
     if not le.zlecenia.temp then
-        decho(dc(le.zlecenia.config.colors.urgent_high, "Brak tymczasowego zlecenia do aktualizacji.\n"))
+        le.zlecenia.output(dc(le.zlecenia.config.colors.urgent_high,
+            "Brak tymczasowego zlecenia do aktualizacji."))
         return
     end
     le.zlecenia.learn_words(timePhrase)
@@ -344,11 +355,10 @@ function le.zlecenia.order_time_core(timePhrase)
 
     local remaining = order.completionAt - epoch()
     le.zlecenia.output(string.format(
-        "Dodano zlecenie od %s: %s\n           Potrzebuje %s. Czas na realizację: %s (koniec ok. %s).",
-        dc(le.zlecenia.config.colors.npc, order.npc), dc(le.zlecenia.config.colors.value, order.type),
+        "Dodano dostawę · %s · %s · %s",
         dc(le.zlecenia.config.colors.value, order.what),
-        dc(le.zlecenia.urgency_color(remaining), le.zlecenia.duration(remaining)),
-        dc(le.zlecenia.config.colors.good, os.date("%H:%M %d-%m-%Y", order.completionAt))
+        dc(le.zlecenia.config.colors.npc, order.npc),
+        dc(le.zlecenia.urgency_color(remaining), le.zlecenia.duration(remaining))
     ))
     le.zlecenia.temp = nil
     le.zlecenia.UI.rebuild()
@@ -362,7 +372,8 @@ function le.zlecenia.handle_order_time_gnome()
     local timePhrase, ok = le.zlecenia.desquash(matches[3])
     le.zlecenia.order_time_core(timePhrase)
     if not ok then
-        decho(dc(le.zlecenia.config.colors.muted, "(gnomia mowa nie w pełni rozpoznana, dodaj brakujące słowa do słownika: /le.zlecenia slowo <słowo>)\n"))
+        le.zlecenia.output(dc(le.zlecenia.config.colors.muted,
+            "Gnomia mowa nie w pełni rozpoznana · /le.zlecenia slowo <słowo>"))
     end
 end
 
@@ -402,7 +413,8 @@ function le.zlecenia.handle_partial_order_gnome()
     local remainingPhrase, ok = le.zlecenia.desquash(matches[3])
     le.zlecenia.partial_order_core(matches[2]:gsub("%s*$", ""), remainingPhrase)
     if not ok then
-        decho(dc(le.zlecenia.config.colors.muted, "(gnomia mowa nie w pełni rozpoznana, dodaj brakujące słowa do słownika: /le.zlecenia slowo <słowo>)\n"))
+        le.zlecenia.output(dc(le.zlecenia.config.colors.muted,
+            "Gnomia mowa nie w pełni rozpoznana · /le.zlecenia slowo <słowo>"))
     end
 end
 
@@ -454,53 +466,62 @@ end
 -- Komendy konsolowe --------------------------------------------------------
 
 function le.zlecenia.show_help()
-    local col = le.zlecenia.config.colors
-    le.zlecenia.output("--- Pomoc: Menedżer Zleceń ---")
-    decho(dc(col.value, "Dostępne komendy:\n"))
-    local rows = {
-        { "/le.zlecenia", "pokazuje tę pomoc" },
-        { "/le.zlecenia lista", "lista aktywnych zleceń" },
-        { "/le.zlecenia sprawdz", "zapytaj NPCów o nowe zlecenia" },
-        { "/le.zlecenia usun <nr>", "usuń zlecenie z listy" },
-        { "/le.zlecenia reset", "wyczyść listę (licznik zostaje)" },
-        { "/le.zlecenia slowo <słowo>", "dodaj słowo do słownika (dla gnomiej mowy)" },
-    }
-    for _, r in ipairs(rows) do
-        decho(string.format("  %s %s\n", dc("#FDF5C4", r[1]), dc(col.muted, "— " .. r[2])))
+    le.zlecenia.output("Pomoc · dostawy od NPC")
+    if le.ui and le.ui.note then
+        le.ui.note("zlec", "Kliknij komendę, aby ją uruchomić.")
+        le.ui.command("zlec", "/le.zlecenia lista", "/le.zlecenia lista", "aktywne dostawy i szczegóły", false)
+        le.ui.command("zlec", "/le.zlecenia sprawdz", "/le.zlecenia sprawdz", "zapytaj NPC o nowe zlecenie", false)
+        le.ui.command("zlec", "/le.zlecenia usun <nr>", "/le.zlecenia usun ", "usuń dostawę z listy", true)
+        le.ui.command("zlec", "/le.zlecenia reset", "/le.zlecenia reset", "wyczyść listę dostaw", false)
+        le.ui.command("zlec", "/le.zlecenia slowo <słowo>", "/le.zlecenia slowo ", "uzupełnij słownik gnomiej mowy", true)
+        le.ui.output("zlec", "Wykonane dostawy · " .. tostring(le.zlecenia.data.completed))
     end
-    decho(string.format("%s %s\n", dc(col.good_label, "Wykonanych zleceń:"), dc(col.good, le.zlecenia.data.completed)))
 end
 
 function le.zlecenia.show_list()
     local col = le.zlecenia.config.colors
     local orders = le.zlecenia.active_orders_sorted()
-    local noOrderNpcs = {}
-    for key, order in pairs(le.zlecenia.data.orders) do
-        if order.status == "brak" then noOrderNpcs[#noOrderNpcs + 1] = { npc = order.npc, lastSeen = order.lastSeen } end
+    local no_order_npcs = {}
+    for _, order in pairs(le.zlecenia.data.orders) do
+        if order.status == "brak" then
+            no_order_npcs[#no_order_npcs + 1] = { npc = order.npc, lastSeen = order.lastSeen }
+        end
     end
 
-    if #orders == 0 and #noOrderNpcs == 0 then
-        le.zlecenia.output("Nie masz aktualnie żadnych zleceń.")
+    if #orders == 0 and #no_order_npcs == 0 then
+        le.zlecenia.output("Nie masz aktualnie żadnych dostaw.")
         return
     end
 
-    le.zlecenia.output("Twoje zlecenia:")
+    le.zlecenia.output("Aktywne dostawy · " .. tostring(#orders))
     le.zlecenia.indexMap = {}
-    for i, order in ipairs(orders) do
-        le.zlecenia.indexMap[i] = order.key
-        local remaining = (order.completionAt or 0) - epoch()
-        decho(string.format("%s %s %s\n", dc(col.good, i .. "."), dc(col.npc, order.npc), dc(col.muted, "— " .. (order.type or "-"))))
-        decho(string.format("   %s %s\n", dc(col.label, "Potrzebuje:"), dc(col.value, order.what or "-")))
-        decho(string.format("   %s %s ", dc(col.label, "Gdzie:"), dc(col.npc, order.roomName or "-")))
-        dechoLink(dc(col.value, "[trasa]"), string.format([[alias_func_prowadz(%s)]], tostring(order.roomID or "")), "Kliknij, aby wyznaczyć ścieżkę", true)
+    for index, order in ipairs(orders) do
+        le.zlecenia.indexMap[index] = order.key
+        local selected = order
+        local remaining = math.max(0, (order.completionAt or 0) - epoch())
+
+        console_prefix()
+        decho(string.format("%s  %s\n",
+            dc(col.value, order.what or "-"),
+            dc(le.zlecenia.urgency_color(remaining), le.zlecenia.duration(remaining))))
+
+        console_prefix()
+        decho(string.format("%s %s  %s %s  ",
+            dc(col.muted, "Odbiorca ·"), dc(col.text, order.npc or "-"),
+            dc(col.muted, "Miejsce ·"), dc(col.text, order.roomName or "-")))
+        dechoLink(dc(col.good, le.zlecenia.UI.routingKey == order.key and "ZATRZYMAJ" or "PROWADŹ"),
+            function() le.zlecenia.UI.toggle_route(selected) end, "Prowadzenie do odbiorcy", true)
+        decho("  ")
+        dechoLink(dc(col.danger_link, "USUŃ"),
+            function() le.zlecenia.remove_order(selected.key) end, "Usuń tę dostawę", true)
         decho("\n")
-        decho(string.format("   %s %s %s ", dc(col.label, "Czas:"), dc(le.zlecenia.urgency_color(remaining), "za " .. le.zlecenia.duration(remaining)), dc(col.muted_dim, "(koniec ok. " .. os.date("%H:%M %d-%m-%Y", order.completionAt or epoch()) .. ")")))
-        dechoLink(dc(col.danger_link, "[usuń]"), string.format([[le.zlecenia.remove_by_index(%d)]], i), "Usuń to zlecenie", true)
-        decho("\n\n")
     end
 
-    for _, n in ipairs(noOrderNpcs) do
-        decho(string.format("%s %s %s\n\n", dc(col.muted, n.npc), dc(col.muted, "— brak zlecenia"), dc(col.muted_dim, "(zapytano " .. (n.lastSeen or "-") .. ")")))
+    for _, item in ipairs(no_order_npcs) do
+        console_prefix()
+        decho(string.format("%s %s\n",
+            dc(col.muted, item.npc or "-"),
+            dc(col.muted_dim, "· brak zlecenia · " .. (item.lastSeen or "-"))))
     end
 end
 
