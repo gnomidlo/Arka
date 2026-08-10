@@ -868,7 +868,7 @@ end
 
 local function help_alias(label, command, description, fill_only)
     cecho("  ")
-    cechoLink(string.format("<pale_turquoise>◆ %s<reset>", label),
+    cechoLink(string.format("<pale_turquoise>%s<reset>", label),
         function()
             if fill_only and type(setCmdLine) == "function" then
                 setCmdLine(command)
@@ -876,8 +876,8 @@ local function help_alias(label, command, description, fill_only)
                 expandAlias(command)
             end
         end,
-        fill_only and "Uzupelnij komende i zatwierdz" or description, true)
-    cecho("\n    <slate_gray>" .. description .. "<reset>\n")
+        fill_only and "Uzupełnij komendę i zatwierdź" or description, true)
+    cecho("<slate_gray> · " .. description .. "<reset>\n")
 end
 
 function le.czas.setup_aliases()
@@ -894,7 +894,7 @@ function le.czas.setup_aliases()
     end)
 
     le.czas.aliases.help = tempAlias("^/le\\.czas$", function()
-        cecho("\n<sky_blue>[<powder_blue> czas <sky_blue>]<reset> Komendy (kliknij):\n")
+        if le.ui and le.ui.output then le.ui.output("czas", "Komendy") else cecho("\nKomendy czasu\n") end
         help_alias("/le.czas sync <domena> <dzien> <godzina> <minuta>", "/le.czas sync ",
             "reczna synchronizacja zegara", true)
         help_alias("/le.czas domena <ishtar|imperium>", "/le.czas domena ",
