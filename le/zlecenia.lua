@@ -4,7 +4,7 @@ le = le or {}
 -- (własne triggery/aliasy, własne triggery/aliasy, zapis JSON, panel Geyser).
 -- Uwaga: kolorowe echo używa decho() (tagi <r,g,b>, reset to <r> a nie <reset>).
 -- Treść etykiet Geyser to Qt rich text: bez flexbox/grid/position/transform,
--- justowanie dwóch kolumn robimy przez proste <table>, tak jak w ChronoPop.
+-- justowanie dwóch kolumn robimy przez proste <table>.
 -- le.zlecenia są kluczowane po ID lokacji NPC (nie po imieniu) — to samo NPC
 -- bywa widoczne pod różnymi nazwami (np. przed/po przedstawieniu się).
 
@@ -237,7 +237,7 @@ function le.zlecenia.extract_quantity(text)
     return qty, rest
 end
 
--- Zapis/odczyt danych (JSON, jak w ChronoPop) ----------------------------
+-- Zapis/odczyt danych JSON ------------------------------------------------
 
 le.zlecenia.path = getMudletHomeDir() .. "/Zlecenia_data.json"
 le.zlecenia.data = le.zlecenia.data or { orders = {}, completed = 0 }
