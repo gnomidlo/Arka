@@ -39,10 +39,11 @@ le.zlecenia.config = {
         urgent_high = "#D98282", urgent_mid = "#D7AE5D", urgent_low = "#8FC9A3",
         muted = "#8B909A", muted_dim = "#666B75", danger_link = "#D98282",
     },
-    -- Terminy zleceń NPC są podawane w czasie rzeczywistym, nie w zegarze świata gry.
-    real_seconds_per_day = 24 * 60 * 60,
-    real_seconds_per_hour = 60 * 60,
-    real_seconds_per_minute = 60,
+    -- Zegar Arkadii: godzina gry trwa 120 s rzeczywistych, minuta gry 2 s,
+    -- a pełny dzień gry (24 godziny) trwa 2880 s, czyli 48 minut.
+    real_seconds_per_game_hour = 120,
+    real_seconds_per_game_minute = 2,
+    real_seconds_per_game_day = 24 * 120,
     check_interval = 30,
 }
 
@@ -214,22 +215,22 @@ end
 le.zlecenia.deadlineUnits = {
     {
         name = "day",
-        seconds = le.zlecenia.config.real_seconds_per_day,
+        seconds = le.zlecenia.config.real_seconds_per_game_day,
         forms = { "dzien", "dnia", "dni" },
     },
     {
         name = "hour",
-        seconds = le.zlecenia.config.real_seconds_per_hour,
+        seconds = le.zlecenia.config.real_seconds_per_game_hour,
         forms = { "godzina", "godzine", "godziny", "godzin" },
     },
     {
         name = "minute",
-        seconds = le.zlecenia.config.real_seconds_per_minute,
+        seconds = le.zlecenia.config.real_seconds_per_game_minute,
         forms = { "minuta", "minute", "minuty", "minut" },
     },
 }
 
--- Parsuje rzeczywisty termin zlecenia, np. "dzien", "dwa dni",
+-- Parsuje termin zlecenia w jednostkach czasu gry, np. "dzien", "dwa dni",
 -- "24 godziny". Brak liczebnika przed jednostką oznacza jeden.
 function le.zlecenia.parse_deadline_seconds(text)
     text = tostring(text or ""):lower()
@@ -400,7 +401,7 @@ function le.zlecenia.order_time_core(timePhrase)
     local remaining = order.completionAt - epoch()
     if estimated then
         le.zlecenia.output(dc(le.zlecenia.config.colors.urgent_mid,
-            "Nie rozpoznano terminu „" .. tostring(timePhrase) .. "” · przyjęto 1 dzień."))
+            "Nie rozpoznano terminu „" .. tostring(timePhrase) .. "” · przyjęto 1 dzień gry."))
     end
     le.zlecenia.output(string.format(
         "Dodano dostawę · %s · %s · %s",
