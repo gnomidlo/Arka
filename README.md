@@ -124,7 +124,7 @@ Mudlet raportuje te ustawienia jako indeksy ANSI odpowiednio 152, 159 i 116. Mod
 
 ## Terminy zleceń
 
-Czas podawany przez NPC jest liczony jako czas rzeczywisty. `dzien` oznacza 24 godziny, a liczebniki słowne i cyfrowe są obsługiwane również dla dni, godzin i minut. Jeśli termin jest nieznany, moduł wyświetla ostrzeżenie i przyjmuje bezpiecznie jeden dzień zamiast kilkudziesięciu sekund.
+Czas podawany przez NPC jest liczony zegarem świata gry. Jedna godzina gry trwa 120 sekund rzeczywistych, dlatego `dzien` oznacza 24 godziny gry, czyli 2880 sekund — 48 minut rzeczywistych. Liczebniki słowne i cyfrowe są obsługiwane dla dni, godzin i minut gry. Jeśli termin jest nieznany, moduł wyświetla ostrzeżenie i przyjmuje jeden dzień gry zamiast jednej godziny.
 
 ## Wersje i aktualizacje
 
