@@ -16,15 +16,15 @@ le.ui.palette = {
 }
 
 le.ui.modules = {
-    config = { accent = "#D5A1B8", tag = "config" },
-    czas = { accent = "#79C9D3", tag = "czas" },
-    kal = { accent = "#B6A2E1", tag = "kal" },
-    zlec = { accent = "#D7A84D", tag = "zlec" },
-    lecz = { accent = "#82C9A5", tag = "lecz" },
+    config = { accent = "#D5A1B8" },
+    czas = { accent = "#79C9D3" },
+    kal = { accent = "#B6A2E1" },
+    zlec = { accent = "#D7A84D" },
+    lecz = { accent = "#82C9A5" },
 }
 
 function le.ui.module(name)
-    return le.ui.modules[name] or { accent = le.ui.palette.text, tag = tostring(name or "unicorn") }
+    return le.ui.modules[name] or { accent = le.ui.palette.text }
 end
 
 function le.ui.rgb(hex)
