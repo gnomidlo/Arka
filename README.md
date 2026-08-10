@@ -134,6 +134,14 @@ Sprawdzanie wersji uruchamia sie automatycznie 6 sekund po zaladowaniu pluginu i
 
 `/le.config napraw` usuwa pozostalosci `UNICORN_todelete` oraz katalogi tymczasowe zakonczone nazwa `UNICORN`. Jesli system blokuje usuniecie, katalog jest przenoszony poza `plugins`, aby loader nie traktowal go jako pluginu. Po aktualizacji lub naprawie nalezy zrestartowac Mudlet.
 
+## Budowanie paczki UNICORN
+
+Aktualna wersja: **0.5.4**
+
+Zbuduj paczkę `dist/UNICORN.zip` zawierającą aktualne pliki źródłowe:
+- `init.lua`
+- `version.lua`
+- katalog `le/` (`ui.lua`, `config.lua`, `czas.lua`, `lecz.lua`, `zlecenia.lua`, `mowa.lua`)
 
 ## Interfejs 0.5.2
 
