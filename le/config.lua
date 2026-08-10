@@ -16,14 +16,17 @@ local function log(text, color)
         le.ui.output("config", text)
         return
     end
-    cecho(string.format("\n<light_pink>▎ [ config ]<reset> %s\n", tostring(text or "")))
+    cecho(string.format("\n<light_pink>▎<reset>  %s\n", tostring(text or "")))
 end
 
-local function command_item(command_color, label, command, description)
+local function command_item(module_name, label, command, description)
+    if le.ui and le.ui.command then
+        le.ui.command(module_name, label, command, description, false)
+        return
+    end
     cecho("  ")
-    cechoLink(string.format("<%s>%s<reset>", command_color, label),
-        function() expandAlias(command) end, description, true)
-    cecho(string.format("<slate_gray> · %s<reset>\n", description))
+    cechoLink(label, function() expandAlias(command) end, description, true)
+    cecho(" · " .. description .. "\n")
 end
 
 local function compare_versions(left, right)
@@ -200,25 +203,23 @@ function le.config.cleanupArtifacts(options)
 end
 
 function le.config.showHelp()
-    if le.ui and le.ui.output then
-        le.ui.output("config", "UNICORN " .. tostring(le.version or ""))
-    else
-        cecho("\n<light_pink>▎ [ config ]<reset> UNICORN\n")
+    log("UNICORN " .. tostring(le.version or "") .. " · pomoc")
+    if le.ui and le.ui.note then
+        le.ui.note("config", "Kliknij komendę, aby ją uruchomić.")
+        le.ui.output("config", "MODUŁY")
     end
-    cecho("<slate_gray>Kliknij komendę, aby ją uruchomić.<reset>\n")
 
-    cecho("\n<khaki>MODULY<reset>\n")
-    command_item("light_pink", "/le.config", "/le.config", "centrum pomocy UNICORN")
-    command_item("light_salmon", "/le.czas", "/le.czas", "zegar i synchronizacja")
-    command_item("khaki", "/le.kal", "/le.kal", "kalendarz i agenda 7 dni")
-    command_item("pale_green", "/le.lecz", "/le.lecz", "dobór ziół do przypadłości")
-    command_item("goldenrod", "/le.zlecenia", "/le.zlecenia", "dostawy od NPC")
+    command_item("config", "/le.config", "/le.config", "centrum pomocy UNICORN")
+    command_item("czas", "/le.czas", "/le.czas", "zegar i synchronizacja")
+    command_item("kal", "/le.kal", "/le.kal", "kalendarz i agenda 7 dni")
+    command_item("lecz", "/le.lecz", "/le.lecz", "dobór ziół do przypadłości")
+    command_item("zlec", "/le.zlecenia", "/le.zlecenia", "dostawy od NPC")
 
-    cecho("\n<pale_turquoise>KONFIGURACJA<reset>\n")
-    command_item("light_sky_blue", "/le.config wersja", "/le.config wersja", "pokaz zainstalowana wersje")
-    command_item("plum", "/le.config aktualizacja", "/le.config aktualizacja", "sprawdz dostepna wersje")
-    command_item("light_pink", "/le.config aktualizuj", "/le.config aktualizuj", "pobierz i zainstaluj")
-    command_item("light_salmon", "/le.config napraw", "/le.config napraw", "usun lub odizoluj pozostalosci instalatora")
+    if le.ui and le.ui.output then le.ui.output("config", "KONFIGURACJA") end
+    command_item("config", "/le.config wersja", "/le.config wersja", "pokaż zainstalowaną wersję")
+    command_item("config", "/le.config aktualizacja", "/le.config aktualizacja", "sprawdź dostępną wersję")
+    command_item("config", "/le.config aktualizuj", "/le.config aktualizuj", "pobierz i zainstaluj")
+    command_item("config", "/le.config napraw", "/le.config napraw", "usuń pozostałości instalatora")
 end
 
 function le.config.showVersion()
