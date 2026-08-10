@@ -39,8 +39,10 @@ le.zlecenia.config = {
         urgent_high = "#D98282", urgent_mid = "#D7AE5D", urgent_low = "#8FC9A3",
         muted = "#8B909A", muted_dim = "#666B75", danger_link = "#D98282",
     },
-    -- Zegar Arkadii: jedna godzina gry trwa 120 sekund czasu rzeczywistego.
-    real_seconds_per_game_hour = 120,
+    -- Terminy zleceń NPC są podawane w czasie rzeczywistym, nie w zegarze świata gry.
+    real_seconds_per_day = 24 * 60 * 60,
+    real_seconds_per_hour = 60 * 60,
+    real_seconds_per_minute = 60,
     check_interval = 30,
 }
 
@@ -124,7 +126,9 @@ le.zlecenia.unitNormalize = {
 -- uczonego z gry (rasy mówiące bez spacji, np. gnomy, potrzebują ich do
 -- segmentacji zlepionego tekstu).
 le.zlecenia.seedVocab = {
-    "z", "o", "i", "kazda", "sztuke", "sztuk", "sztuki", "dni", "dzien", "godzin", "kilka",
+    "z", "o", "i", "kazda", "sztuke", "sztuk", "sztuki",
+    "dzien", "dnia", "dni", "godzina", "godzine", "godziny", "godzin",
+    "minuta", "minute", "minuty", "minut", "kilka",
     "kg", "srednich", "srednia", "srednie", "duzych", "duza", "duze", "malych", "mala", "male",
     "ciezkich", "ciezka", "ciezkie", "lekkich", "lekka", "lekkie", "przynajmniej", "sredniej",
     "jakosci", "chroniacych", "nogi", "rece", "tors",
@@ -205,6 +209,48 @@ function le.zlecenia.words_to_number(text)
     end
     if found then return sum end
     return tonumber(text)
+end
+
+le.zlecenia.deadlineUnits = {
+    {
+        name = "day",
+        seconds = le.zlecenia.config.real_seconds_per_day,
+        forms = { "dzien", "dnia", "dni" },
+    },
+    {
+        name = "hour",
+        seconds = le.zlecenia.config.real_seconds_per_hour,
+        forms = { "godzina", "godzine", "godziny", "godzin" },
+    },
+    {
+        name = "minute",
+        seconds = le.zlecenia.config.real_seconds_per_minute,
+        forms = { "minuta", "minute", "minuty", "minut" },
+    },
+}
+
+-- Parsuje rzeczywisty termin zlecenia, np. "dzien", "dwa dni",
+-- "24 godziny". Brak liczebnika przed jednostką oznacza jeden.
+function le.zlecenia.parse_deadline_seconds(text)
+    text = tostring(text or ""):lower()
+    text = text:gsub("^%s+", ""):gsub("%s+$", "")
+    text = text:gsub("[%.%,;:]+$", "")
+
+    for _, unit in ipairs(le.zlecenia.deadlineUnits) do
+        for _, form in ipairs(unit.forms) do
+            local count
+            if text == form then
+                count = 1
+            else
+                local count_text = text:match("^(.-)%s+" .. form .. "$")
+                if count_text then count = le.zlecenia.words_to_number(count_text) end
+            end
+            if count and count > 0 then
+                return count * unit.seconds, count, unit.name
+            end
+        end
+    end
+    return nil
 end
 
 -- Wyciąga ilość z opisu zlecenia: cyframi ("10 desek dębowych") albo
@@ -333,8 +379,9 @@ function le.zlecenia.order_time_core(timePhrase)
     end
     le.zlecenia.learn_words(timePhrase)
     local order = le.zlecenia.temp
-    local timeWord = timePhrase:gsub("%s+dni?%s*$", "")
-    local timeDays = le.zlecenia.words_to_number(timeWord)
+    local realSeconds = le.zlecenia.parse_deadline_seconds(timePhrase)
+    local estimated = realSeconds == nil
+    if estimated then realSeconds = le.zlecenia.config.real_seconds_per_day end
 
     local roomID = order.roomID or getPlayerRoom()
     order.roomID = roomID
@@ -342,18 +389,19 @@ function le.zlecenia.order_time_core(timePhrase)
     order.status = "aktywne"
     order.lastSeen = os.date("%H:%M %d-%m-%Y")
 
-    if type(timeDays) == "number" then
-        local realSeconds = timeDays * 24 * le.zlecenia.config.real_seconds_per_game_hour
-        order.completionAt = order.receivedAt + realSeconds
-    else
-        order.completionAt = order.receivedAt + le.zlecenia.config.real_seconds_per_game_hour -- < 1 dzień: przyjmij ok. 1h realnie
-    end
+    order.deadlineText = timePhrase
+    order.deadlineEstimated = estimated
+    order.completionAt = order.receivedAt + realSeconds
 
     -- Ta sama lokacja = to samo zlecenie, nawet jeśli NPC pokazał się pod inną nazwą.
     le.zlecenia.data.orders[tostring(roomID)] = order
     le.zlecenia.save()
 
     local remaining = order.completionAt - epoch()
+    if estimated then
+        le.zlecenia.output(dc(le.zlecenia.config.colors.urgent_mid,
+            "Nie rozpoznano terminu „" .. tostring(timePhrase) .. "” · przyjęto 1 dzień."))
+    end
     le.zlecenia.output(string.format(
         "Dodano dostawę · %s · %s · %s",
         dc(le.zlecenia.config.colors.value, order.what),
