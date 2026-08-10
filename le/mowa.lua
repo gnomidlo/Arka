@@ -65,7 +65,7 @@ end
 
 local speech_bar = "▎"
 if type(utf8) == "table" and type(utf8.char) == "function" then
-    speech_bar = utf8.char(0x258E)
+    speech_bar = utf8.char(0x258B)
 end
 
 local function marker(definition)
@@ -87,17 +87,25 @@ function le.mowa.on_color(kind)
     if line_number and le.mowa.last_line_number == line_number then return end
     le.mowa.last_line_number = line_number
 
-    -- prefix() liczy bajty UTF-8 zamiast szerokości znaku i dla "▎"
-    -- przesuwa dwie spacje za pierwsze dwie litery wypowiedzi. Wstawienie
-    -- tekstu bezpośrednio na pozycji 0 omija ten błąd Mudleta.
     local moved = false
     if line_number and type(moveCursor) == "function" then
         local ok, result = pcall(moveCursor, 0, line_number)
         moved = ok and result ~= false
     end
-    if moved and type(dinsertText) == "function" then
-        dinsertText(marker(definition) .. "  ")
-        if type(moveCursorEnd) == "function" then moveCursorEnd() end
+
+    local insert_fn = (type(cinsertText) == "function" and cinsertText) or (type(dinsertText) == "function" and dinsertText)
+
+    if moved and insert_fn then
+        -- 1. Wstawiamy belkę na początku linii (kolumna 0)
+        insert_fn(marker(definition))
+        -- 2. Korekta pozycji kursora na 1 znak (za belkę), omijająca błąd zliczania bajtów UTF-8
+        pcall(moveCursor, 1, line_number)
+        -- 3. Wstawiamy odstęp dwóch spacji po belce
+        insert_fn("  ")
+        -- 4. Przywracamy kursor na koniec linii
+        if type(moveCursorEnd) == "function" then
+            pcall(moveCursorEnd)
+        end
     else
         -- Bezpieczny fallback ASCII dla bardzo starych wersji Mudleta.
         prefix("|  ")
@@ -187,4 +195,4 @@ function le.mowa.init()
     return true
 end
 
-le.mowa.init()
+return le.mowa.init()
