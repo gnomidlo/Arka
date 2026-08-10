@@ -93,21 +93,33 @@ function le.mowa.on_color(kind)
         moved = ok and result ~= false
     end
 
-    local insert_fn = (type(cinsertText) == "function" and cinsertText) or (type(dinsertText) == "function" and dinsertText)
+    if moved then
+        -- 1. Wstawiamy dwie spacje na pozycji 0 (przesuwa tekst gry czysto w prawo)
+        if type(insertText) == "function" then
+            insertText("  ")
+        elseif type(dinsertText) == "function" then
+            dinsertText("  ")
+        end
 
-    if moved and insert_fn then
-        -- 1. Wstawiamy belkę na początku linii (kolumna 0)
-        insert_fn(marker(definition))
-        -- 2. Korekta pozycji kursora na 1 znak (za belkę), omijająca błąd zliczania bajtów UTF-8
-        pcall(moveCursor, 1, line_number)
-        -- 3. Wstawiamy odstęp dwóch spacji po belce
-        insert_fn("  ")
+        -- 2. Wracamy kursorem na pozycję 0 (przed wstawione spacje)
+        pcall(moveCursor, 0, line_number)
+
+        -- 3. Wstawiamy sam pokolorowany symbol belki (bez spacji w tym samym ciągu)
+        local m = marker(definition)
+        if m:find("^<#") and type(cinsertText) == "function" then
+            cinsertText(m)
+        elseif type(dinsertText) == "function" then
+            dinsertText(m)
+        elseif type(cinsertText) == "function" then
+            cinsertText(m)
+        end
+
         -- 4. Przywracamy kursor na koniec linii
         if type(moveCursorEnd) == "function" then
             pcall(moveCursorEnd)
         end
     else
-        -- Bezpieczny fallback ASCII dla bardzo starych wersji Mudleta.
+        -- Fallback dla braku obsługi kursorów
         prefix("|  ")
     end
 end
@@ -138,7 +150,7 @@ end
 function le.mowa.show_help()
     output("Pomoc · mowa")
     note("Wypowiedzi są oznaczane samą belką; treść i kolor gry pozostają bez zmian.")
-    if le.ui and le.ui.command then
+    if le.ui and le.ui.command me
         le.ui.command("mowa", "/le.mowa ustaw", "/le.mowa ustaw",
             "ustaw w grze kolory 153, 160 i 117", false)
         le.ui.command("mowa", "/le.mowa podglad", "/le.mowa podglad",
