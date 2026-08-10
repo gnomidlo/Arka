@@ -737,7 +737,7 @@ function le.czas.show_calendar(count)
 
     if le.ui and le.ui.output then le.ui.output("kal", "Najbliższe wydarzenia") else cecho("\nNajbliższe wydarzenia\n") end
     if #events == 0 then
-        cecho("<slate_gray>Brak nadchodzacych wydarzen.<reset>\n")
+        if le.ui and le.ui.note then le.ui.note("kal", "Brak nadchodzących wydarzeń.") end
     else
         for _, event in ipairs(events) do echo_calendar_event(event) end
     end
@@ -792,7 +792,7 @@ function le.czas.show_week_agenda()
                 WEEKDAY_FULL[value.wday], value.day, MONTH_NAMES[value.month]:upper()))
         end
         if #group.events == 0 then
-            cecho("<slate_gray>Brak wydarzen<reset>\n")
+            if le.ui and le.ui.note then le.ui.note("kal", "Brak wydarzeń") end
         else
             for _, event in ipairs(group.events) do
                 local event_time = epoch() + event.offset
