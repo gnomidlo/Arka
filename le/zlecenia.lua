@@ -1,7 +1,7 @@
 le = le or {}
 
--- le.zlecenia: śledzenie zleceń od NPC. Architektura wzorowana na ChronoPop
--- (samodzielny moduł, własne triggery/aliasy, zapis JSON, panel Geyser).
+-- le.zlecenia: śledzenie zleceń od NPC. samodzielny moduł UNICORN
+-- (własne triggery/aliasy, własne triggery/aliasy, zapis JSON, panel Geyser).
 -- Uwaga: kolorowe echo używa decho() (tagi <r,g,b>, reset to <r> a nie <reset>).
 -- Treść etykiet Geyser to Qt rich text: bez flexbox/grid/position/transform,
 -- justowanie dwóch kolumn robimy przez proste <table>, tak jak w ChronoPop.
@@ -31,7 +31,7 @@ le.zlecenia.config = {
         padding: 0px;
         font-family: 'DejaVu Sans Mono', 'Consolas', monospace;
     ]],
-    -- Jedna paleta pasteli, współdzielona z resztą naszych skryptów (Chrono itp.)
+    -- Wspólna, semantyczna paleta UNICORN.
     colors = {
         accent = "#D7A84D", text = "#D8DBE2", bracket = "#D7A84D",
         brand = "#D7A84D", label = "#9A9FAA", npc = "#D8DBE2",
@@ -39,7 +39,7 @@ le.zlecenia.config = {
         urgent_high = "#D98282", urgent_mid = "#D7AE5D", urgent_low = "#8FC9A3",
         muted = "#8B909A", muted_dim = "#666B75", danger_link = "#D98282",
     },
-    -- Zgodnie z konwencją ChronoPop: 1 dzień w grze = 24h w grze = 120s realnie na godzinę.
+    -- Zegar Arkadii: jedna godzina gry trwa 120 sekund czasu rzeczywistego.
     real_seconds_per_game_hour = 120,
     check_interval = 30,
 }
@@ -66,6 +66,13 @@ function le.zlecenia.duration(seconds)
     if d > 0 then return string.format("%dd %02dh", d, h) end
     if h > 0 then return string.format("%dh %02dm", h, m) end
     return string.format("%dm", m)
+end
+
+function le.zlecenia.compact_duration(seconds)
+    seconds = math.max(0, math.floor(tonumber(seconds) or 0))
+    local hours = math.floor(seconds / 3600)
+    local minutes = math.floor((seconds % 3600) / 60)
+    return string.format("%d:%02d", hours, minutes)
 end
 
 function le.zlecenia.urgency_color(seconds)
@@ -525,7 +532,7 @@ function le.zlecenia.reset_all()
     le.zlecenia.UI.rebuild()
 end
 
--- Panel na ekranie (Geyser), pod widgetami ChronoPop -----------------------
+-- Panel na ekranie (Geyser), pod modułami czasu UNICORN -----------------------
 -- Etykiety Geyser renderują Qt rich text (podzbiór HTML4/CSS2): brak
 -- flexbox/grid/position/transform. Justowanie dwóch kolumn -> <table>.
 -- Mini-przyciski trasy/usuwania to osobne małe etykiety nałożone na kartę,
@@ -545,7 +552,7 @@ function le.zlecenia.UI.order_html(order, expanded)
         <td align='right'><span style='font-size:10px;color:%s;font-weight:bold'>%s</span></td>
       </tr></table>]],
         col.text, expanded and "font-weight:bold" or "", esc(order.what),
-        urgency, le.zlecenia.duration(remaining))
+        urgency, le.zlecenia.compact_duration(remaining))
 
     if expanded then
         html = html .. string.format([[
@@ -810,8 +817,7 @@ function le.zlecenia.cleanup()
     if le.zlecenia.UI.routeBtn then for _, b in ipairs(le.zlecenia.UI.routeBtn) do b:hide() end end
     if le.zlecenia.UI.deleteBtn then for _, b in ipairs(le.zlecenia.UI.deleteBtn) do b:hide() end end
     if le.zlecenia.UI.routingKey then pcall(alias_func_prowadz_stop) end
-    le.zlecenia.UI.pool = nil
-end
+    end
 
 function le.zlecenia.init()
     le.zlecenia.cleanup()
@@ -824,7 +830,7 @@ function le.zlecenia.init()
         le.zlecenia.UI.rebuild()
     end, true)
     le.zlecenia.UI.rebuild()
-    le.zlecenia.output("le.zlecenia (le.zlecenia) załadowane. Wpisz /le.zlecenia po pomoc.")
+    le.zlecenia.output("Moduł zleceń załadowany · /le.zlecenia")
 end
 
 le.zlecenia.init()
