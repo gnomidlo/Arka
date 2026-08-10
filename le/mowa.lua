@@ -63,9 +63,14 @@ local function note(text)
     end
 end
 
+local speech_bar = "▎"
+if type(utf8) == "table" and type(utf8.char) == "function" then
+    speech_bar = utf8.char(0x258E)
+end
+
 local function marker(definition)
-    if le.ui and le.ui.dc then return le.ui.dc(definition.accent, "▎") end
-    return "<127,175,192>▎<r>"
+    if le.ui and le.ui.dc then return le.ui.dc(definition.accent, speech_bar) end
+    return "<127,175,192>" .. speech_bar .. "<r>"
 end
 
 function le.mowa.on_color(kind)
@@ -82,7 +87,21 @@ function le.mowa.on_color(kind)
     if line_number and le.mowa.last_line_number == line_number then return end
     le.mowa.last_line_number = line_number
 
-    prefix(marker(definition) .. "  ", decho, nil, nil, nil)
+    -- prefix() liczy bajty UTF-8 zamiast szerokości znaku i dla "▎"
+    -- przesuwa dwie spacje za pierwsze dwie litery wypowiedzi. Wstawienie
+    -- tekstu bezpośrednio na pozycji 0 omija ten błąd Mudleta.
+    local moved = false
+    if line_number and type(moveCursor) == "function" then
+        local ok, result = pcall(moveCursor, 0, line_number)
+        moved = ok and result ~= false
+    end
+    if moved and type(dinsertText) == "function" then
+        dinsertText(marker(definition) .. "  ")
+        if type(moveCursorEnd) == "function" then moveCursorEnd() end
+    else
+        -- Bezpieczny fallback ASCII dla bardzo starych wersji Mudleta.
+        prefix("|  ")
+    end
 end
 
 function le.mowa.configure_game_colors()

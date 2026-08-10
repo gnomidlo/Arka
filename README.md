@@ -12,7 +12,7 @@ Niezależna konfiguracja i zestaw pluginów dla Mudleta.
 Po udostępnieniu repozytorium wykonaj w Mudlecie:
 
 ```text
-/zainstaluj_plugin https://raw.githubusercontent.com/gnomidlo/Arka/main/dist/UNICORN.zip?version=0.5.1
+/zainstaluj_plugin https://raw.githubusercontent.com/gnomidlo/Arka/main/dist/UNICORN.zip?version=0.5.2
 ```
 
 Po instalacji sprawdź listę pluginów:
@@ -30,7 +30,7 @@ Po pierwszej instalacji pliki sa juz na dysku, ale plugin moze nie byc jeszcze w
 Zmiana nazwy pluginu wymaga jednorazowego usuniecia starego katalogu. Zamknij Mudlet, usun katalog `plugins/Arka`, uruchom Mudlet i zainstaluj nowa paczke:
 
 ```text
-/zainstaluj_plugin https://raw.githubusercontent.com/gnomidlo/Arka/main/dist/UNICORN.zip?version=0.5.1
+/zainstaluj_plugin https://raw.githubusercontent.com/gnomidlo/Arka/main/dist/UNICORN.zip?version=0.5.2
 ```
 
 Od wersji `0.2.0` plugin jest instalowany i wyswietlany na liscie jako `UNICORN`. Paczka ma pliki bezposrednio w katalogu glownym ZIP-a, zgodnie z formatem instalatora Arkadii.
@@ -120,7 +120,7 @@ kolor szeptu 160
 ustaw kolor krzyku 117
 ```
 
-Mudlet raportuje te ustawienia jako indeksy ANSI odpowiednio 152, 159 i 116. Moduł używa triggerów ANSI 256 oraz zapasowych triggerów tekstowych dla czasowników mowy, więc nie wymaga importowania osobnego pakietu XML.
+Mudlet raportuje te ustawienia jako indeksy ANSI odpowiednio 152, 159 i 116. Moduł używa triggerów ANSI 256 oraz zapasowych triggerów tekstowych dla czasowników mowy, więc nie wymaga importowania osobnego pakietu XML. Belka jest wstawiana bezpośrednio na początku linii jako znak Unicode, bez funkcji `prefix()`, która błędnie przesuwa tekst dla znaków wielobajtowych.
 
 ## Terminy zleceń
 
@@ -135,7 +135,7 @@ Sprawdzanie wersji uruchamia sie automatycznie 6 sekund po zaladowaniu pluginu i
 `/le.config napraw` usuwa pozostalosci `UNICORN_todelete` oraz katalogi tymczasowe zakonczone nazwa `UNICORN`. Jesli system blokuje usuniecie, katalog jest przenoszony poza `plugins`, aby loader nie traktowal go jako pluginu. Po aktualizacji lub naprawie nalezy zrestartowac Mudlet.
 
 
-## Interfejs 0.5.1
+## Interfejs 0.5.2
 
 UNICORN używa jednego minimalistycznego systemu wizualnego. Komunikaty konsoli zaczynają się od cienkiej belki w kolorze modułu, na przykład:
 
