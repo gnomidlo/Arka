@@ -26,9 +26,9 @@ le.czas.config = {
     minimum_event_gap = 600,
     maximum_samples = 10,
     outlier_minutes = 180,
-    sun_colors = { sunrise = "#e6c34f", sunset = "#8e94aa" },
-    sky_icon_colors = { sun = "#e6c34f", moon = "#747b87", unknown = "#9297a0" },
-    domain_colors = { imperium = "#eedd82", ishtar = "#afeeee" },
+    sun_colors = { sunrise = "#B7A56E", sunset = "#8793A6" },
+    sky_icon_colors = { sun = "#B7A56E", moon = "#8793A6", unknown = "#777C86" },
+    domain_colors = { imperium = "#AA9668", ishtar = "#79A8AD" },
     log_bracket_color = "sky_blue",
     log_colors = { detected = "steel_blue", saved = "powder_blue", skipped = "slate_gray", rejected = "light_pink", info = "pale_green" },
 }
@@ -165,7 +165,7 @@ function le.czas.log(level, text)
         le.ui.output("czas", text)
         return
     end
-    cecho(string.format("\n<sky_blue>▎ [ czas ]<reset> %s\n", tostring(text or "")))
+    cecho(string.format("\n<sky_blue>▎<reset>  %s\n", tostring(text or "")))
 end
 
 local function duration(seconds)
@@ -663,14 +663,14 @@ end
 
 local function pastel_event_color(event)
     local value = tostring(event and event.desc or ""):lower()
-    if value:find("pelni", 1, true) or value:find("nowiu", 1, true) then return "#c9c3e6" end
-    if value:find("spiskowcy", 1, true) then return "#d8b8cf" end
-    if value:find("wiosn", 1, true) then return "#b9d9c2" end
-    if value:find("lat", 1, true) then return "#ead9a6" end
-    if value:find("jesieni", 1, true) or value:find("saovine", 1, true) then return "#dfc0a7" end
-    if value:find("zim", 1, true) or value:find("yule", 1, true) then return "#b9d3df" end
-    if value:find("geheim", 1, true) or value:find("rytual", 1, true) then return "#deb5b8" end
-    return "#d8d0b8"
+    if value:find("pelni", 1, true) or value:find("nowiu", 1, true) then return "#988FB5" end
+    if value:find("spiskowcy", 1, true) then return "#A37F96" end
+    if value:find("wiosn", 1, true) then return "#83A38B" end
+    if value:find("lat", 1, true) then return "#AD9C69" end
+    if value:find("jesieni", 1, true) or value:find("saovine", 1, true) then return "#A77F68" end
+    if value:find("zim", 1, true) or value:find("yule", 1, true) then return "#7D96A5" end
+    if value:find("geheim", 1, true) or value:find("rytual", 1, true) then return "#AE747A" end
+    return "#9F9880"
 end
 
 local WEEKDAY_SHORT = { "n", "pn", "wt", "sr", "czw", "pt", "sob" }
@@ -721,8 +721,9 @@ end
 local function echo_calendar_event(event)
     local timestamp = epoch() + event.offset
     local domain, domain_color = domain_display(event)
+    if le.ui and le.ui.prefix then le.ui.prefix("kal") end
     decho(string.format(
-        "<234,217,166>%s<r> <104,107,114>|<r> <%s>%s<r> <104,107,114>|<r> <%s>%s<r> <104,107,114>|<r> <184,187,194>%s<r> <104,107,114>|<r> <215,217,222>%s<r>\n",
+        "<174,157,105>%s<r> <82,86,96>|<r> <%s>%s<r> <82,86,96>|<r> <%s>%s<r> <82,86,96>|<r> <145,149,158>%s<r> <82,86,96>|<r> <180,183,190>%s<r>\n",
         fit_text(calendar_countdown(event.offset), 10),
         decho_rgb(domain_color), fit_text(domain, 8),
         decho_rgb(pastel_event_color(event)), fit_text(event.desc, 28),
@@ -741,9 +742,9 @@ function le.czas.show_calendar(count)
         for _, event in ipairs(events) do echo_calendar_event(event) end
     end
 
-    decho("<85,88,95>" .. string.rep("-", 83) .. "<r>\n")
-    dechoLink("<176,224,230>>> /le.kal tydzien<r> <184,187,194>- pokaz agende na 7 dni<r>\n",
-        function() expandAlias("/le.kal tydzien") end, "Pokaz agende 7-dniowa", true)
+    if le.ui and le.ui.command then
+        le.ui.command("kal", "/le.kal tydzien", "/le.kal tydzien", "pokaż agendę na 7 dni", false)
+    end
 end
 
 function le.czas.show_week_agenda()
@@ -786,16 +787,19 @@ function le.czas.show_week_agenda()
         local key = os.date("%Y-%m-%d", timestamp)
         local group = groups[key]
 
-        cecho(string.format("\n<powder_blue>%s | %02d %s<reset>\n",
-            WEEKDAY_FULL[value.wday], value.day, MONTH_NAMES[value.month]:upper()))
+        if le.ui and le.ui.output then
+            le.ui.output("kal", string.format("%s · %02d %s",
+                WEEKDAY_FULL[value.wday], value.day, MONTH_NAMES[value.month]:upper()))
+        end
         if #group.events == 0 then
             cecho("<slate_gray>Brak wydarzen<reset>\n")
         else
             for _, event in ipairs(group.events) do
                 local event_time = epoch() + event.offset
                 local domain, domain_color = domain_display(event)
+                if le.ui and le.ui.prefix then le.ui.prefix("kal") end
                 decho(string.format(
-                    "<215,217,222>%s<r> <104,107,114>|<r> <%s>%s<r> <104,107,114>|<r> <%s>%s<r> <104,107,114>|<r> <234,217,166>%s<r>\n",
+                    "<180,183,190>%s<r> <82,86,96>|<r> <%s>%s<r> <82,86,96>|<r> <%s>%s<r> <82,86,96>|<r> <174,157,105>%s<r>\n",
                     os.date("%H:%M", event_time),
                     decho_rgb(domain_color), fit_text(domain, 8),
                     decho_rgb(pastel_event_color(event)), fit_text(event.desc, 28),
@@ -804,9 +808,9 @@ function le.czas.show_week_agenda()
         end
     end
 
-    decho("<85,88,95>" .. string.rep("-", 60) .. "<r>\n")
-    dechoLink("<176,224,230>>> /le.kal<r> <184,187,194>- powrot do najblizszych wydarzen<r>\n",
-        function() expandAlias("/le.kal") end, "Pokaz najblizsze wydarzenia", true)
+    if le.ui and le.ui.command then
+        le.ui.command("kal", "/le.kal", "/le.kal", "powrót do najbliższych wydarzeń", false)
+    end
 end
 
 function le.czas.UI.update()
@@ -843,7 +847,7 @@ function le.czas.UI.update()
 
     le.czas.UI.clock:echo(string.format([[
       <div style='font-family:DejaVu Sans Mono,Consolas,monospace'>
-        <div style='font-size:34px;line-height:1;color:#F1F2F4;font-weight:900'>%02d:%02d</div>
+        <div style="font-family:'Trebuchet MS','Segoe UI',sans-serif;font-size:40px;line-height:1;color:#F1F2F4;font-weight:900;letter-spacing:1px">%02d:%02d</div>
         <div style='font-size:11px;color:#D8DBE2;margin-top:8px'>%s</div>
         <div style='font-size:11px;color:#D8DBE2;margin-top:3px'><span style='font-weight:bold'>%s</span> <span style='color:#666B75'>·</span> %s</div>
         <div style='font-size:10px;margin-top:8px'>%s</div>
@@ -866,51 +870,25 @@ end
 
 -- Aliases ---------------------------------------------------------------
 
-local function help_alias(label, command, description, fill_only)
-    cecho("  ")
-    cechoLink(string.format("<pale_turquoise>%s<reset>", label),
-        function()
-            if fill_only and type(setCmdLine) == "function" then
-                setCmdLine(command)
-            else
-                expandAlias(command)
-            end
-        end,
-        fill_only and "Uzupełnij komendę i zatwierdź" or description, true)
-    cecho("<slate_gray> · " .. description .. "<reset>\n")
-end
-
 function le.czas.setup_aliases()
     le.czas.aliases = le.czas.aliases or {}
 
-    le.czas.aliases.sync = tempAlias("^/le\\.czas sync (ishtar|imperium) (\\d+) (\\d+) (\\d+)$", function()
-        le.czas.sync(matches[2], tonumber(matches[3]), tonumber(matches[4]), tonumber(matches[5]))
-    end)
-
-    le.czas.aliases.domain = tempAlias("^/le\\.czas domena (ishtar|imperium)$", function()
-        le.czas.data.domain = matches[2]
-        le.czas.save()
-        le.czas.log("info", "Ustawiono domene recznie: " .. matches[2])
-    end)
-
     le.czas.aliases.help = tempAlias("^/le\\.czas$", function()
-        if le.ui and le.ui.output then le.ui.output("czas", "Komendy") else cecho("\nKomendy czasu\n") end
-        help_alias("/le.czas sync <domena> <dzien> <godzina> <minuta>", "/le.czas sync ",
-            "reczna synchronizacja zegara", true)
-        help_alias("/le.czas domena <ishtar|imperium>", "/le.czas domena ",
-            "ustaw domene recznie", true)
-        help_alias("/le.kal [liczba]", "/le.kal", "najblizsze wydarzenia", false)
-        help_alias("/le.kal tydzien", "/le.kal tydzien", "agenda na najblizsze 7 dni", false)
+        if le.ui and le.ui.output then
+            le.ui.output("czas", "Zegar synchronizuje się automatycznie po komendzie: czas")
+            le.ui.command("kal", "/le.kal [liczba]", "/le.kal", "najbliższe wydarzenia", false)
+            le.ui.command("kal", "/le.kal tydzien", "/le.kal tydzien", "agenda na najbliższe 7 dni", false)
+        end
     end)
 
     le.czas.aliases.ev = tempAlias("^/le\\.kal(?: (\\d+))?$", function()
         local no_imperium = not le.czas.get_game_sec("imperium")
         local no_ishtar = not le.czas.get_game_sec("ishtar")
         if no_imperium and no_ishtar then
-            cecho([[
-<sky_blue>[<powder_blue> kal  <sky_blue>]<reset> Brak synchronizacji dla obu domen.
-Wpisz <yellow>czas<reset> po odwiedzeniu kazdej domeny, aby zapisac jej zegar.
-]])
+            if le.ui and le.ui.output then
+                le.ui.output("kal", "Brak synchronizacji dla obu domen.")
+                le.ui.note("kal", "Wpisz w grze: czas · po odwiedzeniu każdej domeny.")
+            end
             return
         end
         le.czas.show_calendar(tonumber(matches[2]) or 20)
