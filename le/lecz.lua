@@ -254,7 +254,7 @@ function le.lecz.render_recommendation(found)
         end
         cecho("      ")
         render_pair(item)
-        cecho(string.format(" <%s>-> %s  <%s>mamy: %d\n",
+        cecho(string.format(" <%s>· %s  <%s>mamy: %d\n",
             colors.separator, table.concat(names, ", "), colors.count, item.count))
     end
 end
@@ -322,12 +322,13 @@ function le.lecz.show_category(argument)
         cecho((le.lecz.names[key] or key) .. "\n")
     end
     for _, item in ipairs(owned) do
-        cecho("  ")
+        console_prefix()
         render_pair(item)
         cecho(string.format(" <%s>mamy: %d\n", colors.count, item.count))
     end
     for _, item in ipairs(missing) do
-        cecho(string.format("  <%s>%s <%s>(%s) <%s>mamy: %d\n",
+        console_prefix()
+        cecho(string.format("<%s>%s <%s>(%s) <%s>mamy: %d\n",
             colors.muted, item.herb, colors.dark, item.action, colors.dark, item.count))
     end
 end
@@ -382,8 +383,9 @@ function le.lecz.init()
         end
     end)
     log("Modul zaladowany.", "pale_green")
-    cechoLink("<pale_turquoise>>> /le.lecz<reset> <slate_gray>- otworz pomoc<reset>\n",
-        function() expandAlias("/le.lecz") end, "Otworz pomoc le.lecz", true)
+    if le.ui and le.ui.command then
+        le.ui.command("lecz", "/le.lecz", "/le.lecz", "otwórz pomoc leczenia", false)
+    end
 end
 
 le.lecz.init()
