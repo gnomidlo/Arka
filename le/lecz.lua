@@ -186,7 +186,7 @@ function le.lecz.render_condition(key)
     end
 
     cecho(string.format("\n<pale_green>▎ [ lecz ]<reset> <%s>%s<%s> · ",
-        colors.separator, colors.title, le.lecz.names[key] or key, colors.separator))
+        colors.title, le.lecz.names[key] or key, colors.separator))
     if #owned > 0 then
         cecho(string.format("<%s>wylecz: ", colors.separator))
         for index, item in ipairs(owned) do
@@ -232,7 +232,7 @@ function le.lecz.render_recommendation(found)
 
     local colors = le.lecz.colors
     cecho(string.format("\n<pale_green>▎ [ lecz ]<reset> <%s>leczy kilka na raz<%s>:\n",
-        colors.separator, colors.tag, colors.separator))
+        colors.tag, colors.separator))
     for _, item in ipairs(choices) do
         local names = {}
         for _, key in ipairs(found) do
@@ -248,7 +248,7 @@ end
 function le.lecz.report(found)
     if #found == 0 then return end
     if not inventory_ready() then
-        cecho(string.format("\n   <%s>|- <%s>brak danych o ziolach, kliknij ",
+        cecho(string.format("\n<pale_green>▎ [ lecz ]<reset> <%s>brak danych o ziołach, kliknij ",
             le.lecz.colors.separator, le.lecz.colors.warning))
         cechoLink("<pale_turquoise>/ziola_buduj",
             function() expandAlias("/ziola_buduj") end, "Zbuduj baze ziol", true)
