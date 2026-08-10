@@ -39,13 +39,33 @@ function le.ui.dc(hex, text)
     return string.format("<%s>%s<r>", le.ui.rgb(hex), tostring(text or ""))
 end
 
-function le.ui.output(module_name, text)
+function le.ui.prefix(module_name)
     local module = le.ui.module(module_name)
-    decho("\n")
     decho(le.ui.dc(module.accent, "▎"))
-    decho(" ")
-    decho(le.ui.dc(module.accent, "[ " .. module.tag .. " ]"))
-    decho(" " .. tostring(text or "") .. "\n")
+    decho("  ")
+end
+
+function le.ui.output(module_name, text)
+    le.ui.prefix(module_name)
+    decho(tostring(text or "") .. "\n")
+end
+
+function le.ui.note(module_name, text)
+    le.ui.prefix(module_name)
+    decho(le.ui.dc(le.ui.palette.muted, text) .. "\n")
+end
+
+function le.ui.command(module_name, label, command, description, fill_only)
+    local module = le.ui.module(module_name)
+    le.ui.prefix(module_name)
+    dechoLink(le.ui.dc(module.accent, label), function()
+        if fill_only and type(setCmdLine) == "function" then
+            setCmdLine(command)
+        else
+            expandAlias(command)
+        end
+    end, fill_only and "Uzupełnij komendę i zatwierdź" or description, true)
+    decho(le.ui.dc(le.ui.palette.muted, " · " .. tostring(description or "")) .. "\n")
 end
 
 function le.ui.panel_style(accent, padding)
