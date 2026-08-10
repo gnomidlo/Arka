@@ -26,6 +26,16 @@ le.czas.config = {
     minimum_event_gap = 600,
     maximum_samples = 10,
     outlier_minutes = 180,
+    -- Lokacje przejściowe między domenami raportują chwilowe zmiany daylight.
+    -- Lista pochodzi z rozwiązania kalendarza msmudlet; w tych pokojach nie
+    -- kalibrujemy zegara ani nie zapisujemy obserwacji świtu i zmierzchu.
+    excluded_locations = {
+        [3251] = true, [4651] = true,
+        [24758] = true, [24759] = true, [24760] = true, [24761] = true,
+        [24762] = true, [24763] = true, [24764] = true, [24765] = true,
+        [24766] = true, [24767] = true, [24768] = true, [24769] = true,
+        [24770] = true, [7448] = true, [7449] = true, [7450] = true,
+    },
     sun_colors = { sunrise = "#B7A56E", sunset = "#8793A6" },
     sky_icon_colors = { sun = "#B7A56E", moon = "#8793A6", unknown = "#777C86" },
     domain_colors = { imperium = "#AA9668", ishtar = "#79A8AD" },
@@ -211,25 +221,31 @@ le.czas.path = getMudletHomeDir() .. "/le_czas_data.json"
 le.czas.data = le.czas.data or {
     domain = nil,
     anchors = {},         -- [domain] = { game_sec, real_ts }
+    hour_marks = {},       -- [domain] = realny timestamp dokładnej granicy godziny
     sun = { imperium = {}, ishtar = {} },
-    daylight = {},         -- [domain] = true/false, last observed
 }
 
 function le.czas.load()
-    if not io.exists(le.czas.path) then return end
-    local file = io.open(le.czas.path, "r")
-    if not file then return end
-    local content = file:read("*a")
-    file:close()
-    local ok, decoded = pcall(yajl.to_value, content)
-    if ok and type(decoded) == "table" then
-        le.czas.data = decoded
-        le.czas.data.anchors = le.czas.data.anchors or {}
-        le.czas.data.sun = le.czas.data.sun or { imperium = {}, ishtar = {} }
-        le.czas.data.sun.imperium = le.czas.data.sun.imperium or {}
-        le.czas.data.sun.ishtar = le.czas.data.sun.ishtar or {}
-        le.czas.data.daylight = le.czas.data.daylight or {}
+    if io.exists(le.czas.path) then
+        local file = io.open(le.czas.path, "r")
+        if file then
+            local content = file:read("*a")
+            file:close()
+            local ok, decoded = pcall(yajl.to_value, content)
+            if ok and type(decoded) == "table" then le.czas.data = decoded end
+        end
     end
+
+    -- Uzupełnij strukturę także po gorącym przeładowaniu lub przy braku pliku.
+    le.czas.data = le.czas.data or {}
+    le.czas.data.anchors = le.czas.data.anchors or {}
+    le.czas.data.hour_marks = le.czas.data.hour_marks or {}
+    le.czas.data.sun = le.czas.data.sun or { imperium = {}, ishtar = {} }
+    le.czas.data.sun.imperium = le.czas.data.sun.imperium or {}
+    le.czas.data.sun.ishtar = le.czas.data.sun.ishtar or {}
+    -- Dawne daylight było zapisywane między sesjami i mogło generować
+    -- fałszywą zmianę po ponownym uruchomieniu. Obserwacja jest teraz sesyjna.
+    le.czas.data.daylight = nil
 end
 
 function le.czas.save()
@@ -319,16 +335,20 @@ local function parse_game_clock(text)
     local phrase = text:match("^jest%s+dokladnie%s+([^,]+)")
         or text:match("^jest%s+w%s+przyblizeniu%s+([^,]+)")
     if not phrase then return nil end
-    if phrase:find("polnoc", 1, true) then return 0, 0 end
-    if phrase:find("poludnie", 1, true) then return 12, 0 end
+    -- Tekst słowny podaje tylko godzinę przybliżoną. Nil oznacza, że parser
+    -- nie zna minuty i nie wolno zerować istniejącej fazy godziny.
+    if phrase:find("polnoc", 1, true) then return 0, nil end
+    if phrase:find("poludnie", 1, true) then return 12, nil end
 
     local word = phrase:match("^(%a+)")
     hour = CLOCK_HOURS[word]
     if not hour then return nil end
-    if (phrase:find("po poludniu", 1, true) or phrase:find("wieczorem", 1, true)) and hour < 12 then
-        hour = hour + 12
-    end
-    return hour, 0
+    local after_noon = phrase:find("po poludniu", 1, true)
+        or phrase:find("poludniem", 1, true)
+        or phrase:find("wieczorem", 1, true)
+        or (phrase:find("nocy", 1, true) and hour > 4)
+    if after_noon and hour < 12 then hour = hour + 12 end
+    return hour, nil
 end
 
 local function find_calendar_period(period_name)
@@ -374,9 +394,17 @@ function le.czas.on_time_text(raw_text)
     end
 
     le.czas.data.domain = domain
-    le.czas.sync(domain, day, hour, minute, true)
-    le.czas.log("saved", string.format(
-        "Automatyczna synchronizacja %s: dzien %d, %02d:%02d.", domain, day, hour, minute))
+    local ok, status = le.czas.sync(domain, day, hour, minute, true)
+    if not ok then return false end
+
+    -- Zgodna odpowiedź "czas" wyłącznie potwierdza biegnący zegar. Komunikat
+    -- pokazujemy tylko wtedy, gdy faktycznie utworzyliśmy lub poprawiliśmy kotwicę.
+    if status ~= "confirmed" then
+        local game_sec = le.czas.get_game_sec(domain)
+        local _, synced_hour, synced_minute = sec_to_date(game_sec, domain)
+        le.czas.log("saved", string.format(
+            "Synchronizacja %s: dzien %d, %02d:%02d.", domain, day, synced_hour, synced_minute))
+    end
     return true
 end
 
@@ -405,27 +433,95 @@ end
 
 -- Sync -----------------------------------------------------------------
 
+local function game_sec_at_hour(day, hour)
+    return (day - 1) * 2880 + hour * 120
+end
+
+function le.czas.get_game_sec(domain, now)
+    local anchor = le.czas.data.anchors[domain]
+    if not anchor then return nil end
+    now = tonumber(now) or epoch()
+    return anchor.game_sec + (now - anchor.real_ts)
+end
+
+-- Dokładna faza bieżącej godziny. Zmiana daylight następuje na granicy
+-- godziny gry, więc jej realny timestamp pozostaje wiarygodnym modulo 120 s.
+function le.czas.get_hour_phase(domain, now)
+    local mark = tonumber(le.czas.data.hour_marks[domain])
+    if not mark or mark <= 0 then return nil end
+    now = tonumber(now) or epoch()
+    return (now - mark) % 120
+end
+
 function le.czas.sync(domain, day, hour, minute, quiet)
     if domain ~= "imperium" and domain ~= "ishtar" then
         le.czas.log("rejected", "Nieznana domena: " .. tostring(domain))
-        return
+        return false, "rejected"
     end
+
     local total = le.czas.cal[domain].totalDays
     day = math.max(1, math.min(total, tonumber(day) or 1))
     hour = math.max(0, math.min(23, tonumber(hour) or 0))
-    minute = math.max(0, math.min(59, tonumber(minute) or 0))
-    local game_sec = (day - 1) * 2880 + hour * 120 + minute * 2
-    le.czas.data.anchors[domain] = { game_sec = game_sec, real_ts = epoch() }
-    le.czas.save()
-    if not quiet then
-        le.czas.log("saved", string.format("Zsynchronizowano %s: dzien %d, %02d:%02d.", domain, day, hour, minute))
+    local parsed_minute = tonumber(minute)
+    local now = epoch()
+
+    -- Najważniejsza zasada z msmudlet: odpowiedź tekstowa podaje godzinę,
+    -- nie minutę. Jeśli biegnący zegar pokazuje ten sam dzień i godzinę,
+    -- nie zapisujemy nowej kotwicy i zachowujemy minuty.
+    if parsed_minute == nil then
+        local current = le.czas.get_game_sec(domain, now)
+        if current then
+            local current_day, current_hour = sec_to_date(current, domain)
+            if current_day == day and current_hour == hour then
+                return true, "confirmed"
+            end
+        end
     end
+
+    local phase
+    local status
+    if parsed_minute ~= nil then
+        parsed_minute = math.max(0, math.min(59, parsed_minute))
+        phase = parsed_minute * 2
+        status = "exact"
+    else
+        phase = le.czas.get_hour_phase(domain, now) or 0
+        status = phase > 0 and "corrected_exact" or "corrected_approximate"
+    end
+
+    local game_sec = game_sec_at_hour(day, hour) + phase
+    le.czas.data.anchors[domain] = { game_sec = game_sec, real_ts = now }
+    le.czas.save()
+
+    if not quiet then
+        local _, synced_hour, synced_minute = sec_to_date(game_sec, domain)
+        le.czas.log("saved", string.format(
+            "Zsynchronizowano %s: dzien %d, %02d:%02d.", domain, day, synced_hour, synced_minute))
+    end
+    return true, status
 end
 
-function le.czas.get_game_sec(domain)
-    local anchor = le.czas.data.anchors[domain]
-    if not anchor then return nil end
-    return anchor.game_sec + (epoch() - anchor.real_ts)
+-- Kalibracja na dokładnej granicy godziny wykrytej przez GMCP daylight.
+-- Pierwsza obserwacja zaokrągla przybliżony zegar w górę; następne używają
+-- już znanej fazy i zaokrąglają w dół, tak jak rozwiązanie msmudlet.
+function le.czas.on_hour_boundary(domain, now)
+    now = tonumber(now) or epoch()
+    local old_mark = tonumber(le.czas.data.hour_marks[domain])
+    local current = le.czas.get_game_sec(domain, now)
+
+    le.czas.data.hour_marks[domain] = now
+    if current then
+        local rounded
+        if old_mark and old_mark > 0 then
+            rounded = math.floor(current / 120) * 120
+        else
+            rounded = math.ceil(current / 120) * 120
+        end
+        le.czas.data.anchors[domain] = { game_sec = rounded, real_ts = now }
+    end
+
+    le.czas.save()
+    return current ~= nil
 end
 
 -- Season / period helpers -------------------------------------------------
@@ -547,17 +643,43 @@ function le.czas.store_sun(domain, period, kind, minute)
 end
 
 le.czas.last_event_at = le.czas.last_event_at or {}
+le.czas.last_daylight = le.czas.last_daylight or {}
+
+local function current_room_is_excluded()
+    local room_id
+    if type(getPlayerRoom) == "function" then
+        local ok, value = pcall(getPlayerRoom)
+        if ok then room_id = tonumber(value) end
+    end
+    if not room_id and gmcp and gmcp.room and gmcp.room.info then
+        room_id = tonumber(gmcp.room.info.num or gmcp.room.info.id)
+    end
+    return room_id and le.czas.config.excluded_locations[room_id] or false
+end
 
 function le.czas.on_room_time()
-    local domain = le.czas.data.domain
+    local detected = detect_domain_from_gmcp()
+    local domain = detected or le.czas.data.domain
     if domain ~= "imperium" and domain ~= "ishtar" then return end
+    if detected then le.czas.data.domain = detected end
     if not gmcp or not gmcp.room or not gmcp.room.time or gmcp.room.time.daylight == nil then return end
-    local daylight = gmcp.room.time.daylight
-    local previous = le.czas.data.daylight[domain]
-    le.czas.data.daylight[domain] = daylight
-    if previous == nil or previous == daylight then return end
 
-    local kind = daylight and "sunrise" or "sunset"
+    local daylight = gmcp.room.time.daylight
+    local previous = le.czas.last_daylight[domain]
+    le.czas.last_daylight[domain] = daylight
+
+    -- Pierwszy stan w sesji jest wyłącznie punktem odniesienia. Dzięki temu
+    -- restart Mudleta nie wygląda jak fałszywy świt lub zmierzch.
+    if previous == nil or previous == daylight then return end
+    if current_room_is_excluded() then return end
+
+    -- Zmiana daylight wyznacza dokładną granicę godziny i najpierw stabilizuje
+    -- zegar. Dopiero potem zapisujemy obserwację świtu lub zmierzchu.
+    le.czas.on_hour_boundary(domain)
+
+    local is_daylight = daylight == true or daylight == 1
+        or daylight == "true" or daylight == "day"
+    local kind = is_daylight and "sunrise" or "sunset"
     local kind_label = kind == "sunrise" and "swit" or "zmierzch"
     local last = le.czas.last_event_at[domain .. kind] or 0
     if epoch() - last < le.czas.config.minimum_event_gap then return end
@@ -917,6 +1039,7 @@ end
 function le.czas.init()
     le.czas.cleanup()
     le.czas.load()
+    le.czas.last_daylight = {}
     le.czas.seed_ishtar_sun()
     le.czas.save()
     le.czas.UI.clock = Geyser.Label:new(le.czas.config.clock)
