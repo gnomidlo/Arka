@@ -181,9 +181,11 @@ function le.mowa.init()
     for _, definition in ipairs(le.mowa.types) do
         local kind = definition.key
         local xterm_color = definition.xterm_color
-        le.mowa.triggers["xterm_" .. kind] = tempAnsiColorTrigger(xterm_color, -1, function()
-            le.mowa.on_color(kind)
-        end)
+        -- Kod tekstowy jest trwale przechowywany przez Mudleta. Przekazane
+        -- tu anonimowe domknięcie potrafiło zniknąć po GC i dawało błąd
+        -- „func reference not found by Lua”.
+        local trigger_code = string.format([[le.mowa.on_color(%q)]], kind)
+        le.mowa.triggers["xterm_" .. kind] = tempAnsiColorTrigger(xterm_color, -1, trigger_code)
     end
 
     le.mowa.aliases.help = tempAlias([[^/le\.mowa$]], le.mowa.show_help)
