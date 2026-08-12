@@ -94,27 +94,33 @@ function le.mowa.on_color(kind)
     end
 
     if moved then
-        -- 1. Rezerwujemy miejsce na dwie jednakowe belki modułu i rodzaju mowy.
+        -- 1. Jedna spacja jest potrzebna dopiero po obu belkach.
         if type(insertText) == "function" then
-            insertText("  ")
+            insertText(" ")
         elseif type(dinsertText) == "function" then
-            dinsertText("  ")
+            dinsertText(" ")
         end
 
-        -- 2. Wracamy kursorem na pozycję 0 (przed wstawione spacje)
+        -- 2. Wstawiamy znaki pojedynczo. cinsertText() przesuwał kursor
+        -- między fragmentami kolorów, co dawało niechciane: „▎  ▎tekst”.
         pcall(moveCursor, 0, line_number)
-
-        -- 3. Wstawiamy dwie równe, pokolorowane belki (bez dodatkowego tekstu).
-        local m = module_marker() .. type_marker(definition)
-        if m:find("^<#") and type(cinsertText) == "function" then
-            cinsertText(m)
-        elseif type(dinsertText) == "function" then
-            dinsertText(m)
-        elseif type(cinsertText) == "function" then
-            cinsertText(m)
+        local function insert_bar(hex)
+            local r, g, b = tostring(hex or "#FFFFFF"):match("#?(%x%x)(%x%x)(%x%x)")
+            if type(setFgColor) == "function" and r then
+                pcall(setFgColor, tonumber(r, 16), tonumber(g, 16), tonumber(b, 16))
+            end
+            if type(insertText) == "function" then
+                insertText(speech_bar)
+            elseif type(dinsertText) == "function" then
+                dinsertText(speech_bar)
+            end
         end
+        local module_accent = le.ui and le.ui.module and le.ui.module("mowa").accent or "#7FAFC0"
+        insert_bar(module_accent)
+        insert_bar(definition.accent)
+        if type(resetFormat) == "function" then pcall(resetFormat) end
 
-        -- 4. Przywracamy kursor na koniec linii
+        -- 3. Przywracamy kursor na koniec linii
         if type(moveCursorEnd) == "function" then
             pcall(moveCursorEnd)
         end
