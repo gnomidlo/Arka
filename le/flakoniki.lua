@@ -18,8 +18,8 @@ local function flask(key, stem, label, description, color)
         -- Obsługuje także złożone przymiotniki, np.
         -- „trójkątny przezroczysto-żółty flakonik”.
         pattern = string.format(
-            [[(?i)\b((?:(?:[a-z]+\s+)?(?:[a-z]+-)?%s[a-z]*\s+(?:[a-z]+\s+)?|flakonik[a-z]*\s+(?:[a-z]+\s+)?(?:[a-z]+-)?%s[a-z]*)flakonik[a-z]*)\b]],
-            stem, stem
+            [[(?i)\b((?:[a-z]+\s+)?(?:[a-z]+-)?%s[a-z]*\s+(?:[a-z]+\s+)?flakonik[a-z]*)\b]],
+            stem
         ),
     }
 end
