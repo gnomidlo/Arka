@@ -843,7 +843,7 @@ end
 local function echo_calendar_event(event)
     local timestamp = epoch() + event.offset
     local domain, domain_color = domain_display(event)
-    if le.ui and le.ui.prefix then le.ui.prefix("kal") end
+    if le.ui and le.ui.prefix then le.ui.prefix("kal", false) end
     decho(string.format(
         "<174,157,105>%s<r> <82,86,96>|<r> <%s>%s<r> <82,86,96>|<r> <%s>%s<r> <82,86,96>|<r> <145,149,158>%s<r> <82,86,96>|<r> <180,183,190>%s<r>\n",
         fit_text(calendar_countdown(event.offset), 10),
@@ -911,15 +911,15 @@ function le.czas.show_week_agenda()
 
         if le.ui and le.ui.output then
             le.ui.output("kal", string.format("%s · %02d %s",
-                WEEKDAY_FULL[value.wday], value.day, MONTH_NAMES[value.month]:upper()))
+                WEEKDAY_FULL[value.wday], value.day, MONTH_NAMES[value.month]:upper()), false)
         end
         if #group.events == 0 then
-            if le.ui and le.ui.note then le.ui.note("kal", "Brak wydarzeń") end
+            if le.ui and le.ui.note then le.ui.note("kal", "Brak wydarzeń", false) end
         else
             for _, event in ipairs(group.events) do
                 local event_time = epoch() + event.offset
                 local domain, domain_color = domain_display(event)
-                if le.ui and le.ui.prefix then le.ui.prefix("kal") end
+                if le.ui and le.ui.prefix then le.ui.prefix("kal", false) end
                 decho(string.format(
                     "<180,183,190>%s<r> <82,86,96>|<r> <%s>%s<r> <82,86,96>|<r> <%s>%s<r> <82,86,96>|<r> <174,157,105>%s<r>\n",
                     os.date("%H:%M", event_time),
