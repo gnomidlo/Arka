@@ -12,7 +12,7 @@ Niezależna konfiguracja i zestaw pluginów dla Mudleta.
 Po udostępnieniu repozytorium wykonaj w Mudlecie:
 
 ```text
-/zainstaluj_plugin https://raw.githubusercontent.com/gnomidlo/Arka/main/dist/UNICORN.zip?version=0.5.12
+/zainstaluj_plugin https://raw.githubusercontent.com/gnomidlo/Arka/main/dist/UNICORN.zip?version=0.6.0
 ```
 
 Po instalacji sprawdź listę pluginów:
@@ -30,7 +30,7 @@ Po pierwszej instalacji pliki sa juz na dysku, ale plugin moze nie byc jeszcze w
 Zmiana nazwy pluginu wymaga jednorazowego usuniecia starego katalogu. Zamknij Mudlet, usun katalog `plugins/Arka`, uruchom Mudlet i zainstaluj nowa paczke:
 
 ```text
-/zainstaluj_plugin https://raw.githubusercontent.com/gnomidlo/Arka/main/dist/UNICORN.zip?version=0.5.12
+/zainstaluj_plugin https://raw.githubusercontent.com/gnomidlo/Arka/main/dist/UNICORN.zip?version=0.6.0
 ```
 
 Od wersji `0.2.0` plugin jest instalowany i wyswietlany na liscie jako `UNICORN`. Paczka ma pliki bezposrednio w katalogu glownym ZIP-a, zgodnie z formatem instalatora Arkadii.
@@ -54,6 +54,10 @@ Od wersji `0.2.0` plugin jest instalowany i wyswietlany na liscie jako `UNICORN`
 /le.mowa
 /le.mowa ustaw
 /le.mowa podglad
+/le.flakoniki
+/le.flakoniki lista
+/le.kamienie
+/le.kamienie lista
 ```
 
 - `/le.config` — pomoc konfiguracji `le.conf`,
@@ -72,6 +76,8 @@ Od wersji `0.2.0` plugin jest instalowany i wyswietlany na liscie jako `UNICORN`
 - `/le.mowa` — pomoc modułu oznaczania wypowiedzi,
 - `/le.mowa ustaw` — wysyła ustawienia kolorów: mowa 153, szept 160, krzyk 117,
 - `/le.mowa podglad` — pokazuje podgląd trzech kolorów belki.
+- `/le.flakoniki` — pomoc oznaczania i etykiet flakoników.
+- `/le.kamienie` — pomoc oznaczania kamieni oraz menu ich właściwości.
 
 Komendy wyswietlane w pomocy modulow sa klikalne. Szablony wymagajace parametrow w `/le.czas` uzupelniaja linie polecen zamiast wykonywac niepelna komende.
 
@@ -87,6 +93,8 @@ Moduł nie wysyła żadnych komend. Gdy użytkownik wpisze w grze `czas`, moduł
 - `le/lecz.lua` — dobór ziół i klikalne leczenie,
 - `le/zlecenia.lua` — dostawy od NPC, zapis terminów i panel Geyser,
 - `le/mowa.lua` — oznaczanie mowy, szeptu i krzyku na podstawie kolorów ANSI 256.
+- `le/flakoniki.lua` — kolorowanie oraz etykiety efektów flakoników.
+- `le/kamienie.lua` — lawendowe oznaczanie kamieni, tooltipy i menu akcji.
 
 
 
@@ -136,14 +144,14 @@ Sprawdzanie wersji uruchamia sie automatycznie 6 sekund po zaladowaniu pluginu i
 
 ## Budowanie paczki UNICORN
 
-Aktualna wersja: **0.5.12**
+Aktualna wersja: **0.6.0**
 
 Zbuduj paczkę `dist/UNICORN.zip` zawierającą aktualne pliki źródłowe:
 - `init.lua`
 - `version.lua`
-- katalog `le/` (`ui.lua`, `config.lua`, `czas.lua`, `lecz.lua`, `zlecenia.lua`, `mowa.lua`)
+- katalog `le/` (`ui.lua`, `config.lua`, `czas.lua`, `lecz.lua`, `flakoniki.lua`, `kamienie.lua`, `zlecenia.lua`, `mowa.lua`)
 
-## Interfejs 0.5.12
+## Interfejs 0.6.0
 
 UNICORN używa jednego minimalistycznego systemu wizualnego. Komunikaty konsoli zaczynają się od cienkiej belki w kolorze modułu, na przykład:
 
@@ -162,6 +170,6 @@ Panel boczny nie używa ikon ani pełnych ramek. Moduły rozpoznaje się po kolo
 - przygaszona lawenda — szept,
 - stonowany koral — krzyk.
 
-Zegar pokazuje dużą, pogrubioną godzinę, domenę, porę roku i okres kalendarza oraz odliczanie do najbliższego świtu albo zmierzchu.
+Zegar pokazuje dużą, pogrubioną godzinę, domenę, porę roku i okres kalendarza oraz odliczanie do najbliższego świtu albo zmierzchu. Panel najbliższego wydarzenia pokazuje też jego domenę.
 
 Zwarty panel zleceń pokazuje wyłącznie przedmiot, ilość i pozostały czas. Kliknięcie dostawy rozwija odbiorcę, miejsce oraz tekstowe akcje `PROWADŹ` i `USUŃ`.
