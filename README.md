@@ -12,7 +12,7 @@ Niezależna konfiguracja i zestaw pluginów dla Mudleta.
 Po udostępnieniu repozytorium wykonaj w Mudlecie:
 
 ```text
-/zainstaluj_plugin https://raw.githubusercontent.com/gnomidlo/Arka/main/dist/UNICORN.zip?version=0.6.1
+/zainstaluj_plugin https://raw.githubusercontent.com/gnomidlo/Arka/main/dist/UNICORN.zip?version=0.6.2
 ```
 
 Po instalacji sprawdź listę pluginów:
@@ -30,7 +30,7 @@ Po pierwszej instalacji pliki sa juz na dysku, ale plugin moze nie byc jeszcze w
 Zmiana nazwy pluginu wymaga jednorazowego usuniecia starego katalogu. Zamknij Mudlet, usun katalog `plugins/Arka`, uruchom Mudlet i zainstaluj nowa paczke:
 
 ```text
-/zainstaluj_plugin https://raw.githubusercontent.com/gnomidlo/Arka/main/dist/UNICORN.zip?version=0.6.1
+/zainstaluj_plugin https://raw.githubusercontent.com/gnomidlo/Arka/main/dist/UNICORN.zip?version=0.6.2
 ```
 
 Od wersji `0.2.0` plugin jest instalowany i wyswietlany na liscie jako `UNICORN`. Paczka ma pliki bezposrednio w katalogu glownym ZIP-a, zgodnie z formatem instalatora Arkadii.
@@ -128,7 +128,7 @@ kolor szeptu 160
 kolor krzyku 117
 ```
 
-Arkadia ustawia kolory Xterm jako 153, 160 i 117, a Mudlet nasłuchuje ich indeksów 0-based: 152, 159 i 116. Moduł używa wyłącznie triggerów ANSI 256: belka pojawia się tylko na wypowiedziach kolorowanych przez MUD. Belka jest wstawiana bezpośrednio na początku linii jako znak Unicode, bez funkcji `prefix()`, która błędnie przesuwa tekst dla znaków wielobajtowych.
+Arkadia ustawia kolory Xterm jako 153, 160 i 117, a Mudlet nasłuchuje ich indeksów 0-based: 152, 159 i 116. Moduł używa wyłącznie triggerów ANSI 256: belka pojawia się tylko na wypowiedziach kolorowanych przez MUD. Callback triggera jest zapisany jako trwały kod Lua, więc Mudlet nie gubi referencji do funkcji. Belka jest wstawiana bezpośrednio na początku linii jako znak Unicode, bez funkcji `prefix()`, która błędnie przesuwa tekst dla znaków wielobajtowych.
 
 ## Terminy zleceń
 
@@ -144,14 +144,14 @@ Sprawdzanie wersji uruchamia sie automatycznie 6 sekund po zaladowaniu pluginu i
 
 ## Budowanie paczki UNICORN
 
-Aktualna wersja: **0.6.1**
+Aktualna wersja: **0.6.2**
 
 Zbuduj paczkę `dist/UNICORN.zip` zawierającą aktualne pliki źródłowe:
 - `init.lua`
 - `version.lua`
 - katalog `le/` (`ui.lua`, `config.lua`, `czas.lua`, `lecz.lua`, `flakoniki.lua`, `kamienie.lua`, `zlecenia.lua`, `mowa.lua`)
 
-## Interfejs 0.6.1
+## Interfejs 0.6.2
 
 UNICORN używa jednego minimalistycznego systemu wizualnego. Komunikaty konsoli zaczynają się od cienkiej belki w kolorze modułu, na przykład:
 
