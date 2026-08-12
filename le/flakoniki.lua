@@ -15,11 +15,11 @@ local function flask(key, stem, label, description, color)
         label = label,
         description = description,
         color = color,
-        -- Obsługuje „biały flakonik”, „biały mały flakonik”
-        -- oraz „mały biały flakonik”.
+        -- Obsługuje także złożone przymiotniki, np.
+        -- „trójkątny przezroczysto-żółty flakonik”.
         pattern = string.format(
-            [[(?i)\b((?:%s[a-z]*\s+(?:[a-z]+\s+)?|(?:[a-z]+\s+)?%s[a-z]*\s+)flakonik[a-z]*)\b]],
-            stem, stem
+            [[(?i)\b((?:[a-z]+\s+)?(?:[a-z]+-)?%s[a-z]*\s+(?:[a-z]+\s+)?flakonik[a-z]*)\b]],
+            stem
         ),
     }
 end

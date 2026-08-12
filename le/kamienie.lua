@@ -90,7 +90,7 @@ end
 
 function le.kamienie.on_match(matched, definition)
     if not matched or matched == "" or selectString(matched, 1) < 0 then return end
-    if type(fg) == "function" then fg(182, 162, 225) end
+    if type(fg) == "function" then fg("lavender") end
 
     if le.kamienie.config.enable_mouseover and type(setPopup) == "function" then
         local item = matched
