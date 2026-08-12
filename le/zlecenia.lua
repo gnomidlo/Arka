@@ -284,6 +284,26 @@ function le.zlecenia.extract_quantity(text)
     return qty, rest
 end
 
+-- Odpowiedź przy częściowej realizacji często zawiera wyłącznie jednostkę,
+-- np. „sześciu sztuk”. Nie jest to nazwa nowego przedmiotu — pełny opis
+-- („sztuk laku”) trzeba wtedy zachować z pierwotnego zlecenia.
+local function has_item_after_unit(text)
+    text = tostring(text or ""):match("^%s*(.-)%s*$") or ""
+    local _, remainder = text:match("^(%S+)%s*(.*)$")
+    return remainder ~= nil and remainder ~= ""
+end
+
+local function rebuild_order_what(order)
+    if type(order) ~= "table" or not order.remainingQuantity then return false end
+    if not order.itemName or order.itemName == "" then return false end
+
+    local _, current_text = le.zlecenia.extract_quantity(order.what or "")
+    if current_text ~= "" and has_item_after_unit(current_text) then return false end
+
+    order.what = string.format("%d %s", order.remainingQuantity, order.itemName)
+    return true
+end
+
 -- Zapis/odczyt danych JSON ------------------------------------------------
 
 le.zlecenia.path = getMudletHomeDir() .. "/Zlecenia_data.json"
@@ -300,6 +320,10 @@ function le.zlecenia.load()
         le.zlecenia.data = decoded
         le.zlecenia.data.orders = le.zlecenia.data.orders or {}
         le.zlecenia.data.completed = le.zlecenia.data.completed or 0
+        -- Napraw wpisy skrócone przez starszą wersję po częściowej dostawie.
+        for _, order in pairs(le.zlecenia.data.orders) do
+            rebuild_order_what(order)
+        end
     end
 end
 
@@ -445,7 +469,11 @@ function le.zlecenia.partial_order_core(npcName, remainingPhrase)
     order.npc = npcName -- aktualizujemy do najnowszej nazwy NPC
     order.remainingQuantity = remainingQuantity
     order.lastSeen = os.date("%H:%M %d-%m-%Y")
-    order.what = string.format("%d %s", remainingQuantity, restText ~= "" and restText or (order.itemName or ""))
+    local itemText = restText
+    if itemText == "" or not has_item_after_unit(itemText) then
+        itemText = order.itemName or itemText
+    end
+    order.what = string.format("%d %s", remainingQuantity, itemText)
 
     -- Uwaga: ukończenie zlecenia zgłasza WYŁĄCZNIE osobny komunikat gry
     -- ("Dziekuje, wiecej mi juz nie trzeba.") — częściowa dostawa nigdy nie
