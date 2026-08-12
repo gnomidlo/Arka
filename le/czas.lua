@@ -978,13 +978,14 @@ function le.czas.UI.update()
 
     local event = le.czas.next_event(domain, game_sec)
     if event then
+        local event_domain, event_domain_color = domain_display(event)
         le.czas.UI.event:echo(string.format([[
           <div style='font-family:DejaVu Sans Mono,Consolas,monospace'>
-            <div style='font-size:9px;color:#8B909A;letter-spacing:1px'>NAJBLIŻSZE WYDARZENIE</div>
+            <div style='font-size:9px;color:#8B909A;letter-spacing:1px'>NAJBLIŻSZE WYDARZENIE <span style='color:%s;font-weight:bold'>· %s</span></div>
             <div style='font-size:12px;color:#D8DBE2;font-weight:bold;margin-top:4px'>%s</div>
             <div style='font-size:10px;color:#8B909A;margin-top:3px'>za <span style='color:#B6A2E1;font-weight:bold'>%s</span> <span style='color:#666B75'>·</span> %s</div>
           </div>]],
-            event.desc, season_duration(event.offset), os.date("%H:%M", epoch() + event.offset)))
+            event_domain_color, event_domain, event.desc, season_duration(event.offset), os.date("%H:%M", epoch() + event.offset)))
     else
         message(le.czas.UI.event, "NAJBLIŻSZE WYDARZENIE", "Brak danych")
     end

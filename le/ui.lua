@@ -21,6 +21,8 @@ le.ui.modules = {
     kal = { accent = "#B6A2E1" },
     zlec = { accent = "#D7A84D" },
     lecz = { accent = "#82C9A5" },
+    flakoniki = { accent = "#8FAFC5" },
+    kamienie = { accent = "#B6A2E1" },
     mowa = { accent = "#7FAFC0" },
     szept = { accent = "#A39CBC" },
     krzyk = { accent = "#C88478" },
