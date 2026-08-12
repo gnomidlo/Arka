@@ -58,10 +58,8 @@ local function note(text)
     end
 end
 
+-- Wąska belka UNICORN: celowo nie używamy szerokiego znaku ▋.
 local speech_bar = "▎"
-if type(utf8) == "table" and type(utf8.char) == "function" then
-    speech_bar = utf8.char(0x258B)
-end
 
 -- Dwie równe belki: pierwsza identyfikuje moduł mowy, druga rodzaj wypowiedzi.
 local function module_marker()
@@ -98,9 +96,9 @@ function le.mowa.on_color(kind)
     if moved then
         -- 1. Rezerwujemy miejsce na dwie jednakowe belki modułu i rodzaju mowy.
         if type(insertText) == "function" then
-            insertText("    ")
+            insertText("  ")
         elseif type(dinsertText) == "function" then
-            dinsertText("    ")
+            dinsertText("  ")
         end
 
         -- 2. Wracamy kursorem na pozycję 0 (przed wstawione spacje)
