@@ -1,16 +1,10 @@
--- le.mowa: minimalistyczne oznaczanie mowy, szeptu i krzyku po kolorach ANSI.
+-- le.mowa: minimalistyczne oznaczanie mowy, szeptu i krzyku wyłącznie po kolorach ANSI.
 
 le = le or {}
 le.mowa = le.mowa or {}
 le.mowa.triggers = le.mowa.triggers or {}
 le.mowa.aliases = le.mowa.aliases or {}
 le.mowa.timers = le.mowa.timers or {}
-
-le.mowa.text_patterns = {
-    mowa = [[(?i)\b(?:mruczy|mowi|nuci|huczy|marudzi|bulgocze|syczy|skrzypi|skrzeczy|mowisz)\b]],
-    szept = [[(?i)\b(?:szepcze|szepczesz)\b]],
-    krzyk = [[(?i)\b(?:krzyczy|krzyczysz)\b]],
-}
 
 -- Numery ustawiane komendą gry są o jeden wyższe od indeksów ANSI 256,
 -- które raportuje Mudlet (np. kolor gry 153 jest widoczny jako ANSI 152).
@@ -178,27 +172,17 @@ function le.mowa.init()
     le.mowa.cleanup()
     le.mowa.last_line_number = nil
 
-    local has_color_triggers = type(tempAnsiColorTrigger) == "function"
-    local has_text_triggers = type(tempRegexTrigger) == "function"
-    if not has_color_triggers and not has_text_triggers then
-        output("Ta wersja Mudleta nie obsługuje wymaganych triggerów.")
+    if type(tempAnsiColorTrigger) ~= "function" then
+        output("Ta wersja Mudleta nie obsługuje triggerów ANSI 256.")
         return false
     end
 
     for _, definition in ipairs(le.mowa.types) do
         local kind = definition.key
-        if has_color_triggers then
-            local ansi_color = definition.ansi_color
-            le.mowa.triggers["color_" .. kind] = tempAnsiColorTrigger(ansi_color, -1, function()
-                le.mowa.on_color(kind)
-            end)
-        end
-        if has_text_triggers then
-            le.mowa.triggers["text_" .. kind] = tempRegexTrigger(
-                le.mowa.text_patterns[kind],
-                function() le.mowa.on_color(kind) end
-            )
-        end
+        local ansi_color = definition.ansi_color
+        le.mowa.triggers["color_" .. kind] = tempAnsiColorTrigger(ansi_color, -1, function()
+            le.mowa.on_color(kind)
+        end)
     end
 
     le.mowa.aliases.help = tempAlias([[^/le\.mowa$]], le.mowa.show_help)
