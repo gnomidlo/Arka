@@ -6,14 +6,14 @@ le.mowa.triggers = le.mowa.triggers or {}
 le.mowa.aliases = le.mowa.aliases or {}
 le.mowa.timers = le.mowa.timers or {}
 
--- Numery ustawiane komendą gry są o jeden wyższe od indeksów ANSI 256,
--- które raportuje Mudlet (np. kolor gry 153 jest widoczny jako ANSI 152).
+-- tempAnsiColorTrigger() przyjmuje dokładne numery ANSI wysyłane przez MUD.
+-- Używamy więc tych samych wartości, które ustawiamy w grze.
 le.mowa.types = {
     {
         key = "mowa",
         label = "Mowa",
         game_color = 153,
-        ansi_color = 152,
+        ansi_color = 153,
         accent = "#7FAFC0",
         command = "ustaw kolor mowy 153",
     },
@@ -21,7 +21,7 @@ le.mowa.types = {
         key = "szept",
         label = "Szept",
         game_color = 160,
-        ansi_color = 159,
+        ansi_color = 160,
         accent = "#A39CBC",
         command = "kolor szeptu 160",
     },
@@ -29,7 +29,7 @@ le.mowa.types = {
         key = "krzyk",
         label = "Krzyk",
         game_color = 117,
-        ansi_color = 116,
+        ansi_color = 117,
         accent = "#C88478",
         command = "ustaw kolor krzyku 117",
     },
