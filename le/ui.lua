@@ -44,26 +44,28 @@ function le.ui.dc(hex, text)
     return string.format("<%s>%s<r>", le.ui.rgb(hex), tostring(text or ""))
 end
 
-function le.ui.prefix(module_name)
+function le.ui.prefix(module_name, ensure_line_break)
     local module = le.ui.module(module_name)
     -- Trigger moze odpalic na niedomknietej linii serwera (np. mowa NPC bez
     -- konca linii) — wstaw znak nowej linii tylko wtedy, gdy kursor nie jest
     -- juz na jej poczatku, zeby belka nigdy nie doklejala sie do tekstu gry.
-    local ok, column = pcall(getColumnNumber)
-    if ok and column and column > 0 then
-        echo("\n")
+    if ensure_line_break ~= false then
+        local ok, column = pcall(getColumnNumber)
+        if ok and column and column > 0 then
+            echo("\n")
+        end
     end
     decho(le.ui.dc(module.accent, "▎"))
     decho("  ")
 end
 
-function le.ui.output(module_name, text)
-    le.ui.prefix(module_name)
+function le.ui.output(module_name, text, ensure_line_break)
+    le.ui.prefix(module_name, ensure_line_break)
     decho(tostring(text or "") .. "\n")
 end
 
-function le.ui.note(module_name, text)
-    le.ui.prefix(module_name)
+function le.ui.note(module_name, text, ensure_line_break)
+    le.ui.prefix(module_name, ensure_line_break)
     decho(le.ui.dc(le.ui.palette.muted, text) .. "\n")
 end
 

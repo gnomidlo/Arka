@@ -63,7 +63,14 @@ if type(utf8) == "table" and type(utf8.char) == "function" then
     speech_bar = utf8.char(0x258B)
 end
 
-local function marker(definition)
+-- Dwie równe belki: pierwsza identyfikuje moduł mowy, druga rodzaj wypowiedzi.
+local function module_marker()
+    local accent = le.ui and le.ui.module and le.ui.module("mowa").accent or "#7FAFC0"
+    if le.ui and le.ui.dc then return le.ui.dc(accent, speech_bar) end
+    return "<127,175,192>" .. speech_bar .. "<r>"
+end
+
+local function type_marker(definition)
     if le.ui and le.ui.dc then return le.ui.dc(definition.accent, speech_bar) end
     return "<127,175,192>" .. speech_bar .. "<r>"
 end
@@ -89,18 +96,18 @@ function le.mowa.on_color(kind)
     end
 
     if moved then
-        -- 1. Wstawiamy dwie spacje na pozycji 0 (przesuwa tekst gry czysto w prawo)
+        -- 1. Rezerwujemy miejsce na dwie jednakowe belki modułu i rodzaju mowy.
         if type(insertText) == "function" then
-            insertText("  ")
+            insertText("    ")
         elseif type(dinsertText) == "function" then
-            dinsertText("  ")
+            dinsertText("    ")
         end
 
         -- 2. Wracamy kursorem na pozycję 0 (przed wstawione spacje)
         pcall(moveCursor, 0, line_number)
 
-        -- 3. Wstawiamy sam pokolorowany symbol belki (bez spacji w tym samym ciągu)
-        local m = marker(definition)
+        -- 3. Wstawiamy dwie równe, pokolorowane belki (bez dodatkowego tekstu).
+        local m = module_marker() .. type_marker(definition)
         if m:find("^<#") and type(cinsertText) == "function" then
             cinsertText(m)
         elseif type(dinsertText) == "function" then
@@ -115,7 +122,7 @@ function le.mowa.on_color(kind)
         end
     else
         -- Fallback dla braku obsługi kursorów
-        prefix("|  ")
+        prefix("| | ")
     end
 end
 
