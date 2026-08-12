@@ -6,22 +6,23 @@ le.mowa.triggers = le.mowa.triggers or {}
 le.mowa.aliases = le.mowa.aliases or {}
 le.mowa.timers = le.mowa.timers or {}
 
--- tempAnsiColorTrigger() przyjmuje dokładne numery ANSI wysyłane przez MUD.
--- Używamy więc tych samych wartości, które ustawiamy w grze.
+-- Arkadia numeruje kolory Xterm w komendzie gry od 1, a Mudlet od 0.
+-- tempAnsiColorTrigger() obsługuje pełną paletę Xterm 256, więc nasłuchuje
+-- indeksu Xterm o jeden niższego niż wartość ustawiana w grze.
 le.mowa.types = {
     {
         key = "mowa",
         label = "Mowa",
         game_color = 153,
-        ansi_color = 153,
+        xterm_color = 152,
         accent = "#7FAFC0",
-        command = "ustaw kolor mowy 153",
+        command = "kolor mowy 153",
     },
     {
         key = "szept",
         label = "Szept",
         game_color = 160,
-        ansi_color = 160,
+        xterm_color = 159,
         accent = "#A39CBC",
         command = "kolor szeptu 160",
     },
@@ -29,9 +30,9 @@ le.mowa.types = {
         key = "krzyk",
         label = "Krzyk",
         game_color = 117,
-        ansi_color = 117,
+        xterm_color = 116,
         accent = "#C88478",
-        command = "ustaw kolor krzyku 117",
+        command = "kolor krzyku 117",
     },
 }
 
@@ -179,8 +180,8 @@ function le.mowa.init()
 
     for _, definition in ipairs(le.mowa.types) do
         local kind = definition.key
-        local ansi_color = definition.ansi_color
-        le.mowa.triggers["color_" .. kind] = tempAnsiColorTrigger(ansi_color, -1, function()
+        local xterm_color = definition.xterm_color
+        le.mowa.triggers["xterm_" .. kind] = tempAnsiColorTrigger(xterm_color, -1, function()
             le.mowa.on_color(kind)
         end)
     end
