@@ -6,5 +6,7 @@ return {
     "le.mowa",
     "le.czas",
     "le.lecz",
+    "le.flakoniki",
+    "le.kamienie",
     "le.zlecenia",
 }
