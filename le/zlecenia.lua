@@ -237,6 +237,10 @@ function le.zlecenia.parse_deadline_seconds(text)
     text = text:gsub("^%s+", ""):gsub("%s+$", "")
     text = text:gsub("[%.%,;:]+$", "")
 
+    -- Nieprecyzyjne „kilka” liczymy zachowawczo jako trzy jednostki gry.
+    -- Dla „kilka godzin” oznacza to 3 godziny gry = 360 s rzeczywistych.
+    text = text:gsub("^kilka%s+", "3 ")
+
     for _, unit in ipairs(le.zlecenia.deadlineUnits) do
         for _, form in ipairs(unit.forms) do
             local count
@@ -406,7 +410,10 @@ function le.zlecenia.order_time_core(timePhrase)
     local order = le.zlecenia.temp
     local realSeconds = le.zlecenia.parse_deadline_seconds(timePhrase)
     local estimated = realSeconds == nil
-    if estimated then realSeconds = le.zlecenia.config.real_seconds_per_day end
+    if estimated then
+        realSeconds = le.zlecenia.config.real_seconds_per_game_day
+            or (24 * (le.zlecenia.config.real_seconds_per_game_hour or 120))
+    end
 
     local roomID = order.roomID or getPlayerRoom()
     order.roomID = roomID
