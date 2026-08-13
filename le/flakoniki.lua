@@ -60,7 +60,20 @@ function le.flakoniki.on_match(matched, definition)
     if config.show_inline_badge then
         replacement = replacement .. dc("#8B909A", " · " .. definition.label)
     end
-    if config.color_text or config.show_inline_badge then creplace(replacement) end
+    if config.color_text or config.show_inline_badge then
+        -- dc() zwraca znaczniki RGB składni decho: <r,g,b>...<r>.
+        -- creplace() oczekuje składni cecho i wyświetlało je dosłownie.
+        if type(dreplace) == "function" then
+            dreplace(replacement)
+        elseif type(creplace) == "function" then
+            local cechoReplacement = replacement
+                :gsub("<(%d+),(%d+),(%d+)>", function(r, g, b)
+                    return string.format("<#%02X%02X%02X>", tonumber(r), tonumber(g), tonumber(b))
+                end)
+                :gsub("<r>", "<reset>")
+            creplace(cechoReplacement)
+        end
+    end
     deselect()
     resetFormat()
 end

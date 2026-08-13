@@ -92,21 +92,9 @@ function le.kamienie.on_match(matched, definition)
     if not matched or matched == "" or selectString(matched, 1) < 0 then return end
     if type(fg) == "function" then fg("lavender") end
 
-    if le.kamienie.config.enable_mouseover and type(setPopup) == "function" then
-        local item = matched
-        local effect = definition.effect
-        setPopup("main", {
-            function() send("obejrzyj " .. item) end,
-            function() send("wez " .. item) end,
-            function() send("ocen " .. item) end,
-            function() send("wloz " .. item .. " do woreczka") end,
-        }, {
-            effect,
-            "weź " .. item,
-            "oceń " .. item,
-            "włóż do woreczka",
-        })
-    elseif type(setLink) == "function" then
+    if le.kamienie.config.enable_mouseover and type(setLink) == "function" then
+        -- Wyłącznie podpowiedź właściwości; bez menu i komend wykonywanych
+        -- po kliknięciu lub z menu kontekstowego.
         setLink("", definition.effect)
     end
 
@@ -128,10 +116,10 @@ end
 
 function le.kamienie.show_help()
     output("Pomoc · kamienie")
-    note("Kamienie są oznaczane lawendą. Najedź kursorem po opis efektu; prawy klik otwiera akcje.")
+    note("Kamienie są oznaczane lawendą. Najedź kursorem po podpowiedź żywiołu lub magii.")
     if le.ui and le.ui.command then
         le.ui.command("kamienie", "/le.kamienie lista", "/le.kamienie lista", "pokaż właściwości kamieni", false)
-        le.ui.command("kamienie", "/le.kamienie hover", "/le.kamienie hover", "przełącz podpowiedzi i menu", false)
+        le.ui.command("kamienie", "/le.kamienie hover", "/le.kamienie hover", "przełącz podpowiedzi", false)
     end
 end
 
