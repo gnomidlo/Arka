@@ -34,7 +34,7 @@ le.czas.config = {
         [24758] = true, [24759] = true, [24760] = true, [24761] = true,
         [24762] = true, [24763] = true, [24764] = true, [24765] = true,
         [24766] = true, [24767] = true, [24768] = true, [24769] = true,
-        [24770] = true, [7448] = true, [7449] = true, [7450] = true,
+        [24770] = true, [24771] = true, [7448] = true, [7449] = true, [7450] = true,
     },
     sun_colors = { sunrise = "#B7A56E", sunset = "#8793A6" },
     sky_icon_colors = { sun = "#B7A56E", moon = "#8793A6", unknown = "#777C86" },
@@ -225,6 +225,42 @@ le.czas.data = le.czas.data or {
     sun = { imperium = {}, ishtar = {} },
 }
 
+local function remove_sun_minutes(samples, rejected)
+    if type(samples) ~= "table" then return false end
+    local kept, changed = {}, false
+    for _, sample in ipairs(samples) do
+        local minute = tonumber(type(sample) == "table" and sample.minute or sample)
+        if minute and rejected[minute] then
+            changed = true
+        else
+            kept[#kept + 1] = sample
+        end
+    end
+    if changed then
+        for index = #samples, 1, -1 do samples[index] = nil end
+        for _, sample in ipairs(kept) do samples[#samples + 1] = sample end
+    end
+    return changed
+end
+
+local function migrate_sun_samples()
+    le.czas.data.migrations = le.czas.data.migrations or {}
+    if le.czas.data.migrations.sun_ertezeit_0608 then return false end
+
+    local changed = false
+    local imperium = le.czas.data.sun and le.czas.data.sun.imperium
+    local erntezeit = imperium and imperium.Erntezeit
+    if erntezeit then
+        -- Wadliwe przejście domenowe zapisało pary 01:00/16:00.
+        -- Zachowujemy prawidłowe obserwacje Erntezeit 05:00/20:00.
+        changed = remove_sun_minutes(erntezeit.sunrise, { [60] = true }) or changed
+        changed = remove_sun_minutes(erntezeit.sunset, { [960] = true }) or changed
+    end
+
+    le.czas.data.migrations.sun_ertezeit_0608 = true
+    return changed
+end
+
 function le.czas.load()
     if io.exists(le.czas.path) then
         local file = io.open(le.czas.path, "r")
@@ -243,6 +279,7 @@ function le.czas.load()
     le.czas.data.sun = le.czas.data.sun or { imperium = {}, ishtar = {} }
     le.czas.data.sun.imperium = le.czas.data.sun.imperium or {}
     le.czas.data.sun.ishtar = le.czas.data.sun.ishtar or {}
+    migrate_sun_samples()
     -- Dawne daylight było zapisywane między sesjami i mogło generować
     -- fałszywą zmianę po ponownym uruchomieniu. Obserwacja jest teraz sesyjna.
     le.czas.data.daylight = nil
@@ -620,8 +657,10 @@ end
 local function plausible_sun_minute(kind, minute)
     minute = tonumber(minute)
     if not minute or minute < 0 or minute >= 1440 then return false end
-    if kind == "sunrise" then return minute < 720 end
-    return minute >= 720
+    -- Arkadia nie ma świtu w środku nocy ani zmierzchu w południe.
+    -- Węższe granice zatrzymują fałszywe przejścia domenowe (np. świt 01:00).
+    if kind == "sunrise" then return minute >= 180 and minute <= 660 end
+    return minute >= 780 and minute <= 1380
 end
 
 function le.czas.store_sun(domain, period, kind, minute)
@@ -673,24 +712,36 @@ function le.czas.on_room_time()
     if previous == nil or previous == daylight then return end
     if current_room_is_excluded() then return end
 
-    -- Zmiana daylight wyznacza dokładną granicę godziny i najpierw stabilizuje
-    -- zegar. Dopiero potem zapisujemy obserwację świtu lub zmierzchu.
-    le.czas.on_hour_boundary(domain)
-
     local is_daylight = daylight == true or daylight == 1
-        or daylight == "true" or daylight == "day"
+        or daylight == "true" or daylight == "day" or daylight == "1"
     local kind = is_daylight and "sunrise" or "sunset"
     local kind_label = kind == "sunrise" and "swit" or "zmierzch"
     local last = le.czas.last_event_at[domain .. kind] or 0
     if epoch() - last < le.czas.config.minimum_event_gap then return end
-    le.czas.last_event_at[domain .. kind] = epoch()
 
-    local game_sec = le.czas.get_game_sec(domain)
-    if not game_sec then
+    -- Najpierw oceniamy obserwację na niezmienionej kotwicy. Fałszywa zmiana
+    -- daylight nie może już skorygować zegara ani trafić do próbek słońca.
+    local candidate = le.czas.get_game_sec(domain)
+    if not candidate then
         le.czas.log("skipped", string.format(
             "Wykryto %s, ale brak synchronizacji. Wpisz w grze: czas", kind_label))
         return
     end
+    local candidate_day, candidate_hour, candidate_minute = sec_to_date(candidate, domain)
+    local candidate_period = calendar_period_name(domain, candidate_day)
+    local candidate_sun_minute = candidate_hour * 60 + candidate_minute
+    if not candidate_period or not plausible_sun_minute(kind, candidate_sun_minute) then
+        le.czas.log("rejected", string.format(
+            "Odrzucono %s w %s: niewiarygodna godzina %s.",
+            kind_label, candidate_period or "nieznanym okresie", game_clock(candidate_sun_minute)))
+        return
+    end
+
+    -- Dopiero wiarygodna zmiana wyznacza dokładną granicę godziny.
+    le.czas.on_hour_boundary(domain)
+    le.czas.last_event_at[domain .. kind] = epoch()
+
+    local game_sec = le.czas.get_game_sec(domain)
     local day, hour, minute = sec_to_date(game_sec, domain)
     local period = calendar_period_name(domain, day)
     le.czas.store_sun(domain, period, kind, hour * 60 + minute)
