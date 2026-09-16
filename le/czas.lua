@@ -3,10 +3,20 @@
 le = le or {}
 le.czas = le.czas or {}
 le.czas.UI = le.czas.UI or {}
+le.czas.Online = le.czas.Online or {}
 
 le.czas.config = {
     clock = { name = "LeCzasClockLabel", x = "-280px", y = "-790px", width = "260px", height = "158px" },
     event = { name = "LeCzasEventLabel", x = "-280px", y = "-628px", width = "260px", height = "64px" },
+    online = {
+        target_seconds = 5 * 3600,
+        save_interval = 30,
+        maximum_tick_gap = 90,
+        bar = { name = "LeCzasOnlineBar", x = "-280px", y = "-798px", width = "260px", height = "4px" },
+        track_color = "#454A52",
+        progress_color = "#9AB2C7",
+        complete_color = "#8FCF9B",
+    },
     clock_style = [[
         background-color: rgba(12, 14, 18, 220);
         border: none;
@@ -293,6 +303,144 @@ function le.czas.save()
     file:write(encoded)
     file:close()
     return true
+end
+
+-- Tygodniowy czas rzeczywistego zalogowania (poniedziałek–niedziela).
+-- Stan sesji jest ulotny: po uruchomieniu Mudleta czekamy na świeży pakiet GMCP.
+le.czas.Online.path = getMudletHomeDir() .. "/le_czas_online_weekly.json"
+le.czas.Online.weeks = le.czas.Online.weeks or {}
+
+local function online_week_start(timestamp)
+    local date = os.date("*t", timestamp)
+    local days_since_monday = (date.wday + 5) % 7
+    return os.time({
+        year = date.year, month = date.month, day = date.day - days_since_monday,
+        hour = 0, min = 0, sec = 0,
+    })
+end
+
+local function next_online_week_start(monday)
+    local date = os.date("*t", monday)
+    return os.time({
+        year = date.year, month = date.month, day = date.day + 7,
+        hour = 0, min = 0, sec = 0,
+    })
+end
+
+function le.czas.Online.week_key(timestamp)
+    return os.date("%Y-%m-%d", online_week_start(timestamp or epoch()))
+end
+
+function le.czas.Online.total(timestamp)
+    return tonumber(le.czas.Online.weeks[le.czas.Online.week_key(timestamp)]) or 0
+end
+
+function le.czas.Online.load()
+    local online = le.czas.Online
+    if online.loaded then return end
+    online.loaded = true
+    online.last_save_at = epoch()
+    if not io.exists(online.path) then return end
+
+    local file = io.open(online.path, "r")
+    if not file then
+        online.read_only = true
+        le.czas.log("rejected", "Nie mozna odczytac czasu online; zapis wstrzymany.")
+        return
+    end
+    local content = file:read("*a")
+    file:close()
+    local ok, decoded = pcall(yajl.to_value, content)
+    if not ok or type(decoded) ~= "table" or type(decoded.weeks) ~= "table" then
+        online.read_only = true
+        le.czas.log("rejected", "Nieprawidlowy plik czasu online; zapis wstrzymany.")
+        return
+    end
+
+    local weeks = {}
+    for key, seconds in pairs(decoded.weeks) do
+        if type(key) == "string" and key:match("^%d%d%d%d%-%d%d%-%d%d$")
+            and type(seconds) == "number" and seconds >= 0 and seconds < 1000000000 then
+            weeks[key] = seconds
+        end
+    end
+    online.weeks = weeks
+end
+
+function le.czas.Online.save()
+    local online = le.czas.Online
+    if online.read_only then return false end
+    if not online.dirty then return true end
+    local ok, encoded = pcall(yajl.to_string, { version = 1, weeks = online.weeks })
+    if not ok then return false end
+
+    local file = io.open(online.path, "w")
+    if not file then return false end
+    local wrote = pcall(file.write, file, encoded)
+    local closed = file:close()
+    if not wrote or not closed then return false end
+    online.dirty = false
+    online.last_save_at = epoch()
+    online.save_warning = false
+    return true
+end
+
+function le.czas.Online.accrue(now)
+    local online = le.czas.Online
+    if not online.active then return end
+    now = math.floor(tonumber(now) or epoch())
+    local first = online.last_tick or now
+    if now <= first then return end
+    online.last_tick = now
+
+    -- Po uśpieniu komputera nie dopisuj godzin bez potwierdzonego połączenia.
+    local maximum_gap = le.czas.config.online.maximum_tick_gap
+    if now - first > maximum_gap then first = now - maximum_gap end
+
+    while first < now do
+        local monday = online_week_start(first)
+        local boundary = next_online_week_start(monday)
+        local last = math.min(now, boundary)
+        local key = os.date("%Y-%m-%d", monday)
+        online.weeks[key] = (tonumber(online.weeks[key]) or 0) + last - first
+        first = last
+    end
+    online.dirty = true
+end
+
+function le.czas.Online.flush()
+    local online = le.czas.Online
+    online.accrue(epoch())
+    if online.dirty and not online.save() and not online.save_warning then
+        online.save_warning = true
+        le.czas.log("rejected", "Nie udalo sie zapisac tygodniowego czasu online.")
+    end
+end
+
+function le.czas.Online.start_from_room()
+    local online = le.czas.Online
+    if online.active or not (gmcp and gmcp.room and type(gmcp.room.info) == "table") then return end
+    online.active = true
+    online.last_tick = epoch()
+end
+
+function le.czas.Online.stop()
+    local online = le.czas.Online
+    if not online.active then return end
+    online.flush()
+    online.active = false
+    online.last_tick = nil
+    if le.czas.UI.update_online_bar then le.czas.UI.update_online_bar() end
+end
+
+function le.czas.Online.tick()
+    local online = le.czas.Online
+    local now = epoch()
+    online.accrue(now)
+    if online.dirty and now - (online.last_save_at or now) >= le.czas.config.online.save_interval then
+        online.flush()
+    end
+    if le.czas.UI.update_online_bar then le.czas.UI.update_online_bar(now) end
 end
 
 -- Seed Ishtar's sun table from the known-exact static hours (no observation
@@ -986,6 +1134,34 @@ function le.czas.show_week_agenda()
     end
 end
 
+function le.czas.UI.update_online_bar(timestamp)
+    local fill = le.czas.UI.online_fill
+    if not fill then return end
+    local config = le.czas.config.online
+    local width = tonumber(config.bar.width:match("^(%d+)px$")) or 260
+    local total = le.czas.Online.total(timestamp)
+    local pixels = math.floor(width * math.min(1, total / config.target_seconds))
+
+    if pixels <= 0 then
+        if le.czas.UI.online_fill_visible then fill:hide() end
+        le.czas.UI.online_fill_visible = false
+    else
+        if le.czas.UI.online_fill_width ~= pixels then
+            fill:resize(tostring(pixels) .. "px", config.bar.height)
+            le.czas.UI.online_fill_width = pixels
+        end
+        if not le.czas.UI.online_fill_visible then fill:show() end
+        le.czas.UI.online_fill_visible = true
+    end
+
+    local complete = total >= config.target_seconds
+    if le.czas.UI.online_fill_complete ~= complete then
+        local color = complete and config.complete_color or config.progress_color
+        fill:setStyleSheet("background-color: " .. color .. "; border: none; border-radius: 2px;")
+        le.czas.UI.online_fill_complete = complete
+    end
+end
+
 function le.czas.UI.update()
     local domain = le.czas.data.domain
     if domain ~= "imperium" and domain ~= "ishtar" then
@@ -1076,14 +1252,23 @@ end
 -- Lifecycle ---------------------------------------------------------------
 
 function le.czas.cleanup()
+    if le.czas.Online.loaded then le.czas.Online.flush() end
     if le.czas.timer then pcall(killTimer, le.czas.timer); le.czas.timer = nil end
     if le.czas.room_handler then pcall(killAnonymousEventHandler, le.czas.room_handler); le.czas.room_handler = nil end
     if le.czas.time_handler then pcall(killAnonymousEventHandler, le.czas.time_handler); le.czas.time_handler = nil end
     if le.czas.exit_handler then pcall(killAnonymousEventHandler, le.czas.exit_handler); le.czas.exit_handler = nil end
+    if le.czas.Online.room_handler then pcall(killAnonymousEventHandler, le.czas.Online.room_handler); le.czas.Online.room_handler = nil end
+    if le.czas.Online.connection_handler then pcall(killAnonymousEventHandler, le.czas.Online.connection_handler); le.czas.Online.connection_handler = nil end
+    if le.czas.Online.disconnect_handler then pcall(killAnonymousEventHandler, le.czas.Online.disconnect_handler); le.czas.Online.disconnect_handler = nil end
+    if le.czas.Online.exit_handler then pcall(killAnonymousEventHandler, le.czas.Online.exit_handler); le.czas.Online.exit_handler = nil end
+    if le.czas.Online.idle_trigger then pcall(killTrigger, le.czas.Online.idle_trigger); le.czas.Online.idle_trigger = nil end
+    if le.czas.Online.logout_trigger then pcall(killTrigger, le.czas.Online.logout_trigger); le.czas.Online.logout_trigger = nil end
     if le.czas.time_trigger then pcall(killTrigger, le.czas.time_trigger); le.czas.time_trigger = nil end
     if le.czas.aliases then
         for _, id in pairs(le.czas.aliases) do pcall(killAlias, id) end
     end
+    if le.czas.UI.online_fill then le.czas.UI.online_fill:hide(); le.czas.UI.online_fill = nil end
+    if le.czas.UI.online_track then le.czas.UI.online_track:hide(); le.czas.UI.online_track = nil end
     if le.czas.UI.clock then le.czas.UI.clock:hide(); le.czas.UI.clock = nil end
     if le.czas.UI.event then le.czas.UI.event:hide(); le.czas.UI.event = nil end
 end
@@ -1091,9 +1276,23 @@ end
 function le.czas.init()
     le.czas.cleanup()
     le.czas.load()
+    le.czas.Online.load()
     le.czas.last_daylight = {}
     le.czas.seed_ishtar_sun()
     le.czas.save()
+    local online_config = le.czas.config.online
+    le.czas.UI.online_track = Geyser.Label:new(online_config.bar)
+    le.czas.UI.online_track:setStyleSheet(
+        "background-color: " .. online_config.track_color .. "; border: none; border-radius: 2px;")
+    le.czas.UI.online_fill = Geyser.Label:new({
+        name = online_config.bar.name .. "Fill",
+        x = "0px", y = "0px", width = "1px", height = online_config.bar.height,
+    }, le.czas.UI.online_track)
+    le.czas.UI.online_fill:hide()
+    le.czas.UI.online_fill_width = 0
+    le.czas.UI.online_fill_visible = false
+    le.czas.UI.online_fill_complete = nil
+    le.czas.UI.update_online_bar()
     le.czas.UI.clock = Geyser.Label:new(le.czas.config.clock)
     le.czas.UI.clock:setStyleSheet(le.czas.config.clock_style)
     le.czas.UI.event = Geyser.Label:new(le.czas.config.event)
@@ -1105,8 +1304,21 @@ function le.czas.init()
     )
     le.czas.room_handler = registerAnonymousEventHandler("gmcp.room", le.czas.on_room)
     le.czas.time_handler = registerAnonymousEventHandler("gmcp.room.time", le.czas.on_room_time)
+    le.czas.Online.room_handler = registerAnonymousEventHandler("gmcp.room.info", le.czas.Online.start_from_room)
+    le.czas.Online.connection_handler = registerAnonymousEventHandler("sysConnectionEvent", le.czas.Online.stop)
+    le.czas.Online.disconnect_handler = registerAnonymousEventHandler("sysDisconnectionEvent", le.czas.Online.stop)
+    le.czas.Online.exit_handler = registerAnonymousEventHandler("sysExitEvent", le.czas.Online.stop)
+    le.czas.Online.idle_trigger = tempRegexTrigger(
+        "^Zbyt dluga nieaktywnosc - wylogowuje cie\\.$", le.czas.Online.stop)
+    le.czas.Online.logout_trigger = tempRegexTrigger(
+        "^Opuszczasz realny swiat\\.$", le.czas.Online.stop)
     le.czas.exit_handler = registerAnonymousEventHandler("sysExitEvent", le.czas.save)
     le.czas.timer = tempTimer(1, function()
+        local online_ok, online_err = pcall(le.czas.Online.tick)
+        if not online_ok and not le.czas.Online.timer_error_logged then
+            le.czas.Online.timer_error_logged = true
+            le.czas.log("rejected", "Blad licznika online: " .. tostring(online_err))
+        end
         local ok, err = pcall(le.czas.UI.update)
         if not ok and le.czas.UI.clock then message(le.czas.UI.clock, "BLAD", tostring(err)) end
     end, true)
