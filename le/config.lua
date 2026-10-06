@@ -276,7 +276,7 @@ function le.config.showHelp()
     command_item("mowa", "/le.mowa", "/le.mowa", "oznaczenia mowy, szeptu i krzyku")
 
     if le.ui and le.ui.output then le.ui.output("config", "KONFIGURACJA") end
-    command_item("config", "/le.config wersja", "/le.config wersja", "pokaż zainstalowaną wersję")
+    command_item("config", "/le.config wersja", "/le.config wersja", "pokaż wersję i krótkie patch notes")
     command_item("config", "/le.config aktualizacja", "/le.config aktualizacja", "sprawdź dostępną wersję")
     command_item("config", "/le.config aktualizuj", "/le.config aktualizuj", "pobierz, zainstaluj i przeładuj bez restartu")
     command_item("config", "/le.config napraw", "/le.config napraw", "usuń pozostałości instalatora")
