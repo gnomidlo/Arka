@@ -290,7 +290,14 @@ function le.czas.load()
             local content = file:read("*a")
             file:close()
             local ok, decoded = pcall(yajl.to_value, content)
-            if ok and type(decoded) == "table" then le.czas.data = decoded end
+            if ok and type(decoded) == "table" then
+                le.czas.data = decoded
+            else
+                le.czas.read_only = true
+                le.czas.log("rejected", "Nieprawidlowy zapis zegara; zapis wstrzymany, aby zachowac plik.")
+            end
+        else
+            le.czas.read_only = true
         end
     end
 
@@ -308,13 +315,10 @@ function le.czas.load()
 end
 
 function le.czas.save()
-    local file = io.open(le.czas.path, "w")
-    if not file then return false end
-    local ok, encoded = pcall(yajl.to_string, le.czas.data)
-    if not ok then file:close(); return false end
-    file:write(encoded)
-    file:close()
-    return true
+    if le.czas.read_only then return false end
+    local ok, err = le.storage.write_json(le.czas.path, le.czas.data)
+    if not ok then le.czas.log("rejected", "Nie zapisano zegara: " .. tostring(err)) end
+    return ok
 end
 
 -- Tygodniowy czas rzeczywistego zalogowania (poniedziałek–niedziela).
@@ -383,14 +387,8 @@ function le.czas.Online.save()
     local online = le.czas.Online
     if online.read_only then return false end
     if not online.dirty then return true end
-    local ok, encoded = pcall(yajl.to_string, { version = 1, weeks = online.weeks })
-    if not ok then return false end
-
-    local file = io.open(online.path, "w")
-    if not file then return false end
-    local wrote = pcall(file.write, file, encoded)
-    local closed = file:close()
-    if not wrote or not closed then return false end
+    local saved = le.storage.write_json(online.path, { version = 1, weeks = online.weeks })
+    if not saved then return false end
     online.dirty = false
     online.last_save_at = epoch()
     online.save_warning = false
@@ -961,7 +959,20 @@ function le.czas.get_upcoming_events(domain, count)
 end
 
 function le.czas.next_event(domain, game_sec)
-    return le.czas.get_upcoming_events(domain, 1)[1]
+    game_sec = game_sec or le.czas.get_game_sec(domain)
+    if not game_sec then return nil end
+    local cal = le.czas.cal[domain]
+    local year_seconds = cal.totalDays * 2880
+    local now = game_sec % year_seconds
+    local best
+    for _, event in ipairs(cal.events) do
+        local offset = (event.day - 1) * 2880 + event.hour * 120 - now
+        if offset <= 0 then offset = offset + year_seconds end
+        if not best or offset < best.offset then
+            best = { desc = event.desc, color = event.color, domain = domain, offset = offset }
+        end
+    end
+    return best
 end
 
 function le.czas.get_upcoming_events_both(count)
@@ -979,8 +990,14 @@ end
 
 -- UI -------------------------------------------------------------------
 
+local function echo_changed(label, html)
+    if label.le_last_html == html then return end
+    label:echo(html)
+    label.le_last_html = html
+end
+
 local function message(label, title, description)
-    label:echo(string.format([[<div style='font-family:DejaVu Sans Mono,Consolas,monospace'>
+    echo_changed(label, string.format([[<div style='font-family:DejaVu Sans Mono,Consolas,monospace'>
         <div style='font-size:11px;color:#D98282;font-weight:bold'>%s</div>
         <div style='font-size:10px;color:#8B909A;margin-top:5px'>%s</div>
     </div>]], title, description))
@@ -1235,7 +1252,7 @@ function le.czas.UI.update()
         sun_line = [[<span style='color:#8B909A'>Świt i zmierzch · brak danych</span>]]
     end
 
-    le.czas.UI.clock:echo(string.format([[
+    echo_changed(le.czas.UI.clock, string.format([[
       <div style='font-family:DejaVu Sans Mono,Consolas,monospace'>
         <div style="font-family:'Trebuchet MS','Segoe UI',sans-serif;font-size:40px;line-height:1;color:#F1F2F4;font-weight:900;letter-spacing:1px">%02d:%02d</div>
         %s
@@ -1248,7 +1265,7 @@ function le.czas.UI.update()
     local event = le.czas.next_event(domain, game_sec)
     if event then
         local event_domain, event_domain_color = domain_display(event)
-        le.czas.UI.event:echo(string.format([[
+        echo_changed(le.czas.UI.event, string.format([[
           <div style='font-family:DejaVu Sans Mono,Consolas,monospace'>
             <div style='font-size:9px;color:#8B909A;letter-spacing:1px'>NAJBLIŻSZE WYDARZENIE <span style='color:%s;font-weight:bold'>· %s</span></div>
             <div style='font-size:12px;color:#D8DBE2;font-weight:bold;margin-top:4px'>%s</div>

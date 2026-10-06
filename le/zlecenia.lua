@@ -316,11 +316,12 @@ le.zlecenia.data = le.zlecenia.data or { orders = {}, completed = 0 }
 function le.zlecenia.load()
     if not io.exists(le.zlecenia.path) then return end
     local file = io.open(le.zlecenia.path, "r")
-    if not file then return end
+    if not file then le.zlecenia.read_only = true; return end
     local content = file:read("*a")
     file:close()
     local ok, decoded = pcall(yajl.to_value, content)
-    if ok and type(decoded) == "table" then
+    if ok and type(decoded) == "table" and type(decoded.orders or {}) == "table"
+        and type(decoded.completed or 0) == "number" then
         le.zlecenia.data = decoded
         le.zlecenia.data.orders = le.zlecenia.data.orders or {}
         le.zlecenia.data.completed = le.zlecenia.data.completed or 0
@@ -328,17 +329,17 @@ function le.zlecenia.load()
         for _, order in pairs(le.zlecenia.data.orders) do
             rebuild_order_what(order)
         end
+    else
+        le.zlecenia.read_only = true
+        le.zlecenia.output("Nieprawidlowy zapis zlecen; zapis wstrzymany, aby zachowac plik.")
     end
 end
 
 function le.zlecenia.save()
-    local file = io.open(le.zlecenia.path, "w")
-    if not file then return false end
-    local ok, encoded = pcall(yajl.to_string, le.zlecenia.data)
-    if not ok then file:close(); return false end
-    file:write(encoded)
-    file:close()
-    return true
+    if le.zlecenia.read_only then return false end
+    local ok, err = le.storage.write_json(le.zlecenia.path, le.zlecenia.data)
+    if not ok then le.zlecenia.output("Nie zapisano zlecen: " .. tostring(err)) end
+    return ok
 end
 
 -- Komunikaty w oknie tekstowym --------------------------------------------
@@ -522,15 +523,16 @@ end
 
 function le.zlecenia.check_expired()
     local now = epoch()
+    local changed = false
     for key, order in pairs(le.zlecenia.data.orders) do
         if order.completionAt and order.completionAt <= now then
             le.zlecenia.data.orders[key] = nil
-            le.zlecenia.data.completed = le.zlecenia.data.completed + 1
+            changed = true
             le.zlecenia.output(string.format("Zlecenie na %s od %s właśnie się zakończyło. Usunięto z listy.",
                 dc(le.zlecenia.config.colors.value, order.what or "-"), dc(le.zlecenia.config.colors.npc, order.npc)))
-            le.zlecenia.save()
         end
     end
+    if changed then le.zlecenia.save() end
 end
 
 -- Lista aktywnych zleceń, posortowana po najbliższym terminie ------------
@@ -759,8 +761,13 @@ function le.zlecenia.UI.toggle_route(order)
         le.zlecenia.UI.routingKey = nil
     else
         if le.zlecenia.UI.routingKey then pcall(alias_func_prowadz_stop) end
-        pcall(alias_func_prowadz, order.roomID)
-        le.zlecenia.UI.routingKey = order.key
+        le.zlecenia.UI.routingKey = nil
+        local ok, result = pcall(alias_func_prowadz, order.roomID)
+        if ok and result ~= false then
+            le.zlecenia.UI.routingKey = order.key
+        else
+            le.zlecenia.output("Nie udalo sie uruchomic prowadzenia do odbiorcy.")
+        end
     end
     le.zlecenia.UI.rebuild()
 end
@@ -923,6 +930,7 @@ function le.zlecenia.cleanup()
     if le.zlecenia.UI.routeBtn then for _, b in ipairs(le.zlecenia.UI.routeBtn) do b:hide() end end
     if le.zlecenia.UI.deleteBtn then for _, b in ipairs(le.zlecenia.UI.deleteBtn) do b:hide() end end
     if le.zlecenia.UI.routingKey then pcall(alias_func_prowadz_stop) end
+    le.zlecenia.UI.routingKey = nil
     end
 
 function le.zlecenia.init()

@@ -12,7 +12,7 @@ Niezależna konfiguracja i zestaw pluginów dla Mudleta.
 Po udostępnieniu repozytorium wykonaj w Mudlecie:
 
 ```text
-/zainstaluj_plugin https://raw.githubusercontent.com/gnomidlo/Arka/main/dist/UNICORN.zip?version=0.8.1
+/zainstaluj_plugin https://raw.githubusercontent.com/gnomidlo/Arka/main/dist/UNICORN.zip?version=0.8.2
 ```
 
 Po instalacji sprawdź listę pluginów:
@@ -30,7 +30,7 @@ Po pierwszej instalacji pliki sa juz na dysku, ale plugin moze nie byc jeszcze w
 Zmiana nazwy pluginu wymaga jednorazowego usuniecia starego katalogu. Zamknij Mudlet, usun katalog `plugins/Arka`, uruchom Mudlet i zainstaluj nowa paczke:
 
 ```text
-/zainstaluj_plugin https://raw.githubusercontent.com/gnomidlo/Arka/main/dist/UNICORN.zip?version=0.8.1
+/zainstaluj_plugin https://raw.githubusercontent.com/gnomidlo/Arka/main/dist/UNICORN.zip?version=0.8.2
 ```
 
 Od wersji `0.2.0` plugin jest instalowany i wyswietlany na liscie jako `UNICORN`. Paczka ma pliki bezposrednio w katalogu glownym ZIP-a, zgodnie z formatem instalatora Arkadii.
@@ -92,6 +92,7 @@ Bardzo subtelny pasek bez podpisu bezpośrednio pod godziną wypełnia szerokoś
 ## Struktura pluginu
 
 - `init.lua` — punkt wejścia pluginu `UNICORN`,
+- `le/storage.lua` — bezpieczny zapis JSON z kopią poprzedniego pliku,
 - `le/config.lua` — moduł pomocy i alias `/le.config`,
 - `le/patchnotes.lua` — krótkie patch notes dla kolejnych wersji,
 - `le/czas.lua` — niezależny zegar, kalendarz, wydarzenia i interfejs,
@@ -143,22 +144,29 @@ Czas podawany przez NPC jest liczony zegarem świata gry. Jedna godzina gry trwa
 
 Aktualna wersja projektu jest zapisana w `version.lua`. Przed opublikowaniem nowej wersji nalezy podbic ten numer zgodnie z formatem `MAJOR.MINOR.PATCH`.
 
-Sprawdzanie wersji uruchamia sie automatycznie 6 sekund po zaladowaniu pluginu i korzysta z zadania HTTP bez plikow tymczasowych. Instalacja aktualizacji jest wykonywana dopiero po swiadomym wywolaniu `/le.config aktualizuj`. Po udanym hot reloadzie UNICORN pokazuje mini patch notes nowej wersji; można je też ponownie wyświetlić przez `/le.config wersja`. Od wersji `0.8.0` instalator najpierw sprawdza składnię `init.lua` i wszystkich modułów nowej paczki, kopiuje ją do `plugins/UNICORN`, a następnie przeładowuje moduły w kolejności z `init.lua` bez restartowania Mudleta. Jeśli walidacja albo przeładowanie się nie powiedzie, nowe pliki pozostają zapisane, a użytkownik dostaje czytelny komunikat z prośbą o restart jako bezpieczny fallback. Od wersji `0.3.1` paczka jest rozpakowywana poza katalogiem pluginow i kopiowana bezposrednio do `plugins/UNICORN`, dlatego instalator nie tworzy katalogow o nazwach typu `1786310551UNICORN`.
+Sprawdzanie wersji uruchamia sie automatycznie 6 sekund po zaladowaniu pluginu i korzysta z zadania HTTP bez plikow tymczasowych. Instalacja aktualizacji jest wykonywana dopiero po swiadomym wywolaniu `/le.config aktualizuj`. Po udanym hot reloadzie UNICORN pokazuje mini patch notes nowej wersji; można je też ponownie wyświetlić przez `/le.config wersja`. Od wersji `0.8.2` instalator sprawdza wersję, manifest i składnię modułów w rozpakowanej paczce przed podmianą instalacji. Poprzedni katalog zachowuje w `UNICORN-backup` w profilu Mudleta, poza katalogiem pluginów. Po podmianie przeładowuje moduły bez restartu. Jeśli przeładowanie się nie powiedzie, przywraca poprzednie pliki i prosi o restart, aby odtworzyć czysty stan modułów. Jeśli system zablokuje przywrócenie, podaje lokalizację zachowanej kopii. Następna aktualizacja zastępuje kopię dopiero po walidacji nowej paczki i potwierdzeniu obecności bieżącej instalacji. Od wersji `0.3.1` paczka jest rozpakowywana poza katalogiem pluginow i kopiowana bezposrednio do `plugins/UNICORN`, dlatego instalator nie tworzy katalogow o nazwach typu `1786310551UNICORN`.
 
 `/le.config napraw` usuwa pozostalosci `UNICORN_todelete` oraz katalogi tymczasowe zakonczone nazwa `UNICORN`. Jesli system blokuje usuniecie, katalog jest przenoszony poza `plugins`, aby loader nie traktowal go jako pluginu. Zwykła aktualizacja UNICORN nie wymaga już restartu; restart pozostaje awaryjnym fallbackiem oraz nadal może być potrzebny po naprawie pozostałości instalatora.
 
 ## Budowanie paczki UNICORN
 
-Aktualna wersja: **0.8.1**
+Aktualna wersja: **0.8.2**
 
 Zbuduj paczkę `dist/UNICORN.zip` zawierającą aktualne pliki źródłowe:
 - `init.lua`
 - `version.lua`
-- katalog `le/` (`ui.lua`, `patchnotes.lua`, `config.lua`, `czas.lua`, `lecz.lua`, `flakoniki.lua`, `kamienie.lua`, `zlecenia.lua`, `mowa.lua`)
+- katalog `le/` (`ui.lua`, `storage.lua`, `patchnotes.lua`, `config.lua`, `czas.lua`, `lecz.lua`, `flakoniki.lua`, `kamienie.lua`, `zlecenia.lua`, `mowa.lua`)
 
 ## Mini patch notes
 
 Każde wydanie UNICORN zmieniające kod lub zachowanie pluginu ma krótki wpis w `le/patchnotes.lua`. To stały element procesu wydawniczego, nie opcjonalny changelog. Patch notes skupiają się na tym, co użytkownik faktycznie zauważy: nowe funkcje, poprawki zachowania i istotne zmiany interfejsu.
+
+Dla 0.8.2:
+- walidacja aktualizacji przed instalacją oraz kopia poprzedniej wersji,
+- bezpieczniejszy zapis zegara, czasu online i zleceń,
+- poprawione statystyki wygasłych zleceń i zgłaszanie błędów prowadzenia,
+- porady o leczeniu bez ziół niezależne od bazy ziół,
+- mniej zbędnego odświeżania zegara.
 
 Dla 0.8.1:
 - tygodniowy pasek online wypełnia szerokość panelu zegara z małymi marginesami,
@@ -169,7 +177,7 @@ Dla 0.8.0:
 - naprawiono widoczność tygodniowego paska online pod zegarem,
 - dodano mini patch notes przy informacji o wersji i po udanym update.
 
-## Interfejs 0.8.1
+## Interfejs 0.8.2
 
 UNICORN używa jednego minimalistycznego systemu wizualnego. Komunikaty konsoli zaczynają się od cienkiej belki w kolorze modułu, na przykład:
 
@@ -191,3 +199,27 @@ Panel boczny nie używa ikon ani pełnych ramek. Moduły rozpoznaje się po kolo
 Zegar pokazuje dużą, pogrubioną godzinę, domenę, porę roku i okres kalendarza oraz odliczanie do najbliższego świtu albo zmierzchu. Panel najbliższego wydarzenia pokazuje też jego domenę.
 
 Zwarty panel zleceń pokazuje wyłącznie przedmiot, ilość i pozostały czas. Kliknięcie dostawy rozwija odbiorcę, miejsce oraz tekstowe akcje `PROWADŹ` i `USUŃ`.
+
+
+## Bezpieczeństwo zapisu i testy
+
+Zegar, tygodniowy czas online i zlecenia zapisują JSON najpierw do pliku `.tmp`. Dopiero po udanym zapisie i zamknięciu pliku zastępują właściwy zapis, zachowując poprzednią zawartość w `.bak`. Błąd podmiany uruchamia próbę przywrócenia poprzedniego pliku. Wykrycie nieprawidłowego JSON-a wstrzymuje zapis danego modułu, aby nie nadpisać danych; po naprawieniu pliku należy zrestartować Mudlet.
+
+Upływ terminu usuwa zlecenie z listy, ale nie zalicza go do wykonanych dostaw. Licznik zwiększa dopiero potwierdzenie NPC.
+
+Testy wymagają Lua 5.1. Uruchamiaj każdy plik osobno z katalogu repozytorium:
+
+```sh
+for file in tests/*.lua; do lua5.1 "$file"; done
+```
+
+GitHub Actions sprawdza składnię, testy licznika online, zapisu, aktualizatora, zleceń i leczenia oraz zgodność ZIP-a z commitem źródłowym i bieżącymi źródłami. Testy używają atrap API Mudleta; nie zastępują sprawdzenia w grze.
+
+Paczka jest budowana po zatwierdzeniu wszystkich źródeł, z pełnego SHA:
+
+```sh
+git -c core.autocrlf=false archive --format=zip --output=dist/UNICORN.zip <SOURCE_SHA> init.lua version.lua le
+python3 tools/verify_release.py
+```
+
+ZIP zapisuje SHA źródeł w komentarzu archiwum. Sam artefakt trafia do kolejnego commita.

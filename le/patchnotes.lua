@@ -6,6 +6,13 @@ le.patchnotes = le.patchnotes or {}
 -- To jest źródło prawdy dla mini patch notes. Każde wydanie zmieniające kod
 -- lub zachowanie pluginu musi dostać tutaj krótki, użytkowy opis zmian.
 le.patchnotes.notes = {
+    ["0.8.2"] = {
+        "Aktualizator sprawdza paczkę przed instalacją i zachowuje poprzednią wersję na wypadek błędu.",
+        "Zapis zegara, czasu online i zleceń korzysta z pliku tymczasowego oraz kopii zapasowej.",
+        "Wygasłe zlecenia nie zwiększają liczby wykonanych dostaw; błędy prowadzenia są zgłaszane.",
+        "Porady o leczeniu bez ziół działają także bez wczytanej bazy ziół.",
+        "Zegar odświeża etykiety tylko po zmianie ich treści i sprawniej wybiera najbliższe wydarzenie.",
+    },
     ["0.8.1"] = {
         "Tygodniowy pasek online wypełnia szerokość panelu zegara z małymi marginesami.",
         "Długość paska dopasowuje się do szerokości panelu i czcionki, zachowując dotychczasowy wygląd.",

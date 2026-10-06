@@ -1,0 +1,22 @@
+name: Lua and release checks
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Install Lua 5.1
+        run: sudo apt-get update && sudo apt-get install -y lua5.1
+      - name: Check syntax and run regression tests
+        run: |
+          for file in init.lua version.lua le/*.lua tests/*.lua; do luac5.1 -p "$file"; done
+          for file in tests/*.lua; do lua5.1 "$file"; done
+      - name: Verify release archive
+        run: python3 tools/verify_release.py
