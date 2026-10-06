@@ -115,7 +115,8 @@ online.weeks["2026-09-14"] = 5 * 3600
 le.czas.data.domain = "ishtar"
 le.czas.data.anchors.ishtar = { game_sec = 0, real_ts = now }
 le.czas.UI.update()
-assert(le.czas.UI.clock.html:find("width:0%%", 1, false), "nowy tydzień nie wyzerował paska")
+assert(le.czas.UI.clock.html:find("━", 1, true), "pasek online nie został wyrenderowany")
+assert(not le.czas.UI.clock.html:find("width:", 1, true), "pasek nie powinien zależeć od CSS width w Qt rich text")
 now = now + 15
 online.tick()
 assert(online.total() == 20)
@@ -141,7 +142,7 @@ assert(online.total() == 115)
 
 online.weeks["2026-09-21"] = 5 * 3600
 le.czas.UI.update()
-assert(le.czas.UI.clock.html:find("width:100%%", 1, false))
+assert(le.czas.UI.clock.html:find(string.rep("━", 32), 1, true), "pełny pasek nie ma wszystkich segmentów")
 assert(le.czas.UI.clock.html:find("#20242A", 1, true), "pełny pasek nie używa subtelnego koloru")
 
 -- Zasymuluj zatrzymany timer. Świeży event GMCP ma go odtworzyć.
@@ -185,4 +186,4 @@ assert(online.read_only, "uszkodzony zapis powinien przełączyć licznik w tryb
 online.dirty = true
 assert(not online.save())
 assert(files[online.path] == "uszkodzony-json", "uszkodzony plik został nadpisany")
-print("OK: tygodnie, logout, idle, disconnect, exit, zapis, pasek HTML, watchdog i przeładowanie")
+print("OK: tygodnie, logout, idle, disconnect, exit, zapis, pasek segmentowy, watchdog i przeładowanie")

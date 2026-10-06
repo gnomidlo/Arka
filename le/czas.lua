@@ -1154,15 +1154,21 @@ local function online_bar_html(timestamp)
     local config = le.czas.config.online
     local total = le.czas.Online.total(timestamp)
     local ratio = math.max(0, math.min(1, total / config.target_seconds))
-    local percent = math.floor(ratio * 100 + 0.5)
-    local fill_color = ratio >= 1 and config.complete_color or config.progress_color
+    local segments = 32
+    local filled = math.floor(ratio * segments + 0.5)
+    if ratio > 0 and filled == 0 then filled = 1 end
+    filled = math.max(0, math.min(segments, filled))
 
-    -- Qt rich text dobrze radzi sobie z prostymi blokami procentowymi. Pasek
-    -- ma tylko 2 px wysokości i bez etykiety nie konkuruje z godziną.
-    return string.format([[
-      <div style='height:2px;background-color:%s;margin-top:7px;margin-bottom:7px'>
-        <div style='height:2px;width:%d%%;background-color:%s'></div>
-      </div>]], config.track_color, percent, fill_color)
+    local fill_color = ratio >= 1 and config.complete_color or config.progress_color
+    local filled_text = string.rep("━", filled)
+    local empty_text = string.rep("━", segments - filled)
+
+    -- Qt rich text w Mudlecie bywa kapryśny przy zagnieżdżonych <div> z
+    -- procentową szerokością. Stały, monospace'owy pasek ze zwykłych <span>
+    -- renderuje się stabilnie także w starszych wersjach Qt.
+    return string.format(
+        [[<div style='font-size:6px;line-height:7px;margin-top:5px;margin-bottom:5px'><span style='color:%s'>%s</span><span style='color:%s'>%s</span></div>]],
+        fill_color, filled_text, config.track_color, empty_text)
 end
 
 function le.czas.UI.update()

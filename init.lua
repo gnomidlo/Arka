@@ -2,6 +2,7 @@
 return {
     "version",
     "le.ui",
+    "le.patchnotes",
     "le.config",
     "le.mowa",
     "le.czas",

@@ -170,10 +170,13 @@ Sama zmiana dokumentacji lub tego pliku nie wymaga nowej wersji ani przebudowy p
 Przy wydaniu:
 
 1. zaktualizuj `version.lua`;
-2. zaktualizuj wersję i opis w README;
-3. zbuduj `dist/UNICORN.zip` z dokładnego SHA zawierającego wszystkie zmiany źródłowe — nie z potencjalnie buforowanego adresu gałęzi;
-4. umieść pliki bezpośrednio w katalogu głównym ZIP-a, bez dodatkowego katalogu `UNICORN/`;
-5. sprawdź zawartość paczki po jej utworzeniu.
+2. dodaj krótkie mini patch notes dla tej wersji w `le/patchnotes.lua` — 2–5 zwięzłych punktów opisujących najważniejsze zmiany i nowości z perspektywy użytkownika;
+3. zaktualizuj wersję i opis w README;
+4. zbuduj `dist/UNICORN.zip` z dokładnego SHA zawierającego wszystkie zmiany źródłowe — nie z potencjalnie buforowanego adresu gałęzi;
+5. umieść pliki bezpośrednio w katalogu głównym ZIP-a, bez dodatkowego katalogu `UNICORN/`;
+6. sprawdź zawartość paczki po jej utworzeniu.
+
+Mini patch notes są częścią definicji wydania, a nie opcjonalną dokumentacją. Każda nowa wersja zmieniająca kod lub zachowanie pluginu musi mieć wpis w `le/patchnotes.lua`. Powinny być krótkie, konkretne i zrozumiałe bez czytania diffów ani historii Git.
 
 Paczka powinna zawierać co najmniej:
 
@@ -181,6 +184,7 @@ Paczka powinna zawierać co najmniej:
 - `version.lua`;
 - `le/ui.lua`;
 - `le/config.lua`;
+- `le/patchnotes.lua`;
 - `le/czas.lua`;
 - `le/lecz.lua`;
 - `le/zlecenia.lua`;

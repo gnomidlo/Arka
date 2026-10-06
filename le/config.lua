@@ -134,6 +134,65 @@ local function read_version(path)
     return content:match("le%.version%s*=%s*[\"']([%d%.]+)[\"']")
 end
 
+local function module_file(plugin_root, module_name)
+    return plugin_root .. "/" .. tostring(module_name):gsub("%.", "/") .. ".lua"
+end
+
+local function load_module_list(plugin_root)
+    local chunk, err = loadfile(plugin_root .. "/init.lua")
+    if not chunk then return nil, "init.lua: " .. tostring(err) end
+    local ok, modules = pcall(chunk)
+    if not ok then return nil, "init.lua: " .. tostring(modules) end
+    if type(modules) ~= "table" then return nil, "init.lua nie zwrocil listy modulow" end
+    return modules
+end
+
+local function validate_plugin_tree(plugin_root, expected_version)
+    if read_version(plugin_root .. "/version.lua") ~= expected_version then
+        return nil, "niezgodna wersja plikow"
+    end
+
+    local modules, err = load_module_list(plugin_root)
+    if not modules then return nil, err end
+
+    for _, module_name in ipairs(modules) do
+        local path = module_file(plugin_root, module_name)
+        local chunk, compile_error = loadfile(path)
+        if not chunk then
+            return nil, tostring(module_name) .. ": " .. tostring(compile_error)
+        end
+    end
+    return modules
+end
+
+local function ensure_plugin_package_path()
+    local plugins = normalized_path(getMudletHomeDir()) .. "/plugins/?.lua"
+    if not package.path:find(plugins, 1, true) then
+        package.path = plugins .. ";" .. package.path
+    end
+end
+
+local function reload_plugin_modules(plugin_root, expected_version)
+    local modules, validation_error = validate_plugin_tree(plugin_root, expected_version)
+    if not modules then return nil, validation_error end
+
+    ensure_plugin_package_path()
+
+    for _, module_name in ipairs(modules) do
+        local package_name = "UNICORN." .. module_name
+        package.loaded[package_name] = nil
+        local ok, err = pcall(require, package_name)
+        if not ok then
+            return nil, tostring(module_name) .. ": " .. tostring(err)
+        end
+    end
+
+    if tostring(le.version or "") ~= tostring(expected_version) then
+        return nil, "wersja po przeladowaniu to " .. tostring(le.version or "nieznana")
+    end
+    return true
+end
+
 local function install_paths()
     local home = normalized_path(getMudletHomeDir())
     return {
@@ -217,14 +276,17 @@ function le.config.showHelp()
     command_item("mowa", "/le.mowa", "/le.mowa", "oznaczenia mowy, szeptu i krzyku")
 
     if le.ui and le.ui.output then le.ui.output("config", "KONFIGURACJA") end
-    command_item("config", "/le.config wersja", "/le.config wersja", "pokaż zainstalowaną wersję")
+    command_item("config", "/le.config wersja", "/le.config wersja", "pokaż wersję i krótkie patch notes")
     command_item("config", "/le.config aktualizacja", "/le.config aktualizacja", "sprawdź dostępną wersję")
-    command_item("config", "/le.config aktualizuj", "/le.config aktualizuj", "pobierz i zainstaluj")
+    command_item("config", "/le.config aktualizuj", "/le.config aktualizuj", "pobierz, zainstaluj i przeładuj bez restartu")
     command_item("config", "/le.config napraw", "/le.config napraw", "usuń pozostałości instalatora")
 end
 
 function le.config.showVersion()
     log("Zainstalowana wersja: " .. tostring(le.version or "nieznana") .. ".", "pale_green")
+    if le.patchnotes and le.patchnotes.show then
+        le.patchnotes.show(le.version)
+    end
 end
 
 function le.config.checkUpdate(options)
@@ -359,7 +421,27 @@ function le.config.installUpdate()
                         log("Weryfikacja zapisanej wersji nie powiodla sie.", "light_pink")
                         return
                     end
-                    log("UNICORN " .. remote .. " zapisany bez tworzenia nowej instancji. Zrestartuj Mudlet.", "pale_green")
+
+                    local modules, validation_error = validate_plugin_tree(paths.plugin, remote)
+                    if not modules then
+                        log("UNICORN " .. remote .. " zapisany, ale walidacja przed przeladowaniem nie powiodla sie: "
+                            .. tostring(validation_error) .. ". Zrestartuj Mudlet.", "light_pink")
+                        return
+                    end
+
+                    log("UNICORN " .. remote .. " zapisany. Przeladowuje moduly...", "pale_green")
+                    tempTimer(0.05, function()
+                        local ok, reload_error = reload_plugin_modules(paths.plugin, remote)
+                        if not ok then
+                            log("Pliki sa zaktualizowane, ale przeladowanie nie powiodlo sie: "
+                                .. tostring(reload_error) .. ". Zrestartuj Mudlet.", "light_pink")
+                            return
+                        end
+                        log("UNICORN " .. remote .. " zaktualizowany i przeladowany bez restartu.", "pale_green")
+                        if le.patchnotes and le.patchnotes.show then
+                            le.patchnotes.show(remote)
+                        end
+                    end)
                 end,
                 true
             )
