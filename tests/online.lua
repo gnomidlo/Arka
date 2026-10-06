@@ -14,6 +14,12 @@ local function id()
 end
 
 io.exists = function(path) return files[path] ~= nil end
+os.rename = function(source, target)
+    if not files[source] or files[target] then return nil, "rename failed" end
+    files[target], files[source] = files[source], nil
+    return true
+end
+os.remove = function(path) files[path] = nil; return true end
 io.open = function(path, mode)
     if mode == "r" then
         if files[path] == nil then return nil end
@@ -23,7 +29,7 @@ io.open = function(path, mode)
         }
     end
     return {
-        write = function(_, value) files[path] = value end,
+        write = function(_, value) files[path] = value; return true end,
         close = function() return true end,
     }
 end
@@ -105,6 +111,7 @@ local function count_entries(values)
     return count
 end
 
+dofile("le/storage.lua")
 dofile("le/czas.lua")
 local online = le.czas.Online
 assert(not online.active, "sam start Mudleta nie może naliczać czasu")
@@ -237,3 +244,32 @@ for index, measure in ipairs({
     check_bar(index == 1 and 64 or 37, 0, "#20242A")
 end
 print("OK: szerokość panelu, metryki czcionki i fallback API")
+
+-- Najbliższe wydarzenie odpowiada pełnej liście, także na granicy roku.
+for _, domain in ipairs({ "imperium", "ishtar" }) do
+    for _, seconds in ipairs({ 0, 1, 2880, le.czas.cal[domain].totalDays * 2880 - 1 }) do
+        le.czas.data.anchors[domain] = { game_sec = seconds, real_ts = now }
+        local expected = le.czas.get_upcoming_events(domain, 1)[1]
+        local actual = le.czas.next_event(domain, seconds)
+        assert((not actual and not expected) or actual.offset == expected.offset)
+    end
+end
+local clock, event = le.czas.UI.clock, le.czas.UI.event
+local echoes = 0
+for _, label in ipairs({clock, event}) do
+    label.le_last_html = nil
+    label.echo = function(self, html) self.html = html; echoes = echoes + 1 end
+end
+le.czas.UI.update()
+local first = echoes
+le.czas.UI.update()
+assert(first == 2 and echoes == first, "unchanged HTML should not be repainted")
+now = now + 120
+le.czas.UI.update()
+assert(echoes > first, "changed clock must be repainted")
+print("OK: nearest event and repaint only when HTML changes")
+files[le.czas.path] = "invalid-clock-json"
+le.czas.load()
+assert(le.czas.read_only and not le.czas.save())
+assert(files[le.czas.path] == "invalid-clock-json")
+print("OK: corrupt clock save is preserved")

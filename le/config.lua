@@ -93,39 +93,6 @@ local function remove_path(path)
     return lfs.rmdir(path)
 end
 
-local function copy_file(source, target)
-    local input, read_error = io.open(source, "rb")
-    if not input then return nil, read_error end
-    local content = input:read("*a")
-    input:close()
-
-    local output, write_error = io.open(target, "wb")
-    if not output then return nil, write_error end
-    local success, error_message = output:write(content)
-    output:close()
-    if not success then return nil, error_message end
-    return true
-end
-
-local function copy_tree(source, target)
-    source, target = normalized_path(source), normalized_path(target)
-    local mode = lfs.attributes(source, "mode")
-    if mode == "file" then return copy_file(source, target) end
-    if mode ~= "directory" then return nil, "brak katalogu " .. source end
-
-    if lfs.attributes(target, "mode") ~= "directory" then
-        local success, err = lfs.mkdir(target)
-        if not success then return nil, err end
-    end
-    for entry in lfs.dir(source) do
-        if entry ~= "." and entry ~= ".." then
-            local success, err = copy_tree(source .. "/" .. entry, target .. "/" .. entry)
-            if not success then return nil, err end
-        end
-    end
-    return true
-end
-
 local function read_version(path)
     local file = io.open(path, "rb")
     if not file then return nil end
@@ -141,9 +108,23 @@ end
 local function load_module_list(plugin_root)
     local chunk, err = loadfile(plugin_root .. "/init.lua")
     if not chunk then return nil, "init.lua: " .. tostring(err) end
+    -- Manifest zwraca wyłącznie listę; walidacja nie uruchamia kodu pluginu.
+    setfenv(chunk, {})
     local ok, modules = pcall(chunk)
     if not ok then return nil, "init.lua: " .. tostring(modules) end
-    if type(modules) ~= "table" then return nil, "init.lua nie zwrocil listy modulow" end
+    if type(modules) ~= "table" or #modules == 0 then return nil, "init.lua nie zwrocil listy modulow" end
+    local seen, count = {}, 0
+    for index, name in pairs(modules) do
+        if type(index) ~= "number" or index < 1 or index > #modules or index % 1 ~= 0
+            or type(name) ~= "string" or not name:match("^[%w_]+[%w_%.]*$")
+            or name:find("..", 1, true) or name:sub(-1) == "." or seen[name] then
+            return nil, "nieprawidlowa lista modulow"
+        end
+        seen[name] = true
+        count = count + 1
+    end
+    if count ~= #modules then return nil, "nieciagla lista modulow" end
+    if not seen.version then return nil, "brak modulu version" end
     return modules
 end
 
@@ -201,6 +182,7 @@ local function install_paths()
         staging = home .. "/UNICORN-update",
         plugin = home .. "/plugins/UNICORN",
         plugins = home .. "/plugins",
+        backup = home .. "/UNICORN-backup",
     }
 end
 
@@ -395,46 +377,59 @@ function le.config.installUpdate()
                     kill_update_handler("unzip_done_handler")
                     kill_update_handler("unzip_error_handler")
 
-                    local staged_version = read_version(paths.staging .. "/version.lua")
-                    if staged_version ~= remote then
+                    local modules, validation_error = validate_plugin_tree(paths.staging, remote)
+                    if not modules then
                         cleanup_install_resources()
                         pcall(remove_path, paths.staging)
                         pcall(os.remove, paths.archive)
-                        log("Paczka aktualizacji ma nieprawidlowa wersje.", "light_pink")
+                        log("Odrzucono paczke przed instalacja: " .. tostring(validation_error), "light_pink")
                         return
                     end
 
-                    local ok, success, err = pcall(copy_tree, paths.staging, paths.plugin)
-                    if not ok or not success then
+                    -- Katalogi są na tym samym dysku profilu. Zamiast kopiować
+                    -- po pliku, zachowaj starą instalację i podmień cały katalog.
+                    if lfs.attributes(paths.plugin, "mode") ~= "directory" then
                         cleanup_install_resources()
-                        log("Nie udalo sie zapisac aktualizacji: " .. tostring(err or success), "light_pink")
+                        log("Brak katalogu aktualnej instalacji. Zachowano kopie zapasowa.", "light_pink")
                         return
                     end
-
-                    local installed_version = read_version(paths.plugin .. "/version.lua")
-                    pcall(remove_path, paths.staging)
-                    pcall(os.remove, paths.archive)
-                    le.config.cleanupArtifacts({ quiet = true })
-                    cleanup_install_resources()
-
-                    if installed_version ~= remote then
-                        log("Weryfikacja zapisanej wersji nie powiodla sie.", "light_pink")
+                    local cleared, result = pcall(remove_path, paths.backup)
+                    if not cleared or not result then
+                        cleanup_install_resources()
+                        log("Nie mozna przygotowac kopii poprzedniej wersji.", "light_pink")
                         return
                     end
-
-                    local modules, validation_error = validate_plugin_tree(paths.plugin, remote)
-                    if not modules then
-                        log("UNICORN " .. remote .. " zapisany, ale walidacja przed przeladowaniem nie powiodla sie: "
-                            .. tostring(validation_error) .. ". Zrestartuj Mudlet.", "light_pink")
+                    local backed_up, backup_error = os.rename(paths.plugin, paths.backup)
+                    if not backed_up then
+                        cleanup_install_resources()
+                        log("Nie utworzono kopii poprzedniej wersji: " .. tostring(backup_error), "light_pink")
+                        return
+                    end
+                    local installed, install_error = os.rename(paths.staging, paths.plugin)
+                    if not installed then
+                        local restored, restore_error = os.rename(paths.backup, paths.plugin)
+                        cleanup_install_resources()
+                        log("Podmiana nie powiodla sie: " .. tostring(install_error)
+                            .. (restored and ". Zachowano poprzednia wersje." or
+                                ". Poprzednia wersja pozostaje w " .. paths.backup .. ": " .. tostring(restore_error)), "light_pink")
                         return
                     end
 
                     log("UNICORN " .. remote .. " zapisany. Przeladowuje moduly...", "pale_green")
-                    tempTimer(0.05, function()
-                        local ok, reload_error = reload_plugin_modules(paths.plugin, remote)
-                        if not ok then
-                            log("Pliki sa zaktualizowane, ale przeladowanie nie powiodlo sie: "
-                                .. tostring(reload_error) .. ". Zrestartuj Mudlet.", "light_pink")
+                    le.config.update.reload_timer = tempTimer(0.05, function()
+                        le.config.update.reload_timer = nil
+                        local called, ok, reload_error = pcall(reload_plugin_modules, paths.plugin, remote)
+                        cleanup_install_resources()
+                        pcall(os.remove, paths.archive)
+                        if not called or not ok then
+                            -- Część modułów mogła już wykonać kod. Przywracamy
+                            -- pliki, ale dopiero restart gwarantuje czysty runtime.
+                            local moved, move_error = os.rename(paths.plugin, paths.staging)
+                            local restored, restore_error
+                            if moved then restored, restore_error = os.rename(paths.backup, paths.plugin) end
+                            log("Przeladowanie nie powiodlo sie: " .. tostring(reload_error or ok)
+                                .. (restored and ". Przywrocono poprzednie pliki. Zrestartuj Mudlet." or
+                                    ". Kopia pozostaje w " .. paths.backup .. ": " .. tostring(restore_error or move_error)), "light_pink")
                             return
                         end
                         log("UNICORN " .. remote .. " zaktualizowany i przeladowany bez restartu.", "pale_green")
@@ -481,6 +476,10 @@ end
 function le.config.cleanup()
     cleanup_update_resources()
     cleanup_install_resources()
+    if le.config.update.reload_timer then
+        pcall(killTimer, le.config.update.reload_timer)
+        le.config.update.reload_timer = nil
+    end
     if le.config.update.startup_timer then
         pcall(killTimer, le.config.update.startup_timer)
         le.config.update.startup_timer = nil

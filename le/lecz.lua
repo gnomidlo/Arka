@@ -261,6 +261,16 @@ end
 
 function le.lecz.report(found)
     if #found == 0 then return end
+    local herbal = {}
+    for _, key in ipairs(found) do
+        if le.lecz.special[key] then
+            render_special(key)
+        else
+            herbal[#herbal + 1] = key
+        end
+    end
+    found = herbal
+    if #found == 0 then return end
     if not inventory_ready() then
         cecho("\n")
         console_prefix()
