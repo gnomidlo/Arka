@@ -47,7 +47,7 @@ function Geyser.Label:new(config)
         config = config,
         visible = true,
         setStyleSheet = function(self, style) self.style = style end,
-        echo = function() end,
+        echo = function(self, value) self.html = value end,
         hide = function(self) self.visible = false end,
         show = function(self) self.visible = true end,
         resize = function(self, width, height) self.width, self.height = width, height end,
@@ -112,10 +112,10 @@ online.tick()
 assert(online.weeks["2026-09-14"] == 5)
 assert(online.weeks["2026-09-21"] == 5)
 online.weeks["2026-09-14"] = 5 * 3600
-le.czas.UI.update_online_bar(now - 10)
-assert(le.czas.UI.online_fill.width == "260px")
-le.czas.UI.update_online_bar(now)
-assert(not le.czas.UI.online_fill.visible, "nowy tydzień nie wyzerował paska")
+le.czas.data.domain = "ishtar"
+le.czas.data.anchors.ishtar = { game_sec = 0, real_ts = now }
+le.czas.UI.update()
+assert(le.czas.UI.clock.html:find("width:0%%", 1, false), "nowy tydzień nie wyzerował paska")
 now = now + 15
 online.tick()
 assert(online.total() == 20)
@@ -140,9 +140,16 @@ online.tick()
 assert(online.total() == 115)
 
 online.weeks["2026-09-21"] = 5 * 3600
-le.czas.UI.update_online_bar()
-assert(le.czas.UI.online_fill.width == "260px")
-assert(le.czas.UI.online_fill.style:find("#8FCF9B", 1, true))
+le.czas.UI.update()
+assert(le.czas.UI.clock.html:find("width:100%%", 1, false))
+assert(le.czas.UI.clock.html:find("#20242A", 1, true), "pełny pasek nie używa subtelnego koloru")
+
+-- Zasymuluj zatrzymany timer. Świeży event GMCP ma go odtworzyć.
+local dead_timer = le.czas.timer
+killTimer(dead_timer)
+le.czas.timer_last_tick = now - 10
+emit("gmcp.room.info")
+assert(le.czas.timer ~= dead_timer and timers[le.czas.timer], "GMCP nie odtworzył zatrzymanego timera")
 
 emit("sysDisconnectionEvent")
 assert(not online.active)
@@ -178,4 +185,4 @@ assert(online.read_only, "uszkodzony zapis powinien przełączyć licznik w tryb
 online.dirty = true
 assert(not online.save())
 assert(files[online.path] == "uszkodzony-json", "uszkodzony plik został nadpisany")
-print("OK: tygodnie, logout, idle, disconnect, exit, zapis, pasek i przeładowanie")
+print("OK: tygodnie, logout, idle, disconnect, exit, zapis, pasek HTML, watchdog i przeładowanie")
