@@ -1150,11 +1150,43 @@ function le.czas.show_week_agenda()
     end
 end
 
+local online_bar_metrics
+local function online_bar_segments()
+    local clock = le.czas.UI.clock
+    if not online_bar_metrics then
+        -- Fallback dla Mudleta bez getLabelSizeHint: znak 6px i odstępy QLabel.
+        online_bar_metrics = { segment = 6, inset = 35 }
+        if type(getLabelSizeHint) == "function" then
+            local ok, short, long = pcall(function()
+                local widths = {}
+                for index, count in ipairs({ 16, 32 }) do
+                    -- Ten sam QLabel uwzględnia font fallback, padding i wcięcie Qt.
+                    -- UI.update nadpisuje próbkę docelowym HTML w tym samym wywołaniu.
+                    clock:echo("<div style='font-family:DejaVu Sans Mono,Consolas,monospace;font-size:6px'>"
+                        .. string.rep("━", count) .. "</div>")
+                    widths[index] = getLabelSizeHint(clock.name or le.czas.config.clock.name)
+                end
+                return widths[1], widths[2]
+            end)
+            if ok and type(short) == "number" and type(long) == "number" and long > short then
+                local segment = (long - short) / 16
+                online_bar_metrics = { segment = segment, inset = math.max(0, short - 16 * segment) }
+            end
+        end
+    end
+    local width = tonumber(tostring(le.czas.config.clock.width):match("^(%d+)px$")) or 260
+    if type(clock.get_width) == "function" then
+        local ok, actual = pcall(clock.get_width, clock)
+        if ok and type(actual) == "number" and actual > 0 then width = actual end
+    end
+    return math.max(1, math.floor((width - online_bar_metrics.inset) / online_bar_metrics.segment))
+end
+
 local function online_bar_html(timestamp)
     local config = le.czas.config.online
     local total = le.czas.Online.total(timestamp)
     local ratio = math.max(0, math.min(1, total / config.target_seconds))
-    local segments = 32
+    local segments = online_bar_segments()
     local filled = math.floor(ratio * segments + 0.5)
     if ratio > 0 and filled == 0 then filled = 1 end
     filled = math.max(0, math.min(segments, filled))

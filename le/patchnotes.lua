@@ -6,6 +6,10 @@ le.patchnotes = le.patchnotes or {}
 -- To jest źródło prawdy dla mini patch notes. Każde wydanie zmieniające kod
 -- lub zachowanie pluginu musi dostać tutaj krótki, użytkowy opis zmian.
 le.patchnotes.notes = {
+    ["0.8.1"] = {
+        "Tygodniowy pasek online wypełnia szerokość panelu zegara z małymi marginesami.",
+        "Długość paska dopasowuje się do szerokości panelu i czcionki, zachowując dotychczasowy wygląd.",
+    },
     ["0.8.0"] = {
         "Aktualizacje UNICORN przeładowują moduły bez restartu Mudleta.",
         "Naprawiono widoczność tygodniowego paska online pod zegarem.",
