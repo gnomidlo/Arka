@@ -12,7 +12,7 @@ Niezależna konfiguracja i zestaw pluginów dla Mudleta.
 Po udostępnieniu repozytorium wykonaj w Mudlecie:
 
 ```text
-/zainstaluj_plugin https://raw.githubusercontent.com/gnomidlo/Arka/main/dist/UNICORN.zip?version=0.7.1
+/zainstaluj_plugin https://raw.githubusercontent.com/gnomidlo/Arka/main/dist/UNICORN.zip?version=0.8.0
 ```
 
 Po instalacji sprawdź listę pluginów:
@@ -30,7 +30,7 @@ Po pierwszej instalacji pliki sa juz na dysku, ale plugin moze nie byc jeszcze w
 Zmiana nazwy pluginu wymaga jednorazowego usuniecia starego katalogu. Zamknij Mudlet, usun katalog `plugins/Arka`, uruchom Mudlet i zainstaluj nowa paczke:
 
 ```text
-/zainstaluj_plugin https://raw.githubusercontent.com/gnomidlo/Arka/main/dist/UNICORN.zip?version=0.7.1
+/zainstaluj_plugin https://raw.githubusercontent.com/gnomidlo/Arka/main/dist/UNICORN.zip?version=0.8.0
 ```
 
 Od wersji `0.2.0` plugin jest instalowany i wyswietlany na liscie jako `UNICORN`. Paczka ma pliki bezposrednio w katalogu glownym ZIP-a, zgodnie z formatem instalatora Arkadii.
@@ -63,7 +63,7 @@ Od wersji `0.2.0` plugin jest instalowany i wyswietlany na liscie jako `UNICORN`
 - `/le.config` — pomoc konfiguracji `le.conf`,
 - `/le.config wersja` — pokazuje wersje lokalna,
 - `/le.config aktualizacja` — sprawdza nowsza wersje na GitHubie,
-- `/le.config aktualizuj` — instaluje wykryta aktualizacje bez tworzenia nowej instancji,
+- `/le.config aktualizuj` — pobiera aktualizację, sprawdza pliki, instaluje ją i przeładowuje moduły UNICORN bez restartu Mudleta,
 - `/le.config napraw` — usuwa pozostawione katalogi instalatora i duplikaty UNICORN,
 - `/le.czas` — pomoc zegara i synchronizacji,
 - `/le.kal` — jednoliniowa lista najbliższych wydarzen z obu domen,
@@ -142,20 +142,20 @@ Czas podawany przez NPC jest liczony zegarem świata gry. Jedna godzina gry trwa
 
 Aktualna wersja projektu jest zapisana w `version.lua`. Przed opublikowaniem nowej wersji nalezy podbic ten numer zgodnie z formatem `MAJOR.MINOR.PATCH`.
 
-Sprawdzanie wersji uruchamia sie automatycznie 6 sekund po zaladowaniu pluginu i korzysta z zadania HTTP bez plikow tymczasowych. Instalacja aktualizacji jest wykonywana dopiero po swiadomym wywolaniu `/le.config aktualizuj`. Od wersji `0.3.1` paczka jest rozpakowywana poza katalogiem pluginow, weryfikowana i kopiowana bezposrednio do `plugins/UNICORN`, dlatego instalator nie tworzy katalogow o nazwach typu `1786310551UNICORN`.
+Sprawdzanie wersji uruchamia sie automatycznie 6 sekund po zaladowaniu pluginu i korzysta z zadania HTTP bez plikow tymczasowych. Instalacja aktualizacji jest wykonywana dopiero po swiadomym wywolaniu `/le.config aktualizuj`. Od wersji `0.8.0` instalator najpierw sprawdza składnię `init.lua` i wszystkich modułów nowej paczki, kopiuje ją do `plugins/UNICORN`, a następnie przeładowuje moduły w kolejności z `init.lua` bez restartowania Mudleta. Jeśli walidacja albo przeładowanie się nie powiedzie, nowe pliki pozostają zapisane, a użytkownik dostaje czytelny komunikat z prośbą o restart jako bezpieczny fallback. Od wersji `0.3.1` paczka jest rozpakowywana poza katalogiem pluginow i kopiowana bezposrednio do `plugins/UNICORN`, dlatego instalator nie tworzy katalogow o nazwach typu `1786310551UNICORN`.
 
-`/le.config napraw` usuwa pozostalosci `UNICORN_todelete` oraz katalogi tymczasowe zakonczone nazwa `UNICORN`. Jesli system blokuje usuniecie, katalog jest przenoszony poza `plugins`, aby loader nie traktowal go jako pluginu. Po aktualizacji lub naprawie nalezy zrestartowac Mudlet.
+`/le.config napraw` usuwa pozostalosci `UNICORN_todelete` oraz katalogi tymczasowe zakonczone nazwa `UNICORN`. Jesli system blokuje usuniecie, katalog jest przenoszony poza `plugins`, aby loader nie traktowal go jako pluginu. Zwykła aktualizacja UNICORN nie wymaga już restartu; restart pozostaje awaryjnym fallbackiem oraz nadal może być potrzebny po naprawie pozostałości instalatora.
 
 ## Budowanie paczki UNICORN
 
-Aktualna wersja: **0.7.1**
+Aktualna wersja: **0.8.0**
 
 Zbuduj paczkę `dist/UNICORN.zip` zawierającą aktualne pliki źródłowe:
 - `init.lua`
 - `version.lua`
 - katalog `le/` (`ui.lua`, `config.lua`, `czas.lua`, `lecz.lua`, `flakoniki.lua`, `kamienie.lua`, `zlecenia.lua`, `mowa.lua`)
 
-## Interfejs 0.7.1
+## Interfejs 0.8.0
 
 UNICORN używa jednego minimalistycznego systemu wizualnego. Komunikaty konsoli zaczynają się od cienkiej belki w kolorze modułu, na przykład:
 
