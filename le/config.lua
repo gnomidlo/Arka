@@ -284,6 +284,9 @@ end
 
 function le.config.showVersion()
     log("Zainstalowana wersja: " .. tostring(le.version or "nieznana") .. ".", "pale_green")
+    if le.patchnotes and le.patchnotes.show then
+        le.patchnotes.show(le.version)
+    end
 end
 
 function le.config.checkUpdate(options)
@@ -435,6 +438,9 @@ function le.config.installUpdate()
                             return
                         end
                         log("UNICORN " .. remote .. " zaktualizowany i przeladowany bez restartu.", "pale_green")
+                        if le.patchnotes and le.patchnotes.show then
+                            le.patchnotes.show(remote)
+                        end
                     end)
                 end,
                 true
