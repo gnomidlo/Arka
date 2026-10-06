@@ -1263,6 +1263,74 @@ function le.czas.ensure_timer(force)
     le.czas.timer = nil
     le.czas.timer_last_tick = now
 
+    le.czas.timer = tempTimer(1, function()
+        le.czas.timer_last_tick = epoch()
+
+        local online_ok, online_err = pcall(le.czas.Online.tick)
+        if not online_ok and not le.czas.Online.timer_error_logged then
+            le.czas.Online.timer_error_logged = true
+            le.czas.log("rejected", "Blad licznika online: " .. tostring(online_err))
+        end
+
+        local ok, err = pcall(le.czas.UI.update)
+        if not ok then
+            le.czas.log("rejected", "Blad odswiezania zegara: " .. tostring(err))
+        end
+    end, true)
+    return true
+end
+
+function le.czas.cleanup()
+    if le.czas.Online.loaded then le.czas.Online.flush() end
+    if le.czas.timer then pcall(killTimer, le.czas.timer); le.czas.timer = nil end
+    le.czas.timer_last_tick = nil
+    if le.czas.room_handler then pcall(killAnonymousEventHandler, le.czas.room_handler); le.czas.room_handler = nil end
+    if le.czas.time_handler then pcall(killAnonymousEventHandler, le.czas.time_handler); le.czas.time_handler = nil end
+    if le.czas.exit_handler then pcall(killAnonymousEventHandler, le.czas.exit_handler); le.czas.exit_handler = nil end
+    if le.czas.Online.room_handler then pcall(killAnonymousEventHandler, le.czas.Online.room_handler); le.czas.Online.room_handler = nil end
+    if le.czas.Online.connection_handler then pcall(killAnonymousEventHandler, le.czas.Online.connection_handler); le.czas.Online.connection_handler = nil end
+    if le.czas.Online.disconnect_handler then pcall(killAnonymousEventHandler, le.czas.Online.disconnect_handler); le.czas.Online.disconnect_handler = nil end
+    if le.czas.Online.exit_handler then pcall(killAnonymousEventHandler, le.czas.Online.exit_handler); le.czas.Online.exit_handler = nil end
+    if le.czas.Online.idle_trigger then pcall(killTrigger, le.czas.Online.idle_trigger); le.czas.Online.idle_trigger = nil end
+    if le.czas.Online.logout_trigger then pcall(killTrigger, le.czas.Online.logout_trigger); le.czas.Online.logout_trigger = nil end
+    if le.czas.time_trigger then pcall(killTrigger, le.czas.time_trigger); le.czas.time_trigger = nil end
+    if le.czas.aliases then
+        for _, id in pairs(le.czas.aliases) do pcall(killAlias, id) end
+    end
+    if le.czas.UI.clock then le.czas.UI.clock:hide(); le.czas.UI.clock = nil end
+    if le.czas.UI.event then le.czas.UI.event:hide(); le.czas.UI.event = nil end
+end
+
+function le.czas.init()
+    le.czas.cleanup()
+    le.czas.load()
+    le.czas.Online.load()
+    le.czas.last_daylight = {}
+    le.czas.seed_ishtar_sun()
+    le.czas.save()
+
+    le.czas.UI.clock = Geyser.Label:new(le.czas.config.clock)
+    le.czas.UI.clock:setStyleSheet(le.czas.config.clock_style)
+    le.czas.UI.event = Geyser.Label:new(le.czas.config.event)
+    le.czas.UI.event:setStyleSheet(le.czas.config.event_style)
+
+    le.czas.setup_aliases()
+    le.czas.time_trigger = tempRegexTrigger(
+        [[^Jest (?:dokladnie|w przyblizeniu) .+ wedlug (?:rachuby czasu Starszego Ludu|Kalendarza Imperialnego)\.$]],
+        function() le.czas.on_time_text(matches[1]) end
+    )
+    le.czas.room_handler = registerAnonymousEventHandler("gmcp.room", le.czas.on_room)
+    le.czas.time_handler = registerAnonymousEventHandler("gmcp.room.time", le.czas.on_room_time)
+    le.czas.Online.room_handler = registerAnonymousEventHandler("gmcp.room.info", le.czas.Online.start_from_room)
+    le.czas.Online.connection_handler = registerAnonymousEventHandler("sysConnectionEvent", le.czas.Online.stop)
+    le.czas.Online.disconnect_handler = registerAnonymousEventHandler("sysDisconnectionEvent", le.czas.Online.stop)
+    le.czas.Online.exit_handler = registerAnonymousEventHandler("sysExitEvent", le.czas.Online.stop)
+    le.czas.Online.idle_trigger = tempRegexTrigger(
+        "^Zbyt dluga nieaktywnosc - wylogowuje cie\\.$", le.czas.Online.stop)
+    le.czas.Online.logout_trigger = tempRegexTrigger(
+        "^Opuszczasz realny swiat\\.$", le.czas.Online.stop)
+    le.czas.exit_handler = registerAnonymousEventHandler("sysExitEvent", le.czas.save)
+
     le.czas.ensure_timer(true)
     le.czas.on_room()
     le.czas.UI.update()
