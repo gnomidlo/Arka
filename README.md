@@ -12,7 +12,7 @@ Niezależna konfiguracja i zestaw pluginów dla Mudleta.
 Po udostępnieniu repozytorium wykonaj w Mudlecie:
 
 ```text
-/zainstaluj_plugin https://raw.githubusercontent.com/gnomidlo/Arka/main/dist/UNICORN.zip?version=0.7.0
+/zainstaluj_plugin https://raw.githubusercontent.com/gnomidlo/Arka/main/dist/UNICORN.zip?version=0.7.1
 ```
 
 Po instalacji sprawdź listę pluginów:
@@ -30,7 +30,7 @@ Po pierwszej instalacji pliki sa juz na dysku, ale plugin moze nie byc jeszcze w
 Zmiana nazwy pluginu wymaga jednorazowego usuniecia starego katalogu. Zamknij Mudlet, usun katalog `plugins/Arka`, uruchom Mudlet i zainstaluj nowa paczke:
 
 ```text
-/zainstaluj_plugin https://raw.githubusercontent.com/gnomidlo/Arka/main/dist/UNICORN.zip?version=0.7.0
+/zainstaluj_plugin https://raw.githubusercontent.com/gnomidlo/Arka/main/dist/UNICORN.zip?version=0.7.1
 ```
 
 Od wersji `0.2.0` plugin jest instalowany i wyswietlany na liscie jako `UNICORN`. Paczka ma pliki bezposrednio w katalogu glownym ZIP-a, zgodnie z formatem instalatora Arkadii.
@@ -83,11 +83,11 @@ Komendy wyswietlane w pomocy modulow sa klikalne. Szablony wymagajace parametrow
 
 ### Synchronizacja czasu
 
-Moduł nie wysyła żadnych komend. Gdy użytkownik wpisze w grze `czas`, moduł odczytuje odpowiedź i synchronizuje lub aktualizuje zegar właściwej domeny. Obsługiwane są zarówno dokładne godziny i numery dni, jak i starszy format opisowy — dla pór Starszego Ludu oraz miesięcy Kalendarza Imperialnego. Moduł nie wymaga ręcznej synchronizacji.
+Moduł nie wysyła żadnych komend. Gdy użytkownik wpisze w grze `czas`, moduł odczytuje odpowiedź i synchronizuje lub aktualizuje zegar właściwej domeny. Obsługiwane są zarówno dokładne godziny i numery dni, jak i starszy format opisowy — dla pór Starszego Ludu oraz miesięcy Kalendarza Imperialnego. Świeża odpowiedź `czas`, zmiana domeny i dane GMCP odświeżają panel natychmiast; moduł potrafi też odtworzyć zatrzymany timer animujący zegar po przeładowaniu lub wznowieniu skryptów.
 
 ### Tygodniowy czas online
 
-Wąski pasek bez podpisu nad zegarem pokazuje postęp do 5 godzin zalogowania w bieżącym tygodniu (poniedziałek–niedziela, czas lokalny). Po osiągnięciu celu pasek jest pełny i zielony. Liczenie zaczyna się po świeżym pakiecie informacji o pokoju z GMCP, a zatrzymuje po komunikacie o wylogowaniu z powodu bezczynności, zwykłym wylogowaniu, utracie połączenia albo zamknięciu Mudleta. Samo uruchomienie klienta nie nalicza czasu. Dane są zapisywane w profilu Mudleta jako `le_czas_online_weekly.json`; po dłuższym uśpieniu klienta licznik ostrożnie pomija niepotwierdzony czas.
+Bardzo subtelny pasek bez podpisu bezpośrednio pod godziną pokazuje postęp do 5 godzin zalogowania w bieżącym tygodniu (poniedziałek–niedziela, czas lokalny). Po osiągnięciu celu pozostaje pełny, ale celowo niemal stapia się z tłem zamiast zmieniać się w jaskrawy znacznik. Liczenie zaczyna się po świeżym pakiecie informacji o pokoju z GMCP, a zatrzymuje po komunikacie o wylogowaniu z powodu bezczynności, zwykłym wylogowaniu, utracie połączenia albo zamknięciu Mudleta. Samo uruchomienie klienta nie nalicza czasu. Dane są zapisywane w profilu Mudleta jako `le_czas_online_weekly.json`; po dłuższym uśpieniu klienta licznik ostrożnie pomija niepotwierdzony czas.
 
 ## Struktura pluginu
 
@@ -148,14 +148,14 @@ Sprawdzanie wersji uruchamia sie automatycznie 6 sekund po zaladowaniu pluginu i
 
 ## Budowanie paczki UNICORN
 
-Aktualna wersja: **0.7.0**
+Aktualna wersja: **0.7.1**
 
 Zbuduj paczkę `dist/UNICORN.zip` zawierającą aktualne pliki źródłowe:
 - `init.lua`
 - `version.lua`
 - katalog `le/` (`ui.lua`, `config.lua`, `czas.lua`, `lecz.lua`, `flakoniki.lua`, `kamienie.lua`, `zlecenia.lua`, `mowa.lua`)
 
-## Interfejs 0.7.0
+## Interfejs 0.7.1
 
 UNICORN używa jednego minimalistycznego systemu wizualnego. Komunikaty konsoli zaczynają się od cienkiej belki w kolorze modułu, na przykład:
 
