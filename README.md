@@ -61,7 +61,7 @@ Od wersji `0.2.0` plugin jest instalowany i wyswietlany na liscie jako `UNICORN`
 ```
 
 - `/le.config` — pomoc konfiguracji `le.conf`,
-- `/le.config wersja` — pokazuje wersje lokalna,
+- `/le.config wersja` — pokazuje wersję lokalną i krótkie patch notes dla tej wersji,
 - `/le.config aktualizacja` — sprawdza nowsza wersje na GitHubie,
 - `/le.config aktualizuj` — pobiera aktualizację, sprawdza pliki, instaluje ją i przeładowuje moduły UNICORN bez restartu Mudleta,
 - `/le.config napraw` — usuwa pozostawione katalogi instalatora i duplikaty UNICORN,
@@ -93,6 +93,7 @@ Bardzo subtelny pasek bez podpisu bezpośrednio pod godziną pokazuje postęp do
 
 - `init.lua` — punkt wejścia pluginu `UNICORN`,
 - `le/config.lua` — moduł pomocy i alias `/le.config`,
+- `le/patchnotes.lua` — krótkie patch notes dla kolejnych wersji,
 - `le/czas.lua` — niezależny zegar, kalendarz, wydarzenia i interfejs,
 - `le/lecz.lua` — dobór ziół i klikalne leczenie,
 - `le/zlecenia.lua` — dostawy od NPC, zapis terminów i panel Geyser,
@@ -142,7 +143,7 @@ Czas podawany przez NPC jest liczony zegarem świata gry. Jedna godzina gry trwa
 
 Aktualna wersja projektu jest zapisana w `version.lua`. Przed opublikowaniem nowej wersji nalezy podbic ten numer zgodnie z formatem `MAJOR.MINOR.PATCH`.
 
-Sprawdzanie wersji uruchamia sie automatycznie 6 sekund po zaladowaniu pluginu i korzysta z zadania HTTP bez plikow tymczasowych. Instalacja aktualizacji jest wykonywana dopiero po swiadomym wywolaniu `/le.config aktualizuj`. Od wersji `0.8.0` instalator najpierw sprawdza składnię `init.lua` i wszystkich modułów nowej paczki, kopiuje ją do `plugins/UNICORN`, a następnie przeładowuje moduły w kolejności z `init.lua` bez restartowania Mudleta. Jeśli walidacja albo przeładowanie się nie powiedzie, nowe pliki pozostają zapisane, a użytkownik dostaje czytelny komunikat z prośbą o restart jako bezpieczny fallback. Od wersji `0.3.1` paczka jest rozpakowywana poza katalogiem pluginow i kopiowana bezposrednio do `plugins/UNICORN`, dlatego instalator nie tworzy katalogow o nazwach typu `1786310551UNICORN`.
+Sprawdzanie wersji uruchamia sie automatycznie 6 sekund po zaladowaniu pluginu i korzysta z zadania HTTP bez plikow tymczasowych. Instalacja aktualizacji jest wykonywana dopiero po swiadomym wywolaniu `/le.config aktualizuj`. Po udanym hot reloadzie UNICORN pokazuje mini patch notes nowej wersji; można je też ponownie wyświetlić przez `/le.config wersja`. Od wersji `0.8.0` instalator najpierw sprawdza składnię `init.lua` i wszystkich modułów nowej paczki, kopiuje ją do `plugins/UNICORN`, a następnie przeładowuje moduły w kolejności z `init.lua` bez restartowania Mudleta. Jeśli walidacja albo przeładowanie się nie powiedzie, nowe pliki pozostają zapisane, a użytkownik dostaje czytelny komunikat z prośbą o restart jako bezpieczny fallback. Od wersji `0.3.1` paczka jest rozpakowywana poza katalogiem pluginow i kopiowana bezposrednio do `plugins/UNICORN`, dlatego instalator nie tworzy katalogow o nazwach typu `1786310551UNICORN`.
 
 `/le.config napraw` usuwa pozostalosci `UNICORN_todelete` oraz katalogi tymczasowe zakonczone nazwa `UNICORN`. Jesli system blokuje usuniecie, katalog jest przenoszony poza `plugins`, aby loader nie traktowal go jako pluginu. Zwykła aktualizacja UNICORN nie wymaga już restartu; restart pozostaje awaryjnym fallbackiem oraz nadal może być potrzebny po naprawie pozostałości instalatora.
 
@@ -153,7 +154,16 @@ Aktualna wersja: **0.8.0**
 Zbuduj paczkę `dist/UNICORN.zip` zawierającą aktualne pliki źródłowe:
 - `init.lua`
 - `version.lua`
-- katalog `le/` (`ui.lua`, `config.lua`, `czas.lua`, `lecz.lua`, `flakoniki.lua`, `kamienie.lua`, `zlecenia.lua`, `mowa.lua`)
+- katalog `le/` (`ui.lua`, `patchnotes.lua`, `config.lua`, `czas.lua`, `lecz.lua`, `flakoniki.lua`, `kamienie.lua`, `zlecenia.lua`, `mowa.lua`)
+
+## Mini patch notes
+
+Każde wydanie UNICORN zmieniające kod lub zachowanie pluginu ma krótki wpis w `le/patchnotes.lua`. To stały element procesu wydawniczego, nie opcjonalny changelog. Patch notes skupiają się na tym, co użytkownik faktycznie zauważy: nowe funkcje, poprawki zachowania i istotne zmiany interfejsu.
+
+Dla 0.8.0:
+- aktualizacje przeładowują moduły bez restartu Mudleta,
+- naprawiono widoczność tygodniowego paska online pod zegarem,
+- dodano mini patch notes przy informacji o wersji i po udanym update.
 
 ## Interfejs 0.8.0
 
