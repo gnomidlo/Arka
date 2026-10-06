@@ -430,6 +430,7 @@ function le.czas.Online.flush()
 end
 
 function le.czas.Online.start_from_room()
+    if le.czas.ensure_timer then pcall(le.czas.ensure_timer) end
     local online = le.czas.Online
     if online.active or not (gmcp and gmcp.room and type(gmcp.room.info) == "table") then return end
     online.active = true
