@@ -12,10 +12,11 @@ le.czas.config = {
         target_seconds = 5 * 3600,
         save_interval = 30,
         maximum_tick_gap = 90,
-        bar = { name = "LeCzasOnlineBar", x = "-280px", y = "-798px", width = "260px", height = "4px" },
-        track_color = "#454A52",
-        progress_color = "#9AB2C7",
-        complete_color = "#8FCF9B",
+        -- Pasek tygodniowego online jest częścią HTML zegara. Celowo bardzo
+        -- subtelny: po osiągnięciu 100% prawie stapia się z tłem ścieżki.
+        track_color = "#252A31",
+        progress_color = "#4B5965",
+        complete_color = "#20242A",
     },
     clock_style = [[
         background-color: rgba(12, 14, 18, 220);
@@ -179,6 +180,17 @@ le.czas.cal = {
 }
 
 local function epoch() return os.time() end
+
+-- Jedno wejście do odświeżania używane przez świeże dane z gry. Timer jest
+-- tylko animatorem wskazania zegara; odpowiedź "czas" i GMCP muszą potrafić
+-- naprawić UI także wtedy, gdy powtarzalny tempTimer został zatrzymany.
+function le.czas.refresh_ui()
+    if le.czas.ensure_timer then pcall(le.czas.ensure_timer) end
+    if le.czas.UI and le.czas.UI.update and le.czas.UI.clock then
+        local ok, err = pcall(le.czas.UI.update)
+        if not ok then le.czas.log("rejected", "Blad odswiezania zegara: " .. tostring(err)) end
+    end
+end
 
 function le.czas.log(level, text)
     if le.ui and le.ui.output then
@@ -418,6 +430,7 @@ function le.czas.Online.flush()
 end
 
 function le.czas.Online.start_from_room()
+    if le.czas.ensure_timer then pcall(le.czas.ensure_timer) end
     local online = le.czas.Online
     if online.active or not (gmcp and gmcp.room and type(gmcp.room.info) == "table") then return end
     online.active = true
@@ -430,7 +443,7 @@ function le.czas.Online.stop()
     online.flush()
     online.active = false
     online.last_tick = nil
-    if le.czas.UI.update_online_bar then le.czas.UI.update_online_bar() end
+    le.czas.refresh_ui()
 end
 
 function le.czas.Online.tick()
@@ -440,7 +453,6 @@ function le.czas.Online.tick()
     if online.dirty and now - (online.last_save_at or now) >= le.czas.config.online.save_interval then
         online.flush()
     end
-    if le.czas.UI.update_online_bar then le.czas.UI.update_online_bar(now) end
 end
 
 -- Seed Ishtar's sun table from the known-exact static hours (no observation
@@ -590,6 +602,7 @@ function le.czas.on_time_text(raw_text)
         le.czas.log("saved", string.format(
             "Synchronizacja %s: dzien %d, %02d:%02d.", domain, day, synced_hour, synced_minute))
     end
+    le.czas.refresh_ui()
     return true
 end
 
@@ -612,6 +625,7 @@ function le.czas.on_room()
             le.czas.log("info", "Wykryto domene: " .. detected)
         end
         le.czas.on_room_time()
+        le.czas.refresh_ui()
     end)
     if not ok then le.czas.log("skipped", "Blad on_room: " .. tostring(err)) end
 end
@@ -845,6 +859,7 @@ local function current_room_is_excluded()
 end
 
 function le.czas.on_room_time()
+    if le.czas.ensure_timer then pcall(le.czas.ensure_timer) end
     local detected = detect_domain_from_gmcp()
     local domain = detected or le.czas.data.domain
     if domain ~= "imperium" and domain ~= "ishtar" then return end
@@ -893,6 +908,7 @@ function le.czas.on_room_time()
     local day, hour, minute = sec_to_date(game_sec, domain)
     local period = calendar_period_name(domain, day)
     le.czas.store_sun(domain, period, kind, hour * 60 + minute)
+    le.czas.refresh_ui()
 end
 
 function le.czas.next_sun(domain, day, game_sec)
@@ -1134,32 +1150,19 @@ function le.czas.show_week_agenda()
     end
 end
 
-function le.czas.UI.update_online_bar(timestamp)
-    local fill = le.czas.UI.online_fill
-    if not fill then return end
+local function online_bar_html(timestamp)
     local config = le.czas.config.online
-    local width = tonumber(config.bar.width:match("^(%d+)px$")) or 260
     local total = le.czas.Online.total(timestamp)
-    local pixels = math.floor(width * math.min(1, total / config.target_seconds))
+    local ratio = math.max(0, math.min(1, total / config.target_seconds))
+    local percent = math.floor(ratio * 100 + 0.5)
+    local fill_color = ratio >= 1 and config.complete_color or config.progress_color
 
-    if pixels <= 0 then
-        if le.czas.UI.online_fill_visible then fill:hide() end
-        le.czas.UI.online_fill_visible = false
-    else
-        if le.czas.UI.online_fill_width ~= pixels then
-            fill:resize(tostring(pixels) .. "px", config.bar.height)
-            le.czas.UI.online_fill_width = pixels
-        end
-        if not le.czas.UI.online_fill_visible then fill:show() end
-        le.czas.UI.online_fill_visible = true
-    end
-
-    local complete = total >= config.target_seconds
-    if le.czas.UI.online_fill_complete ~= complete then
-        local color = complete and config.complete_color or config.progress_color
-        fill:setStyleSheet("background-color: " .. color .. "; border: none; border-radius: 2px;")
-        le.czas.UI.online_fill_complete = complete
-    end
+    -- Qt rich text dobrze radzi sobie z prostymi blokami procentowymi. Pasek
+    -- ma tylko 2 px wysokości i bez etykiety nie konkuruje z godziną.
+    return string.format([[
+      <div style='height:2px;background-color:%s;margin-top:7px;margin-bottom:7px'>
+        <div style='height:2px;width:%d%%;background-color:%s'></div>
+      </div>]], config.track_color, percent, fill_color)
 end
 
 function le.czas.UI.update()
@@ -1197,11 +1200,12 @@ function le.czas.UI.update()
     le.czas.UI.clock:echo(string.format([[
       <div style='font-family:DejaVu Sans Mono,Consolas,monospace'>
         <div style="font-family:'Trebuchet MS','Segoe UI',sans-serif;font-size:40px;line-height:1;color:#F1F2F4;font-weight:900;letter-spacing:1px">%02d:%02d</div>
-        <div style='font-size:11px;color:#D8DBE2;margin-top:8px'>%s</div>
+        %s
+        <div style='font-size:11px;color:#D8DBE2;margin-top:1px'>%s</div>
         <div style='font-size:11px;color:#D8DBE2;margin-top:3px'><span style='font-weight:bold'>%s</span> <span style='color:#666B75'>·</span> %s</div>
         <div style='font-size:10px;margin-top:8px'>%s</div>
       </div>]],
-        hour, minute, domain_name, season_name, period, sun_line))
+        hour, minute, online_bar_html(), domain_name, season_name, period, sun_line))
 
     local event = le.czas.next_event(domain, game_sec)
     if event then
@@ -1251,9 +1255,36 @@ end
 
 -- Lifecycle ---------------------------------------------------------------
 
+function le.czas.ensure_timer(force)
+    local now = epoch()
+    local stale = not le.czas.timer_last_tick or (now - le.czas.timer_last_tick) > 3
+    if not force and le.czas.timer and not stale then return false end
+
+    if le.czas.timer then pcall(killTimer, le.czas.timer) end
+    le.czas.timer = nil
+    le.czas.timer_last_tick = now
+
+    le.czas.timer = tempTimer(1, function()
+        le.czas.timer_last_tick = epoch()
+
+        local online_ok, online_err = pcall(le.czas.Online.tick)
+        if not online_ok and not le.czas.Online.timer_error_logged then
+            le.czas.Online.timer_error_logged = true
+            le.czas.log("rejected", "Blad licznika online: " .. tostring(online_err))
+        end
+
+        local ok, err = pcall(le.czas.UI.update)
+        if not ok then
+            le.czas.log("rejected", "Blad odswiezania zegara: " .. tostring(err))
+        end
+    end, true)
+    return true
+end
+
 function le.czas.cleanup()
     if le.czas.Online.loaded then le.czas.Online.flush() end
     if le.czas.timer then pcall(killTimer, le.czas.timer); le.czas.timer = nil end
+    le.czas.timer_last_tick = nil
     if le.czas.room_handler then pcall(killAnonymousEventHandler, le.czas.room_handler); le.czas.room_handler = nil end
     if le.czas.time_handler then pcall(killAnonymousEventHandler, le.czas.time_handler); le.czas.time_handler = nil end
     if le.czas.exit_handler then pcall(killAnonymousEventHandler, le.czas.exit_handler); le.czas.exit_handler = nil end
@@ -1267,8 +1298,6 @@ function le.czas.cleanup()
     if le.czas.aliases then
         for _, id in pairs(le.czas.aliases) do pcall(killAlias, id) end
     end
-    if le.czas.UI.online_fill then le.czas.UI.online_fill:hide(); le.czas.UI.online_fill = nil end
-    if le.czas.UI.online_track then le.czas.UI.online_track:hide(); le.czas.UI.online_track = nil end
     if le.czas.UI.clock then le.czas.UI.clock:hide(); le.czas.UI.clock = nil end
     if le.czas.UI.event then le.czas.UI.event:hide(); le.czas.UI.event = nil end
 end
@@ -1280,23 +1309,12 @@ function le.czas.init()
     le.czas.last_daylight = {}
     le.czas.seed_ishtar_sun()
     le.czas.save()
-    local online_config = le.czas.config.online
-    le.czas.UI.online_track = Geyser.Label:new(online_config.bar)
-    le.czas.UI.online_track:setStyleSheet(
-        "background-color: " .. online_config.track_color .. "; border: none; border-radius: 2px;")
-    le.czas.UI.online_fill = Geyser.Label:new({
-        name = online_config.bar.name .. "Fill",
-        x = "0px", y = "0px", width = "1px", height = online_config.bar.height,
-    }, le.czas.UI.online_track)
-    le.czas.UI.online_fill:hide()
-    le.czas.UI.online_fill_width = 0
-    le.czas.UI.online_fill_visible = false
-    le.czas.UI.online_fill_complete = nil
-    le.czas.UI.update_online_bar()
+
     le.czas.UI.clock = Geyser.Label:new(le.czas.config.clock)
     le.czas.UI.clock:setStyleSheet(le.czas.config.clock_style)
     le.czas.UI.event = Geyser.Label:new(le.czas.config.event)
     le.czas.UI.event:setStyleSheet(le.czas.config.event_style)
+
     le.czas.setup_aliases()
     le.czas.time_trigger = tempRegexTrigger(
         [[^Jest (?:dokladnie|w przyblizeniu) .+ wedlug (?:rachuby czasu Starszego Ludu|Kalendarza Imperialnego)\.$]],
@@ -1313,15 +1331,8 @@ function le.czas.init()
     le.czas.Online.logout_trigger = tempRegexTrigger(
         "^Opuszczasz realny swiat\\.$", le.czas.Online.stop)
     le.czas.exit_handler = registerAnonymousEventHandler("sysExitEvent", le.czas.save)
-    le.czas.timer = tempTimer(1, function()
-        local online_ok, online_err = pcall(le.czas.Online.tick)
-        if not online_ok and not le.czas.Online.timer_error_logged then
-            le.czas.Online.timer_error_logged = true
-            le.czas.log("rejected", "Blad licznika online: " .. tostring(online_err))
-        end
-        local ok, err = pcall(le.czas.UI.update)
-        if not ok and le.czas.UI.clock then message(le.czas.UI.clock, "BLAD", tostring(err)) end
-    end, true)
+
+    le.czas.ensure_timer(true)
     le.czas.on_room()
     le.czas.UI.update()
     le.czas.log("info", "le.czas zaladowany. Wpisz /le.czas po pomoc.")
