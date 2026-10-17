@@ -273,3 +273,36 @@ le.czas.load()
 assert(le.czas.read_only and not le.czas.save())
 assert(files[le.czas.path] == "invalid-clock-json")
 print("OK: corrupt clock save is preserved")
+
+
+-- Specjalne, jednodniowe wpisy Kalendarza Imperialnego nie zawierają
+-- frazy "dzien miesiaca". Parser ma wyprowadzać dzień bez duplikowania mapy.
+local special_time_cases = {
+    {
+        line = "Jest dokladnie 20:43 poznym wieczorem, po zachodzie slonca w Aubentag, dzien Mitterherbst (rownonoc jesienna) wedlug Kalendarza Imperialnego.",
+        day = 267, hour = 20, minute = 43,
+    },
+    {
+        line = "Jest dokladnie 07:05 rano w Marktag, dzien Mitterfruhl (rownonoc wiosenna) wedlug Kalendarza Imperialnego.",
+        day = 67, hour = 7, minute = 5,
+    },
+    {
+        line = "Jest dokladnie 22:17 wieczorem w Konistag, dzien Geheimnistag wedlug Kalendarza Imperialnego.",
+        day = 201, hour = 22, minute = 17,
+    },
+}
+
+for _, case in ipairs(special_time_cases) do
+    local domain, day, hour, minute = le.czas.parse_time_text(case.line)
+    assert(domain == "imperium", "specjalny dzien powinien nalezec do Imperium")
+    assert(day == case.day, "bledny absolutny dzien specjalnego swieta")
+    assert(hour == case.hour and minute == case.minute, "bledna godzina specjalnego swieta")
+end
+
+le.czas.data.anchors.imperium = { game_sec = 0, real_ts = now }
+assert(le.czas.on_time_text(special_time_cases[1].line), "Mitterherbst powinien zsynchronizowac zegar")
+local special_sec = le.czas.get_game_sec("imperium", now)
+-- sec_to_date jest lokalne w module; sprawdzamy więc bezpośrednio licznik.
+local expected_special_sec = (267 - 1) * 2880 + 20 * 120 + 43 * 2
+assert(special_sec == expected_special_sec, "Mitterherbst nie poprawil kotwicy zegara")
+print("OK: specjalne dni Kalendarza Imperialnego i synchronizacja Mitterherbst")
