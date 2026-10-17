@@ -566,18 +566,38 @@ function le.czas.parse_time_text(raw_text)
     local text = normalize_game_text(raw_text)
     local period_name = text:match("dzien%s+pory%s+([%a]+)")
     local expected_domain = "ishtar"
+    local period_day
 
     if not period_name then
         period_name = text:match("dzien%s+miesiaca%s+([%a]+)")
         expected_domain = "imperium"
     end
 
-    local period_day = parse_ordinal_day(text)
+    if period_name then
+        period_day = parse_ordinal_day(text)
+    else
+        -- Jednodniowe swieta/okresy Kalendarza Imperialnego maja osobny
+        -- format bez "dzien miesiaca", np. "dzien Mitterherbst (...)"
+        -- albo "dzien Geheimnistag wedlug Kalendarza Imperialnego".
+        period_name = text:match("dzien%s+([%a]+)%s*%(")
+            or text:match("dzien%s+([%a]+)%s+wedlug%s+kalendarza%s+imperialnego")
+        expected_domain = "imperium"
+        period_day = period_name and 1 or nil
+    end
+
     local hour, minute = parse_game_clock(text)
     if not period_name or not period_day or hour == nil then return nil end
 
     local domain, start_day, period_length = find_calendar_period(period_name)
     if domain ~= expected_domain or period_day < 1 or period_day > period_length then return nil end
+
+    -- Skrócony format "dzien <nazwa>" akceptujemy wyłącznie dla pozycji,
+    -- które faktycznie zajmuja jeden dzien w istniejącej seasonMap.
+    if text:match("dzien%s+([%a]+)%s*%(")
+        or text:match("dzien%s+([%a]+)%s+wedlug%s+kalendarza%s+imperialnego") then
+        if domain ~= "imperium" or period_length ~= 1 then return nil end
+    end
+
     return domain, start_day + period_day - 1, hour, minute
 end
 
