@@ -6,6 +6,10 @@ le.patchnotes = le.patchnotes or {}
 -- To jest źródło prawdy dla mini patch notes. Każde wydanie zmieniające kod
 -- lub zachowanie pluginu musi dostać tutaj krótki, użytkowy opis zmian.
 le.patchnotes.notes = {
+    ["0.8.3"] = {
+        "Naprawiono synchronizację zegara w jednodniowe święta Kalendarza Imperialnego, m.in. Mitterherbst i Geheimnistag.",
+        "Komenda czas poprawnie ustawia teraz godzinę także dla wpisów w formacie \"dzien <swieto>\".",
+    },
     ["0.8.2"] = {
         "Aktualizator sprawdza paczkę przed instalacją i zachowuje poprzednią wersję na wypadek błędu.",
         "Zapis zegara, czasu online i zleceń korzysta z pliku tymczasowego oraz kopii zapasowej.",
