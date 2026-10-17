@@ -302,7 +302,6 @@ end
 le.czas.data.anchors.imperium = { game_sec = 0, real_ts = now }
 assert(le.czas.on_time_text(special_time_cases[1].line), "Mitterherbst powinien zsynchronizowac zegar")
 local special_sec = le.czas.get_game_sec("imperium", now)
-local special_day, special_hour, special_minute = sec_to_date and sec_to_date(special_sec, "imperium") or nil
 -- sec_to_date jest lokalne w module; sprawdzamy więc bezpośrednio licznik.
 local expected_special_sec = (267 - 1) * 2880 + 20 * 120 + 43 * 2
 assert(special_sec == expected_special_sec, "Mitterherbst nie poprawil kotwicy zegara")
