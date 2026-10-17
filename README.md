@@ -12,7 +12,7 @@ Niezależna konfiguracja i zestaw pluginów dla Mudleta.
 Po udostępnieniu repozytorium wykonaj w Mudlecie:
 
 ```text
-/zainstaluj_plugin https://raw.githubusercontent.com/gnomidlo/Arka/main/dist/UNICORN.zip?version=0.8.2
+/zainstaluj_plugin https://raw.githubusercontent.com/gnomidlo/Arka/main/dist/UNICORN.zip?version=0.8.3
 ```
 
 Po instalacji sprawdź listę pluginów:
@@ -30,7 +30,7 @@ Po pierwszej instalacji pliki sa juz na dysku, ale plugin moze nie byc jeszcze w
 Zmiana nazwy pluginu wymaga jednorazowego usuniecia starego katalogu. Zamknij Mudlet, usun katalog `plugins/Arka`, uruchom Mudlet i zainstaluj nowa paczke:
 
 ```text
-/zainstaluj_plugin https://raw.githubusercontent.com/gnomidlo/Arka/main/dist/UNICORN.zip?version=0.8.2
+/zainstaluj_plugin https://raw.githubusercontent.com/gnomidlo/Arka/main/dist/UNICORN.zip?version=0.8.3
 ```
 
 Od wersji `0.2.0` plugin jest instalowany i wyswietlany na liscie jako `UNICORN`. Paczka ma pliki bezposrednio w katalogu glownym ZIP-a, zgodnie z formatem instalatora Arkadii.
@@ -83,7 +83,7 @@ Komendy wyswietlane w pomocy modulow sa klikalne. Szablony wymagajace parametrow
 
 ### Synchronizacja czasu
 
-Moduł nie wysyła żadnych komend. Gdy użytkownik wpisze w grze `czas`, moduł odczytuje odpowiedź i synchronizuje lub aktualizuje zegar właściwej domeny. Obsługiwane są zarówno dokładne godziny i numery dni, jak i starszy format opisowy — dla pór Starszego Ludu oraz miesięcy Kalendarza Imperialnego. Świeża odpowiedź `czas`, zmiana domeny i dane GMCP odświeżają panel natychmiast; moduł potrafi też odtworzyć zatrzymany timer animujący zegar po przeładowaniu lub wznowieniu skryptów.
+Moduł nie wysyła żadnych komend. Gdy użytkownik wpisze w grze `czas`, moduł odczytuje odpowiedź i synchronizuje lub aktualizuje zegar właściwej domeny. Obsługiwane są zarówno dokładne godziny i numery dni, jak i starszy format opisowy — dla pór Starszego Ludu, miesięcy Kalendarza Imperialnego oraz jednodniowych świąt/okresów takich jak Mitterherbst, Geheimnistag czy Sonnenstill. Świeża odpowiedź `czas`, zmiana domeny i dane GMCP odświeżają panel natychmiast; moduł potrafi też odtworzyć zatrzymany timer animujący zegar po przeładowaniu lub wznowieniu skryptów.
 
 ### Tygodniowy czas online
 
@@ -150,7 +150,7 @@ Sprawdzanie wersji uruchamia sie automatycznie 6 sekund po zaladowaniu pluginu i
 
 ## Budowanie paczki UNICORN
 
-Aktualna wersja: **0.8.2**
+Aktualna wersja: **0.8.3**
 
 Zbuduj paczkę `dist/UNICORN.zip` zawierającą aktualne pliki źródłowe:
 - `init.lua`
@@ -160,6 +160,10 @@ Zbuduj paczkę `dist/UNICORN.zip` zawierającą aktualne pliki źródłowe:
 ## Mini patch notes
 
 Każde wydanie UNICORN zmieniające kod lub zachowanie pluginu ma krótki wpis w `le/patchnotes.lua`. To stały element procesu wydawniczego, nie opcjonalny changelog. Patch notes skupiają się na tym, co użytkownik faktycznie zauważy: nowe funkcje, poprawki zachowania i istotne zmiany interfejsu.
+
+Dla 0.8.3:
+- poprawiona synchronizacja zegara w jednodniowe święta Kalendarza Imperialnego,
+- obsługa odpowiedzi `czas` w formacie `dzien <swieto>`, np. Mitterherbst i Geheimnistag.
 
 Dla 0.8.2:
 - walidacja aktualizacji przed instalacją oraz kopia poprzedniej wersji,
@@ -177,7 +181,7 @@ Dla 0.8.0:
 - naprawiono widoczność tygodniowego paska online pod zegarem,
 - dodano mini patch notes przy informacji o wersji i po udanym update.
 
-## Interfejs 0.8.2
+## Interfejs 0.8.3
 
 UNICORN używa jednego minimalistycznego systemu wizualnego. Komunikaty konsoli zaczynają się od cienkiej belki w kolorze modułu, na przykład:
 
