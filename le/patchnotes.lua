@@ -6,6 +6,11 @@ le.patchnotes = le.patchnotes or {}
 -- To jest źródło prawdy dla mini patch notes. Każde wydanie zmieniające kod
 -- lub zachowanie pluginu musi dostać tutaj krótki, użytkowy opis zmian.
 le.patchnotes.notes = {
+    ["0.8.4"] = {
+        "Oznaczanie mowy odczytuje Twoje kolory po ręcznym wpisaniu kolory w grze.",
+        "Moduł nie zmienia kolorów w grze; zachowuje dwie dotychczasowe belki.",
+        "Brakujące lub błędne kolory wyłączają oznaczanie odpowiedniego rodzaju wypowiedzi.",
+    },
     ["0.8.3"] = {
         "Naprawiono synchronizację zegara w jednodniowe święta Kalendarza Imperialnego, m.in. Mitterherbst i Geheimnistag.",
         "Komenda czas poprawnie ustawia teraz godzinę także dla wpisów w formacie \"dzien <swieto>\".",

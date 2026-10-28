@@ -5,6 +5,7 @@ le.mowa = le.mowa or {}
 le.mowa.triggers = le.mowa.triggers or {}
 le.mowa.aliases = le.mowa.aliases or {}
 le.mowa.timers = le.mowa.timers or {}
+le.mowa.colors = le.mowa.colors or { mowa = 153, szept = 160, krzyk = 117 }
 
 -- Arkadia numeruje kolory Xterm w komendzie gry od 1, a Mudlet od 0.
 -- tempAnsiColorTrigger() obsługuje pełną paletę Xterm 256, więc nasłuchuje
@@ -14,25 +15,19 @@ le.mowa.types = {
         key = "mowa",
         label = "Mowa",
         game_color = 153,
-        xterm_color = 152,
         accent = "#7FAFC0",
-        command = "kolor mowy 153",
     },
     {
         key = "szept",
         label = "Szept",
         game_color = 160,
-        xterm_color = 159,
         accent = "#A39CBC",
-        command = "kolor szeptu 160",
     },
     {
         key = "krzyk",
         label = "Krzyk",
         game_color = 117,
-        xterm_color = 116,
         accent = "#C88478",
-        command = "kolor krzyku 117",
     },
 }
 
@@ -73,7 +68,70 @@ local function type_marker(definition)
     return "<127,175,192>" .. speech_bar .. "<r>"
 end
 
+-- Zachowujemy ostatni odczyt przy hot reloadzie; false oznacza brak koloru.
+local function valid_color(value)
+    return type(value) == "number" and value == math.floor(value) and value >= 1 and value <= 256
+end
+
+local function plain_line(text)
+    return tostring(text or ""):gsub("^%s*▎▎%s*", ""):match("^%s*(.-)%s*$")
+end
+
+function le.mowa.refresh_colors()
+    for _, definition in ipairs(le.mowa.types) do
+        local kind = definition.key
+        local key = "xterm_" .. kind
+        local value = le.mowa.colors[kind]
+        if le.mowa.triggers[key] then
+            pcall(killTrigger, le.mowa.triggers[key])
+            le.mowa.triggers[key] = nil
+        end
+        if valid_color(value) and type(tempAnsiColorTrigger) == "function" then
+            -- Trwały kod Lua zamiast anonimowego callbacka gubionego przez GC.
+            le.mowa.triggers[key] = tempAnsiColorTrigger(value - 1, -1,
+                string.format([[le.mowa.on_color(%q)]], kind))
+        end
+    end
+end
+
+function le.mowa.read_colors(text)
+    text = plain_line(text)
+    if text == "Twoje ustawienia kolorow sa nastepujace:" then
+        le.mowa.color_read = { lines = 0 }
+        return
+    end
+    local state = le.mowa.color_read
+    if not state then return end
+    state.lines = state.lines + 1
+    -- Niekompletny wydruk nie może przechwytywać późniejszych wypowiedzi.
+    if state.lines > 120 then le.mowa.color_read = nil; return end
+    if text == "Komunikacja" then
+        state.values = { mowa = false, szept = false, krzyk = false }
+        return
+    end
+    if not state.values or text == "" then return end
+    local kind, suffix = text:match("^%*%s*(.-)%s*%*%s*(.*)$")
+    if kind and state.values[kind] ~= nil then
+        local value = tonumber(suffix:match("^%((%d+)%)$"))
+        state.values[kind] = valid_color(value) and value or false
+        return
+    end
+    -- Nieoczekiwany tekst przerywa odczyt bez zmiany ostatniego mapowania.
+    if kind ~= "emocje do mnie" and text ~= "Opisy lokacji" and text ~= "Walka postaci" then
+        le.mowa.color_read = nil
+        return
+    end
+    -- Emocje lub kolejna sekcja kończą odczyt; brakujące pozycje są wyłączone.
+    le.mowa.colors = state.values
+    le.mowa.color_read = nil
+    le.mowa.refresh_colors()
+end
+
 function le.mowa.on_color(kind)
+    -- Niezależnie od kolejności triggerów próbki ustawień nie są wypowiedziami.
+    local text = plain_line(line)
+    if le.mowa.color_read or text:match("^%*.-%*")
+        or text == "Twoje ustawienia kolorow sa nastepujace:" then return end
     local definition = type_definition(kind)
     if not definition then return end
 
@@ -130,39 +188,27 @@ function le.mowa.on_color(kind)
     end
 end
 
-function le.mowa.configure_game_colors()
-    for index, definition in ipairs(le.mowa.types) do
-        local command = definition.command
-        if index == 1 then
-            send(command)
-        else
-            le.mowa.timers[index] = tempTimer((index - 1) * 0.2, function()
-                send(command)
-                le.mowa.timers[index] = nil
-            end)
-        end
-    end
-    output("Wysłano ustawienia kolorów · mowa 153 · szept 160 · krzyk 117.")
-end
+-- Usuń funkcję pozostałą po przeładowaniu starszej wersji.
+le.mowa.configure_game_colors = nil
 
 function le.mowa.preview()
-    if le.ui and le.ui.output then
-        le.ui.output("mowa", "Mowa · kolor 153")
-        le.ui.output("szept", "Szept · kolor 160")
-        le.ui.output("krzyk", "Krzyk · kolor 117")
+    for _, definition in ipairs(le.mowa.types) do
+        local value = le.mowa.colors[definition.key]
+        note(definition.label .. " · " .. (valid_color(value) and ("kolor " .. value) or "oznaczanie wyłączone"))
     end
 end
 
 function le.mowa.show_help()
     output("Pomoc · mowa")
-    note("Wypowiedzi są oznaczane samą belką; treść i kolor gry pozostają bez zmian.")
+    note("Wypowiedzi zachowują treść i kolor gry oraz otrzymują dwie belki ▎▎.")
+    note("Wpisz ręcznie w grze kolory, aby odczytać ustawienia mowy, szeptu i krzyku.")
+    note("Moduł nie wysyła komend ani nie zmienia kolorów w grze.")
+    note("Przed pierwszym odczytem: 153/160/117. Brak lub błędny kolor po odczycie wyłącza oznaczanie.")
     if le.ui and le.ui.command then
-        le.ui.command("mowa", "/le.mowa ustaw", "/le.mowa ustaw",
-            "ustaw w grze kolory 153, 160 i 117", false)
         le.ui.command("mowa", "/le.mowa podglad", "/le.mowa podglad",
-            "pokaż trzy warianty belki", false)
+            "pokaż bieżące mapowanie kolorów", false)
     end
-    note("Mapowanie · mowa 153 · szept 160 · krzyk 117")
+    le.mowa.preview()
 end
 
 function le.mowa.cleanup()
@@ -175,6 +221,7 @@ function le.mowa.cleanup()
     for _, id in pairs(le.mowa.timers or {}) do
         if id then pcall(killTimer, id) end
     end
+    le.mowa.color_read = nil
     le.mowa.triggers = {}
     le.mowa.aliases = {}
     le.mowa.timers = {}
@@ -189,18 +236,14 @@ function le.mowa.init()
         return false
     end
 
-    for _, definition in ipairs(le.mowa.types) do
-        local kind = definition.key
-        local xterm_color = definition.xterm_color
-        -- Kod tekstowy jest trwale przechowywany przez Mudleta. Przekazane
-        -- tu anonimowe domknięcie potrafiło zniknąć po GC i dawało błąd
-        -- „func reference not found by Lua”.
-        local trigger_code = string.format([[le.mowa.on_color(%q)]], kind)
-        le.mowa.triggers["xterm_" .. kind] = tempAnsiColorTrigger(xterm_color, -1, trigger_code)
+    le.mowa.refresh_colors()
+    if type(tempRegexTrigger) == "function" then
+        le.mowa.triggers.colors = tempRegexTrigger([[^.*$]], [[le.mowa.read_colors(line)]])
+    else
+        output("Brak obsługi odczytu kolorów; pozostaje bieżące mapowanie.")
     end
 
     le.mowa.aliases.help = tempAlias([[^/le\.mowa$]], le.mowa.show_help)
-    le.mowa.aliases.configure = tempAlias([[^/le\.mowa ustaw$]], le.mowa.configure_game_colors)
     le.mowa.aliases.preview = tempAlias([[^/le\.mowa podglad$]], le.mowa.preview)
     return true
 end
