@@ -12,7 +12,7 @@ Niezależna konfiguracja i zestaw pluginów dla Mudleta.
 Po udostępnieniu repozytorium wykonaj w Mudlecie:
 
 ```text
-/zainstaluj_plugin https://raw.githubusercontent.com/gnomidlo/Arka/main/dist/UNICORN.zip?version=0.8.3
+/zainstaluj_plugin https://raw.githubusercontent.com/gnomidlo/Arka/main/dist/UNICORN.zip?version=0.8.4
 ```
 
 Po instalacji sprawdź listę pluginów:
@@ -30,7 +30,7 @@ Po pierwszej instalacji pliki sa juz na dysku, ale plugin moze nie byc jeszcze w
 Zmiana nazwy pluginu wymaga jednorazowego usuniecia starego katalogu. Zamknij Mudlet, usun katalog `plugins/Arka`, uruchom Mudlet i zainstaluj nowa paczke:
 
 ```text
-/zainstaluj_plugin https://raw.githubusercontent.com/gnomidlo/Arka/main/dist/UNICORN.zip?version=0.8.3
+/zainstaluj_plugin https://raw.githubusercontent.com/gnomidlo/Arka/main/dist/UNICORN.zip?version=0.8.4
 ```
 
 Od wersji `0.2.0` plugin jest instalowany i wyswietlany na liscie jako `UNICORN`. Paczka ma pliki bezposrednio w katalogu glownym ZIP-a, zgodnie z formatem instalatora Arkadii.
@@ -52,7 +52,6 @@ Od wersji `0.2.0` plugin jest instalowany i wyswietlany na liscie jako `UNICORN`
 /le.zlecenia lista
 /le.zlecenia sprawdz
 /le.mowa
-/le.mowa ustaw
 /le.mowa podglad
 /le.flakoniki
 /le.flakoniki lista
@@ -74,8 +73,7 @@ Od wersji `0.2.0` plugin jest instalowany i wyswietlany na liscie jako `UNICORN`
 - `/le.zlecenia lista` — szczegółowa lista aktywnych dostaw,
 - `/le.zlecenia sprawdz` — pyta NPC o dostępne zlecenie,
 - `/le.mowa` — pomoc modułu oznaczania wypowiedzi,
-- `/le.mowa ustaw` — wysyła ustawienia kolorów: mowa 153, szept 160, krzyk 117,
-- `/le.mowa podglad` — pokazuje podgląd trzech kolorów belki.
+- `/le.mowa podglad` — pokazuje bieżące mapowanie kolorów.
 - `/le.flakoniki` — pomoc oznaczania i etykiet flakoników.
 - `/le.kamienie` — pomoc oznaczania kamieni oraz menu ich właściwości.
 
@@ -124,17 +122,13 @@ Informacje o posiadanych ziolach pochodza z globalnej bazy `herbs.counts`, budow
 
 ## Mowa
 
-Moduł rozpoznaje wypowiedzi po kolorach ustawionych w grze i dodaje przed linią wyłącznie cienką belkę. Mowa, szept i krzyk mają trzy spokojne warianty koloru; treść wypowiedzi i jej kolor pozostają bez zmian.
+Moduł dodaje oryginalne dwie belki `▎▎` przed wypowiedzią, zachowując jej tekst i kolor. Rozpoznaje mowę, szept i krzyk po kolorach ANSI 256.
 
-Kliknięcie `/le.mowa ustaw` w pomocy wysyła kolejno:
+Wpisz ręcznie `kolory` w grze. UNICORN pasywnie odczyta sekcję `Komunikacja` po nagłówku `Twoje ustawienia kolorow sa nastepujace:` i zastosuje ustawienia po dojściu do `* emocje do mnie *` lub kolejnej sekcji. Nie wysyła żadnych komend i nie zmienia ustawień gry; dawne `/le.mowa ustaw` zostało usunięte.
 
-```text
-kolor mowy 153
-kolor szeptu 160
-kolor krzyku 117
-```
+Przed pierwszym odczytem obowiązuje fallback: mowa 153, szept 160, krzyk 117. Numer gry z zakresu 1–256 jest mapowany na `tempAnsiColorTrigger(game_color - 1, -1, ...)`. Brakujący, pusty lub nieprawidłowy kolor wyłącza oznaczanie danego rodzaju wypowiedzi do kolejnego odczytu. Przerwany wydruk bez końca sekcji nie zastępuje ostatniego mapowania. Kolejne odczyty zastępują triggery bez duplikatów; przeładowanie zachowuje mapowanie w bieżącej sesji, a restart przywraca fallback. Przy wspólnym kolorze kilku rodzajów dodawana jest tylko jedna para belek; sam kolor nie pozwala rozróżnić rodzaju wypowiedzi.
 
-Arkadia ustawia kolory Xterm jako 153, 160 i 117, a Mudlet nasłuchuje ich indeksów 0-based: 152, 159 i 116. Moduł używa wyłącznie triggerów ANSI 256: belka pojawia się tylko na wypowiedziach kolorowanych przez MUD. Callback triggera jest zapisany jako trwały kod Lua, więc Mudlet nie gubi referencji do funkcji. Belka jest wstawiana bezpośrednio na początku linii jako znak Unicode, bez funkcji `prefix()`, która błędnie przesuwa tekst dla znaków wielobajtowych.
+`/le.mowa` pokazuje pomoc, a `/le.mowa podglad` bieżące mapowanie. Próbki kolorów w wydruku ustawień nie otrzymują dodatkowych belek.
 
 ## Terminy zleceń
 
@@ -150,7 +144,7 @@ Sprawdzanie wersji uruchamia sie automatycznie 6 sekund po zaladowaniu pluginu i
 
 ## Budowanie paczki UNICORN
 
-Aktualna wersja: **0.8.3**
+Aktualna wersja: **0.8.4**
 
 Zbuduj paczkę `dist/UNICORN.zip` zawierającą aktualne pliki źródłowe:
 - `init.lua`
@@ -160,6 +154,11 @@ Zbuduj paczkę `dist/UNICORN.zip` zawierającą aktualne pliki źródłowe:
 ## Mini patch notes
 
 Każde wydanie UNICORN zmieniające kod lub zachowanie pluginu ma krótki wpis w `le/patchnotes.lua`. To stały element procesu wydawniczego, nie opcjonalny changelog. Patch notes skupiają się na tym, co użytkownik faktycznie zauważy: nowe funkcje, poprawki zachowania i istotne zmiany interfejsu.
+
+Dla 0.8.4:
+- pasywny odczyt kolorów mowy, szeptu i krzyku po ręcznej komendzie `kolory`,
+- zachowane belki `▎▎`, bez zmiany ustawień gry,
+- obsługa brakujących i błędnych kolorów oraz ponownych odczytów.
 
 Dla 0.8.3:
 - poprawiona synchronizacja zegara w jednodniowe święta Kalendarza Imperialnego,
