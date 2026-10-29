@@ -4,8 +4,8 @@ local output, cursor, seeks = "", 0, 0
 local function append(value)
     value = tostring(value or ""):gsub("<[^>]+>", "")
     output = output .. value
-    local last = value:match("([^\\n]*)$")
-    if value:find("\\n", 1, true) then
+    local last = value:match("([^\n]*)$")
+    if value:find("\n", 1, true) then
         cursor = #last
     else
         cursor = cursor + #value
@@ -14,7 +14,7 @@ end
 
 moveCursorEnd = function()
     seeks = seeks + 1
-    cursor = #(output:match("([^\\n]*)$") or "")
+    cursor = #(output:match("([^\n]*)$") or "")
     return true
 end
 getColumnNumber = function() return cursor end
@@ -25,7 +25,7 @@ dofile("le/ui.lua")
 output = "Czarnowlosy stary elf mowi do ciebie: Dziekuje, wiecej mi juz nie trzeba."
 cursor = 0 -- kursor triggera na poczatku pelnej linii
 le.ui.output("zlec", "Zlecenie od Czarnowlosy stary elf zostalo wykonane.")
-assert(output:find("trzeba.\\n▎  Zlecenie", 1, true),
+assert(output:find("trzeba.\n▎  Zlecenie", 1, true),
     "zlecenie zostalo doklejone do wypowiedzi NPC")
 assert(seeks == 1, "nie przesunieto kursora na koniec bufora")
 
@@ -38,6 +38,6 @@ assert(output:sub(#before + 1):find("^▎  Lacznie"),
 output = "Wkraczasz na trakt."
 cursor = 0
 le.ui.note("czas", "Zapisano swit")
-assert(output:find("trakt.\\n▎  Zapisano", 1, true),
+assert(output:find("trakt.\n▎  Zapisano", 1, true),
     "podobny komunikat kalendarza nie otrzymal nowej linii")
 print("OK: nowa linia przed komunikatami triggerow i brak pustych linii")
