@@ -12,7 +12,7 @@ Niezależna konfiguracja i zestaw pluginów dla Mudleta.
 Po udostępnieniu repozytorium wykonaj w Mudlecie:
 
 ```text
-/zainstaluj_plugin https://raw.githubusercontent.com/gnomidlo/Arka/main/dist/UNICORN.zip?version=0.8.7
+/zainstaluj_plugin https://raw.githubusercontent.com/gnomidlo/Arka/main/dist/UNICORN.zip?version=0.8.8
 ```
 
 Po instalacji sprawdź listę pluginów:
@@ -30,7 +30,7 @@ Po pierwszej instalacji pliki sa juz na dysku, ale plugin moze nie byc jeszcze w
 Zmiana nazwy pluginu wymaga jednorazowego usuniecia starego katalogu. Zamknij Mudlet, usun katalog `plugins/Arka`, uruchom Mudlet i zainstaluj nowa paczke:
 
 ```text
-/zainstaluj_plugin https://raw.githubusercontent.com/gnomidlo/Arka/main/dist/UNICORN.zip?version=0.8.7
+/zainstaluj_plugin https://raw.githubusercontent.com/gnomidlo/Arka/main/dist/UNICORN.zip?version=0.8.8
 ```
 
 Od wersji `0.2.0` plugin jest instalowany i wyswietlany na liscie jako `UNICORN`. Paczka ma pliki bezposrednio w katalogu glownym ZIP-a, zgodnie z formatem instalatora Arkadii.
@@ -155,7 +155,7 @@ Sprawdzanie wersji uruchamia sie automatycznie 6 sekund po zaladowaniu pluginu i
 
 ## Budowanie paczki UNICORN
 
-Aktualna wersja: **0.8.7**
+Aktualna wersja: **0.8.8**
 
 Zbuduj paczkę `dist/UNICORN.zip` zawierającą aktualne pliki źródłowe:
 - `init.lua`
@@ -165,6 +165,11 @@ Zbuduj paczkę `dist/UNICORN.zip` zawierającą aktualne pliki źródłowe:
 ## Mini patch notes
 
 Każde wydanie UNICORN zmieniające kod lub zachowanie pluginu ma krótki wpis w `le/patchnotes.lua`. To stały element procesu wydawniczego, nie opcjonalny changelog. Patch notes skupiają się na tym, co użytkownik faktycznie zauważy: nowe funkcje, poprawki zachowania i istotne zmiany interfejsu.
+
+Dla 0.8.8:
+- panel zleceń jest w osobnym, przesuwanym `Geyser.UserWindow` (dotychczasowa funkcjonalność szczegółów i akcji pozostaje),
+- ponowna instalacja przebudowuje etykiety i ich kliknięcia; koniec martwych przycisków po hot reloadzie,
+- brak gwarantowanej pełnej przezroczystości natywnego okna Qt na Windows (tło etykiet pozostaje czytelne).
 
 Dla 0.8.7:
 - aktualizator nie kasuje poprzednich kopii przy przygotowaniu nowej instalacji,
@@ -230,6 +235,8 @@ Zegar pokazuje dużą, pogrubioną godzinę, domenę, porę roku i okres kalenda
 Wspólna funkcja komunikatów najpierw przesuwa kursor na koniec bufora, dlatego belki `▎` zleceń, czasu i innych modułów nie pojawiają się w tej samej linii co przetwarzana właśnie wypowiedź NPC.
 
 Zwarty panel zleceń pokazuje wyłącznie przedmiot, ilość i pozostały czas. Kliknięcie dostawy rozwija odbiorcę, miejsce oraz tekstowe akcje `PROWADŹ` i `USUŃ`.
+
+Od wersji 0.8.8 panel jest samodzielnym `Geyser.UserWindow`, z zapamiętaniem położenia; nie przykrywa głównego wyjścia tekstowego Mudleta. Puste okno pokazuje nagłówek `ZLECENIA 0`. Każdy hot reload usuwa etykiety, tworzy je ponownie i przywraca działające kliknięcia. Tło natywnego okna nie musi być przezroczyste nawet przy zerowej alfie konsoli, dlatego najlepiej umieścić je obok tekstu gry lub na drugim monitorze.
 
 
 ## Bezpieczeństwo zapisu i testy
