@@ -12,7 +12,7 @@ Niezależna konfiguracja i zestaw pluginów dla Mudleta.
 Po udostępnieniu repozytorium wykonaj w Mudlecie:
 
 ```text
-/zainstaluj_plugin https://raw.githubusercontent.com/gnomidlo/Arka/main/dist/UNICORN.zip?version=0.8.6
+/zainstaluj_plugin https://raw.githubusercontent.com/gnomidlo/Arka/main/dist/UNICORN.zip?version=0.8.7
 ```
 
 Po instalacji sprawdź listę pluginów:
@@ -30,7 +30,7 @@ Po pierwszej instalacji pliki sa juz na dysku, ale plugin moze nie byc jeszcze w
 Zmiana nazwy pluginu wymaga jednorazowego usuniecia starego katalogu. Zamknij Mudlet, usun katalog `plugins/Arka`, uruchom Mudlet i zainstaluj nowa paczke:
 
 ```text
-/zainstaluj_plugin https://raw.githubusercontent.com/gnomidlo/Arka/main/dist/UNICORN.zip?version=0.8.6
+/zainstaluj_plugin https://raw.githubusercontent.com/gnomidlo/Arka/main/dist/UNICORN.zip?version=0.8.7
 ```
 
 Od wersji `0.2.0` plugin jest instalowany i wyswietlany na liscie jako `UNICORN`. Paczka ma pliki bezposrednio w katalogu glownym ZIP-a, zgodnie z formatem instalatora Arkadii.
@@ -149,13 +149,13 @@ Czas podawany przez NPC jest liczony zegarem świata gry. Jedna godzina gry trwa
 
 Aktualna wersja projektu jest zapisana w `version.lua`. Przed opublikowaniem nowej wersji nalezy podbic ten numer zgodnie z formatem `MAJOR.MINOR.PATCH`.
 
-Sprawdzanie wersji uruchamia sie automatycznie 6 sekund po zaladowaniu pluginu i korzysta z zadania HTTP bez plikow tymczasowych. Instalacja aktualizacji jest wykonywana dopiero po swiadomym wywolaniu `/le.config aktualizuj`. Po udanym hot reloadzie UNICORN pokazuje mini patch notes nowej wersji; można je też ponownie wyświetlić przez `/le.config wersja`. Od wersji `0.8.2` instalator sprawdza wersję, manifest i składnię modułów w rozpakowanej paczce przed podmianą instalacji. Poprzedni katalog zachowuje w `UNICORN-backup` w profilu Mudleta, poza katalogiem pluginów. Po podmianie przeładowuje moduły bez restartu. Jeśli przeładowanie się nie powiedzie, przywraca poprzednie pliki i prosi o restart, aby odtworzyć czysty stan modułów. Jeśli system zablokuje przywrócenie, podaje lokalizację zachowanej kopii. Następna aktualizacja zastępuje kopię dopiero po walidacji nowej paczki i potwierdzeniu obecności bieżącej instalacji. Od wersji `0.3.1` paczka jest rozpakowywana poza katalogiem pluginow i kopiowana bezposrednio do `plugins/UNICORN`, dlatego instalator nie tworzy katalogow o nazwach typu `1786310551UNICORN`.
+Sprawdzanie wersji uruchamia sie automatycznie 6 sekund po zaladowaniu pluginu i korzysta z zadania HTTP bez plikow tymczasowych. Instalacja aktualizacji jest wykonywana dopiero po swiadomym wywolaniu `/le.config aktualizuj`. Po udanym hot reloadzie UNICORN pokazuje mini patch notes nowej wersji; można je też ponownie wyświetlić przez `/le.config wersja`. Od wersji `0.8.2` instalator sprawdza wersję, manifest i składnię modułów w rozpakowanej paczce przed podmianą instalacji. Poprzedni katalog zachowuje w `UNICORN-backup` w profilu Mudleta, poza katalogiem pluginów. Od 0.8.7 **nie usuwa** istniejącej kopii przed aktualizacją: jeżeli `UNICORN-backup` jest już zajęty, zapisuje nową kopię w katalogu `UNICORN-backup-RRRRMMDD-GGMMSS-NNN`. Kopie pozostają do ręcznego uporządkowania po upewnieniu się, że nowa wersja działa prawidłowo. W przypadku błędu podmiany lub przeładowania przywracana jest wyłącznie kopia utworzona w bieżącej próbie. Po podmianie przeładowuje moduły bez restartu. Jeśli przeładowanie się nie powiedzie, przywraca poprzednie pliki i prosi o restart, aby odtworzyć czysty stan modułów. Jeśli system zablokuje przywrócenie, podaje lokalizację zachowanej kopii. Następna aktualizacja zastępuje kopię dopiero po walidacji nowej paczki i potwierdzeniu obecności bieżącej instalacji. Od wersji `0.3.1` paczka jest rozpakowywana poza katalogiem pluginow i kopiowana bezposrednio do `plugins/UNICORN`, dlatego instalator nie tworzy katalogow o nazwach typu `1786310551UNICORN`.
 
 `/le.config napraw` usuwa pozostalosci `UNICORN_todelete` oraz katalogi tymczasowe zakonczone nazwa `UNICORN`. Jesli system blokuje usuniecie, katalog jest przenoszony poza `plugins`, aby loader nie traktowal go jako pluginu. Zwykła aktualizacja UNICORN nie wymaga już restartu; restart pozostaje awaryjnym fallbackiem oraz nadal może być potrzebny po naprawie pozostałości instalatora.
 
 ## Budowanie paczki UNICORN
 
-Aktualna wersja: **0.8.6**
+Aktualna wersja: **0.8.7**
 
 Zbuduj paczkę `dist/UNICORN.zip` zawierającą aktualne pliki źródłowe:
 - `init.lua`
@@ -165,6 +165,11 @@ Zbuduj paczkę `dist/UNICORN.zip` zawierającą aktualne pliki źródłowe:
 ## Mini patch notes
 
 Każde wydanie UNICORN zmieniające kod lub zachowanie pluginu ma krótki wpis w `le/patchnotes.lua`. To stały element procesu wydawniczego, nie opcjonalny changelog. Patch notes skupiają się na tym, co użytkownik faktycznie zauważy: nowe funkcje, poprawki zachowania i istotne zmiany interfejsu.
+
+Dla 0.8.7:
+- aktualizator nie kasuje poprzednich kopii przy przygotowaniu nowej instalacji,
+- zajęty katalog `UNICORN-backup` pozostaje nietknięty, a następna kopia otrzymuje unikalną nazwę,
+- zachowano bezpieczny rollback przy nieudanej podmianie lub przeładowaniu.
 
 Dla 0.8.6:
 - zegar, tygodniowy pasek online oraz kalendarz najbliższego wydarzenia we wspólnym, przesuwanym oknie `Geyser.UserWindow`,
