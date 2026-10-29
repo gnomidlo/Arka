@@ -6,6 +6,16 @@ le.patchnotes = le.patchnotes or {}
 -- To jest źródło prawdy dla mini patch notes. Każde wydanie zmieniające kod
 -- lub zachowanie pluginu musi dostać tutaj krótki, użytkowy opis zmian.
 le.patchnotes.notes = {
+    ["0.9.0"] = {
+        "Panel zleceń ma trzy stałe sloty i strony ‹/›, uporządkowane od najkrótszego czasu.",
+        "Przy czasie widać miejsce; kliknięcie dostawy pokazuje szczegóły i akcje w konsoli.",
+        "Całe okno znika bez aktywnych zleceń i wraca po przyjęciu nowego.",
+    },
+    ["0.8.8"] = {
+        "Panel zleceń przeniesiono do osobnego przesuwanego okna Mudleta.",
+        "Kliknięcie zlecenia po aktualizacji ponownie rozwija szczegóły i przyciski PROWADŹ/USUŃ.",
+        "Przeładowanie usuwa stare etykiety i ich callbacki, zachowując zapisane zlecenia.",
+    },
     ["0.8.7"] = {
         "Aktualizator nie usuwa już starych kopii UNICORN przed instalacją nowej wersji.",
         "Jeśli poprzednia kopia istnieje lub jest zablokowana, wybierana jest nowa, wolna nazwa kopii.",

@@ -14,7 +14,10 @@ le.zlecenia.UI = le.zlecenia.UI or {}
 le.zlecenia.config = {
     panel = {
         x = "-280px", width = 260, top = -560,
-        headerHeight = 22, itemHeight = 24, expandedExtra = 104, gap = 0, maxItems = 8,
+        window = { name = "LeZleceniaWindow", titleText = "UNICORN · zlecenia",
+            x = "45%", y = "15%", width = "260px", height = "178px",
+            dockPosition = "floating", autoDock = false, restoreLayout = true },
+        headerHeight = 24, itemHeight = 44, footerHeight = 22, maxItems = 3,
         routeWidth = 78, deleteWidth = 48, actionHeight = 18, btnMargin = 6,
     },
     style = [[
@@ -541,12 +544,16 @@ end
 function le.zlecenia.active_orders_sorted()
     local list = {}
     for key, order in pairs(le.zlecenia.data.orders) do
-        if order.status ~= "brak" then
+        if order.status ~= "brak" and (not order.completionAt or order.completionAt > epoch()) then
             order.key = key
             list[#list + 1] = order
         end
     end
-    table.sort(list, function(a, b) return (a.completionAt or math.huge) < (b.completionAt or math.huge) end)
+    table.sort(list, function(a, b)
+        local at, bt = a.completionAt or math.huge, b.completionAt or math.huge
+        if at == bt then return tostring(a.key) < tostring(b.key) end
+        return at < bt
+    end)
     return list
 end
 
@@ -554,6 +561,7 @@ end
 
 function le.zlecenia.show_help()
     le.zlecenia.output("Pomoc · dostawy od NPC")
+    le.zlecenia.output("Panel: 3 sloty, strony ‹/›. Kliknij dostawę po szczegóły i akcje w konsoli.")
     if le.ui and le.ui.note then
         le.ui.note("zlec", "Kliknij komendę, aby ją uruchomić.")
         le.ui.command("zlec", "/le.zlecenia lista", "/le.zlecenia lista", "aktywne dostawy i szczegóły", false)
@@ -584,24 +592,7 @@ function le.zlecenia.show_list()
     le.zlecenia.indexMap = {}
     for index, order in ipairs(orders) do
         le.zlecenia.indexMap[index] = order.key
-        local selected = order
-        local remaining = math.max(0, (order.completionAt or 0) - epoch())
-
-        console_prefix()
-        decho(string.format("%s  %s\n",
-            dc(col.value, order.what or "-"),
-            dc(le.zlecenia.urgency_color(remaining), le.zlecenia.duration(remaining))))
-
-        console_prefix()
-        decho(string.format("%s %s  %s %s  ",
-            dc(col.muted, "Odbiorca ·"), dc(col.text, order.npc or "-"),
-            dc(col.muted, "Miejsce ·"), dc(col.text, order.roomName or "-")))
-        dechoLink(dc(col.good, le.zlecenia.UI.routingKey == order.key and "ZATRZYMAJ" or "PROWADŹ"),
-            function() le.zlecenia.UI.toggle_route(selected) end, "Prowadzenie do odbiorcy", true)
-        decho("  ")
-        dechoLink(dc(col.danger_link, "USUŃ"),
-            function() le.zlecenia.remove_order(selected.key) end, "Usuń tę dostawę", true)
-        decho("\n")
+        le.zlecenia.show_order(order.key)
     end
 
     for _, item in ipairs(no_order_npcs) do
@@ -610,6 +601,32 @@ function le.zlecenia.show_list()
             dc(col.muted, item.npc or "-"),
             dc(col.muted_dim, "· brak zlecenia · " .. (item.lastSeen or "-"))))
     end
+end
+
+function le.zlecenia.show_order(key)
+    local order = le.zlecenia.data.orders[key]
+    if not order or order.status == "brak" then return end
+    local col = le.zlecenia.config.colors
+    local remaining = math.max(0, (order.completionAt or 0) - epoch())
+
+    console_prefix()
+    decho(string.format("%s  %s\n",
+        dc(col.value, order.what or "-"),
+        dc(le.zlecenia.urgency_color(remaining), le.zlecenia.duration(remaining))))
+
+    console_prefix()
+    decho(string.format("%s %s  %s %s  ",
+        dc(col.muted, "Odbiorca ·"), dc(col.text, order.npc or "-"),
+        dc(col.muted, "Miejsce ·"), dc(col.text, order.roomName or "-")))
+    dechoLink(dc(col.good, le.zlecenia.UI.routingKey == order.key and "ZATRZYMAJ" or "PROWADŹ"),
+        function()
+            local current = le.zlecenia.data.orders[key]
+            if current and (not current.completionAt or current.completionAt > epoch()) then le.zlecenia.UI.toggle_route(current) end
+        end, "Prowadzenie do odbiorcy", true)
+    decho("  ")
+    dechoLink(dc(col.danger_link, "USUŃ"),
+        function() le.zlecenia.remove_order(key) end, "Usuń tę dostawę", true)
+    decho("\n")
 end
 
 function le.zlecenia.remove_by_index(index)
@@ -643,117 +660,113 @@ end
 -- Panel na ekranie (Geyser), pod modułami czasu UNICORN -----------------------
 -- Etykiety Geyser renderują Qt rich text (podzbiór HTML4/CSS2): brak
 -- flexbox/grid/position/transform. Justowanie dwóch kolumn -> <table>.
--- Mini-przyciski trasy/usuwania to osobne małe etykiety nałożone na kartę,
--- każda z własnym setClickCallback (jedna etykieta = jeden klik).
+-- Trzy stale sloty; szczegoly i akcje sa wypisywane w glownej konsoli.
 
-function le.zlecenia.UI.order_html(order, expanded)
+-- UTF-8-safe shortening: full descriptions remain available in the console.
+local function short_text(value, limit)
+    local chars = {}
+    for char in tostring(value or "-"):gmatch("[%z\1-\127\194-\244][\128-\191]*") do chars[#chars + 1] = char end
+    if #chars > limit then return table.concat(chars, "", 1, limit - 1) .. "…" end
+    return table.concat(chars)
+end
+local function esc(value)
+    return tostring(value):gsub("&", "&amp;"):gsub("<", "&lt;"):gsub(">", "&gt;")
+end
+function le.zlecenia.UI.order_html(order)
     local col = le.zlecenia.config.colors
-    local remaining = math.max(0, (order.completionAt or 0) - epoch())
-    local urgency = le.zlecenia.urgency_color(remaining)
-    local function esc(value)
-        return tostring(value or "-")
-            :gsub("&", "&amp;"):gsub("<", "&lt;"):gsub(">", "&gt;")
-    end
-
-    local html = string.format([[<table width='100%%' cellspacing='0' cellpadding='0'><tr>
-        <td align='left'><span style='font-size:10px;color:%s;%s'>%s</span></td>
-        <td align='right'><span style='font-size:10px;color:%s;font-weight:bold'>%s</span></td>
-      </tr></table>]],
-        col.text, expanded and "font-weight:bold" or "", esc(order.what),
-        urgency, le.zlecenia.compact_duration(remaining))
-
-    if expanded then
-        html = html .. string.format([[
-          <div style='height:8px'></div>
-          <div style='font-size:10px;color:%s'>Odbiorca: <span style='color:%s'>%s</span></div>
-          <div style='font-size:10px;color:%s'>Miejsce: <span style='color:%s'>%s</span></div>
-          <div style='font-size:10px;color:%s'>Pozostało: <span style='color:%s;font-weight:bold'>%s</span></div>]],
-            col.muted, col.text, esc(order.npc),
-            col.muted, col.text, esc(order.roomName),
-            col.muted, urgency, le.zlecenia.duration(remaining))
-    end
-    return html
+    if not order then return "<span style='color:" .. col.muted_dim .. "'>—</span>" end
+    local remaining = order.completionAt and math.max(0, order.completionAt - epoch())
+    return string.format([[<div style='font-size:11px;color:%s'><b>%s</b></div>
+        <div style='font-size:10px;color:%s'>%s &nbsp; <span style='color:%s'>%s</span></div>]],
+        col.text, esc(short_text(order.what, 32)), le.zlecenia.urgency_color(remaining),
+        remaining and le.zlecenia.compact_duration(remaining) or "?:??",
+        col.muted, esc(short_text(order.roomName, 23)))
 end
 
 function le.zlecenia.UI.ensure_pool()
     if le.zlecenia.UI.pool then return end
-    le.zlecenia.UI.pool, le.zlecenia.UI.routeBtn, le.zlecenia.UI.deleteBtn, le.zlecenia.UI.slotOrder = {}, {}, {}, {}
+    local ui = le.zlecenia.UI
     local p = le.zlecenia.config.panel
     local col = le.zlecenia.config.colors
+    local parent
+    if Geyser and Geyser.UserWindow and type(Geyser.UserWindow.new) == "function" then
+        local options = {}
+        for key, value in pairs(p.window) do options[key] = value end
+        options.hidden = true
+        local ok, window = pcall(function() return Geyser.UserWindow:new(options) end)
+        if ok and window then
+            ui.window = window
+            parent = window
+            if type(resizeWindow) == "function" then pcall(resizeWindow, p.window.name, 260, 178) end
+            if type(setBackgroundColor) == "function" then
+                -- Przezroczyste tlo konsoli. Powierzchnia natywnego Qt moze
+                -- nadal byc nieprzezroczysta (zalezy od Mudleta i Windows).
+                pcall(setBackgroundColor, p.window.name, 0, 0, 0, 0)
+            end
+        end
+    end
+    ui.pool, ui.routeBtn, ui.deleteBtn, ui.slotOrder = {}, {}, {}, {}
+    ui.mode = parent and "window" or "legacy"
 
-    le.zlecenia.UI.header = Geyser.Label:new({
-        name = "LeZleceniaHeader", x = p.x, y = tostring(p.top) .. "px",
-        width = tostring(p.width) .. "px", height = tostring(p.headerHeight) .. "px"
-    })
-    le.zlecenia.UI.header:setStyleSheet(string.format([[
+    local function pos(x, y)
+        if parent then return tostring(x) .. "px", tostring(y) .. "px" end
+        return p.x, tostring(p.top + y) .. "px"
+    end
+    local hx, hy = pos(0, 0)
+    ui.header = Geyser.Label:new({
+        name = "LeZleceniaHeader", x = hx, y = hy,
+        width = parent and "100%" or tostring(p.width) .. "px",
+        height = tostring(p.headerHeight) .. "px",
+    }, parent)
+    ui.header:setStyleSheet(string.format([[
         background-color: rgba(12, 14, 18, 220);
         border:none; border-left:3px solid %s; padding:2px 8px;
         font-family:'DejaVu Sans Mono','Consolas',monospace;
     ]], col.accent))
-    le.zlecenia.UI.header:setClickCallback(function() le.zlecenia.UI.toggle_panel() end)
+    ui.header:setClickCallback(function() le.zlecenia.show_list() end)
 
     for i = 1, p.maxItems do
         local slot = i
+        local x, y = pos(0, p.headerHeight)
         local label = Geyser.Label:new({
-            name = "LeZleceniaItem" .. slot, x = p.x, y = "0px",
-            width = tostring(p.width) .. "px", height = tostring(p.itemHeight) .. "px"
-        })
+            name = "LeZleceniaItem" .. slot, x = x, y = y,
+            width = parent and "100%" or tostring(p.width) .. "px",
+            height = tostring(p.itemHeight) .. "px",
+        }, parent)
         label:setStyleSheet(le.zlecenia.config.style)
         label:hide()
         label:setClickCallback(function()
             local order = le.zlecenia.UI.slotOrder[slot]
             if order then le.zlecenia.UI.toggle(order.key) end
         end)
-        le.zlecenia.UI.pool[slot] = label
+        ui.pool[slot] = label
     end
 
-    for i = 1, p.maxItems do
-        local slot = i
-        local route = Geyser.Label:new({
-            name = "LeZleceniaRoute" .. slot, x = "0px", y = "0px",
-            width = tostring(p.routeWidth) .. "px", height = tostring(p.actionHeight) .. "px"
-        })
-        route:setStyleSheet(le.zlecenia.config.btnStyle)
-        route:hide()
-        route:setClickCallback(function()
-            local order = le.zlecenia.UI.slotOrder[slot]
-            if order then le.zlecenia.UI.toggle_route(order) end
+    ui.nav = {}
+    for i, caption in ipairs({ "‹", "›" }) do
+        local direction = i == 1 and -1 or 1
+        local x, y = pos(0, p.headerHeight + 3 * p.itemHeight)
+        local button = Geyser.Label:new({name = "LeZleceniaPage" .. i,
+            x = parent and (i == 1 and "0px" or "230px") or (i == 1 and p.x or "-50px"),
+            y = y, width = "30px", height = "22px"}, parent)
+        button:setStyleSheet(le.zlecenia.config.btnStyle)
+        button:echo("<center><span style='color:" .. col.accent .. "'>" .. caption .. "</span></center>")
+        button:setClickCallback(function()
+            ui.page = math.max(1, math.min(ui.pages or 1, (ui.page or 1) + direction))
+            ui.rebuild()
         end)
-        le.zlecenia.UI.routeBtn[slot] = route
-
-        local delete = Geyser.Label:new({
-            name = "LeZleceniaDelete" .. slot, x = "0px", y = "0px",
-            width = tostring(p.deleteWidth) .. "px", height = tostring(p.actionHeight) .. "px"
-        })
-        delete:setStyleSheet(le.zlecenia.config.btnStyle)
-        delete:hide()
-        delete:setClickCallback(function()
-            local order = le.zlecenia.UI.slotOrder[slot]
-            if order then le.zlecenia.remove_order(order.key) end
-        end)
-        le.zlecenia.UI.deleteBtn[slot] = delete
+        ui.nav[i] = button
     end
+    local x, y = pos(0, p.headerHeight + 3 * p.itemHeight)
+    ui.footer = Geyser.Label:new({name = "LeZleceniaFooter", x = parent and "30px" or "-250px",
+        y = y, width = "200px", height = "22px"}, parent)
+    ui.footer:setStyleSheet(le.zlecenia.config.btnStyle)
 end
 
-function le.zlecenia.UI.toggle(key)
-    -- (uwaga: "cond and nil or key" jest tu bugiem — and/nil zawsze spada na key)
-    if le.zlecenia.UI.expandedKey == key then
-        le.zlecenia.UI.expandedKey = nil
-    else
-        le.zlecenia.UI.expandedKey = key
-    end
-    le.zlecenia.UI.rebuild()
-end
-
-function le.zlecenia.UI.collapse_all()
-    le.zlecenia.UI.expandedKey = nil
-    le.zlecenia.UI.rebuild()
-end
-
-function le.zlecenia.UI.toggle_panel()
-    le.zlecenia.UI.panelHidden = not le.zlecenia.UI.panelHidden
-    le.zlecenia.UI.rebuild()
-end
+-- Compatibility entry points no longer expand the card.
+function le.zlecenia.UI.toggle(key) le.zlecenia.show_order(key) end
+function le.zlecenia.UI.collapse_all() le.zlecenia.UI.rebuild() end
+function le.zlecenia.UI.toggle_panel() le.zlecenia.show_list() end
 
 function le.zlecenia.UI.toggle_route(order)
     if le.zlecenia.UI.routingKey == order.key then
@@ -773,74 +786,34 @@ function le.zlecenia.UI.toggle_route(order)
 end
 
 function le.zlecenia.UI.rebuild()
+    if not (Geyser and Geyser.Label) then return end
     le.zlecenia.UI.ensure_pool()
-    local p = le.zlecenia.config.panel
-    local col = le.zlecenia.config.colors
+    local ui, p = le.zlecenia.UI, le.zlecenia.config.panel
     local orders = le.zlecenia.active_orders_sorted()
-
-    if #orders == 0 then
-        le.zlecenia.UI.header:hide()
-        for _, label in ipairs(le.zlecenia.UI.pool) do label:hide() end
-        for _, button in ipairs(le.zlecenia.UI.routeBtn) do button:hide() end
-        for _, button in ipairs(le.zlecenia.UI.deleteBtn) do button:hide() end
-        return
+    ui.pages = math.max(1, math.ceil(#orders / 3))
+    ui.page = math.max(1, math.min(ui.page or 1, ui.pages))
+    local visible = #orders > 0
+    local action = visible and "show" or "hide"
+    if ui.window and ui.visible ~= visible then
+        if type(ui.window[action]) == "function" then pcall(ui.window[action], ui.window) end
+        local native = visible and showWindow or hideWindow
+        if type(native) == "function" then pcall(native, p.window.name) end
     end
-
-    le.zlecenia.UI.header:move(p.x, tostring(p.top) .. "px")
-    le.zlecenia.UI.header:echo(string.format([[<table width='100%%' cellspacing='0' cellpadding='0'><tr>
-        <td align='left'><span style='font-size:10px;color:%s;letter-spacing:1px'>ZLECENIA</span></td>
-        <td align='right'><span style='font-size:10px;color:%s;font-weight:bold'>%d</span></td>
-      </tr></table>]], col.accent, col.accent, #orders))
-    le.zlecenia.UI.header:show()
-
-    if le.zlecenia.UI.panelHidden then
-        for _, label in ipairs(le.zlecenia.UI.pool) do label:hide() end
-        for _, button in ipairs(le.zlecenia.UI.routeBtn) do button:hide() end
-        for _, button in ipairs(le.zlecenia.UI.deleteBtn) do button:hide() end
-        return
-    end
-
-    local rightOffset = tonumber((p.x:gsub("px", ""))) + p.width
-    local deleteX = rightOffset - p.deleteWidth - p.btnMargin
-    local routeX = deleteX - p.routeWidth - 12
-    local y = p.top + p.headerHeight
-
-    for i, order in ipairs(orders) do
-        if i > p.maxItems then break end
-        le.zlecenia.UI.slotOrder[i] = order
-        local expanded = le.zlecenia.UI.expandedKey == order.key
-        local height = expanded and (p.itemHeight + p.expandedExtra) or p.itemHeight
-        local label = le.zlecenia.UI.pool[i]
-        label:move(p.x, tostring(y) .. "px")
-        label:resize(tostring(p.width) .. "px", tostring(height) .. "px")
-        label:echo(le.zlecenia.UI.order_html(order, expanded))
-        label:show()
-
-        local route = le.zlecenia.UI.routeBtn[i]
-        local delete = le.zlecenia.UI.deleteBtn[i]
-        if expanded then
-            local actionY = y + height - p.actionHeight - 6
-            local routing = le.zlecenia.UI.routingKey == order.key
-            route:move(tostring(routeX) .. "px", tostring(actionY) .. "px")
-            route:echo(string.format("<span style='font-size:10px;color:%s;font-weight:bold'>%s</span>",
-                col.good, routing and "ZATRZYMAJ" or "PROWADŹ"))
-            route:show()
-
-            delete:move(tostring(deleteX) .. "px", tostring(actionY) .. "px")
-            delete:echo(string.format("<span style='font-size:10px;color:%s;font-weight:bold'>USUŃ</span>", col.danger_link))
-            delete:show()
-        else
-            route:hide()
-            delete:hide()
-        end
-        y = y + height
-    end
-
-    for i = math.min(#orders, p.maxItems) + 1, p.maxItems do
-        le.zlecenia.UI.slotOrder[i] = nil
-        le.zlecenia.UI.pool[i]:hide()
-        le.zlecenia.UI.routeBtn[i]:hide()
-        le.zlecenia.UI.deleteBtn[i]:hide()
+    ui.visible = visible
+    ui.header:echo(string.format("<span style='color:%s'>ZLECENIA <b>%d</b></span>",
+        le.zlecenia.config.colors.accent, #orders))
+    ui.header[action](ui.header)
+    ui.footer:echo(string.format("<center><span style='color:%s'>%d / %d</span></center>", le.zlecenia.config.colors.muted, ui.page, ui.pages))
+    ui.footer[action](ui.footer)
+    for _, button in ipairs(ui.nav) do button[action](button) end
+    for i = 1, 3 do
+        local order = orders[(ui.page - 1) * 3 + i]
+        ui.slotOrder[i] = order
+        local label = ui.pool[i]
+        label:move(ui.mode == "window" and "0px" or p.x,
+            tostring((ui.mode == "window" and 0 or p.top) + p.headerHeight + (i - 1) * p.itemHeight) .. "px")
+        label:echo(ui.order_html(order))
+        label[action](label)
     end
 end
 
@@ -924,11 +897,33 @@ function le.zlecenia.cleanup()
     if le.zlecenia.exit_handler then pcall(killAnonymousEventHandler, le.zlecenia.exit_handler); le.zlecenia.exit_handler = nil end
     if le.zlecenia.aliases then for _, id in pairs(le.zlecenia.aliases) do pcall(killAlias, id) end end
     if le.zlecenia.triggers then for _, id in pairs(le.zlecenia.triggers) do pcall(killTrigger, id) end end
-    if le.zlecenia.UI.header then le.zlecenia.UI.header:hide() end
-    if le.zlecenia.UI.footer then le.zlecenia.UI.footer:hide() end
-    if le.zlecenia.UI.pool then for _, label in ipairs(le.zlecenia.UI.pool) do label:hide() end end
-    if le.zlecenia.UI.routeBtn then for _, b in ipairs(le.zlecenia.UI.routeBtn) do b:hide() end end
-    if le.zlecenia.UI.deleteBtn then for _, b in ipairs(le.zlecenia.UI.deleteBtn) do b:hide() end end
+    -- Zwykle hide() nie niszczy etykiet ani ich natywnych callbackow.
+    -- Po aktualizacji skryptu powodowalo to martwe/zaslaniajace klikniecia.
+    local ui = le.zlecenia.UI
+    local labels = { ui.header, ui.footer }
+    for _, group in ipairs({ ui.pool or {}, ui.routeBtn or {}, ui.deleteBtn or {}, ui.nav or {} }) do
+        for _, label in ipairs(group) do labels[#labels + 1] = label end
+    end
+    for _, label in ipairs(labels) do
+        if label then
+            if type(label.delete) == "function" then
+                pcall(label.delete, label)
+            elseif type(label.hide) == "function" then
+                pcall(label.hide, label)
+            end
+        end
+    end
+    if ui.window then
+        if type(saveWindowLayout) == "function" then pcall(saveWindowLayout) end
+        if type(ui.window.type_delete) == "function" then
+            pcall(ui.window.type_delete, ui.window)
+        elseif type(ui.window.delete) == "function" then
+            pcall(ui.window.delete, ui.window)
+        end
+    end
+    ui.header, ui.footer, ui.window = nil, nil, nil
+    ui.pool, ui.routeBtn, ui.deleteBtn, ui.slotOrder = nil, nil, nil, nil
+    ui.mode, ui.visible, ui.nav = nil, nil, nil
     if le.zlecenia.UI.routingKey then pcall(alias_func_prowadz_stop) end
     le.zlecenia.UI.routingKey = nil
     end
