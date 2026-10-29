@@ -6,6 +6,11 @@ le.patchnotes = le.patchnotes or {}
 -- To jest źródło prawdy dla mini patch notes. Każde wydanie zmieniające kod
 -- lub zachowanie pluginu musi dostać tutaj krótki, użytkowy opis zmian.
 le.patchnotes.notes = {
+    ["0.8.7"] = {
+        "Aktualizator nie usuwa już starych kopii UNICORN przed instalacją nowej wersji.",
+        "Jeśli poprzednia kopia istnieje lub jest zablokowana, wybierana jest nowa, wolna nazwa kopii.",
+        "Poprzednie wersje pozostają nietknięte także przy błędzie instalacji.",
+    },
     ["0.8.6"] = {
         "Zegar, pasek online i najbliższe wydarzenie przeniesiono do przesuwanego okna z przezroczystym tłem.",
         "Zachowano położenie okna podczas przeładowania; starszy Mudlet nadal używa dotychczasowych etykiet.",
