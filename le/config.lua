@@ -186,6 +186,21 @@ local function install_paths()
     }
 end
 
+-- Nigdy nie usuwaj starej kopii przed utworzeniem nowej. Na Windows jej
+-- katalog moze byc zablokowany przez plik, antywirusa albo inny proces.
+-- Stara kopia pozostaje nietknieta; w razie potrzeby wybieramy nowa nazwe.
+local function next_backup_path(paths)
+    if not lfs.attributes(paths.backup, "mode") then return paths.backup end
+
+    local suffix = os.date("%Y%m%d-%H%M%S")
+    for index = 1, 1000 do
+        local candidate = string.format("%s-%s-%03d", paths.backup, suffix, index)
+        if not lfs.attributes(candidate, "mode") then return candidate end
+    end
+    return nil, "brak wolnej nazwy kopii (1000 prob)"
+end
+
+
 function le.config.cleanupArtifacts(options)
     options = options or {}
     local paths = install_paths()
@@ -393,12 +408,13 @@ function le.config.installUpdate()
                         log("Brak katalogu aktualnej instalacji. Zachowano kopie zapasowa.", "light_pink")
                         return
                     end
-                    local cleared, result = pcall(remove_path, paths.backup)
-                    if not cleared or not result then
+                    local backup_path, backup_path_error = next_backup_path(paths)
+                    if not backup_path then
                         cleanup_install_resources()
-                        log("Nie mozna przygotowac kopii poprzedniej wersji.", "light_pink")
+                        log("Nie mozna wybrac miejsca na kopie: " .. tostring(backup_path_error), "light_pink")
                         return
                     end
+                    paths.backup = backup_path
                     local backed_up, backup_error = os.rename(paths.plugin, paths.backup)
                     if not backed_up then
                         cleanup_install_resources()
