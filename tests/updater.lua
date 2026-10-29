@@ -14,6 +14,14 @@ local function scenario(mode)
     fs[staging.."/version.lua"] = 'le.version = "1.0.1"'
     fs[staging.."/le/config.lua"] = 'le.config.cleanup()'
     fs[staging.."/le/sample.lua"] = 'le.sample = "new"'
+    if mode == "old-backup-locked" or mode == "backup-collision" then
+        fs[backup] = true
+        fs[backup.."/version.lua"] = 'le.version = "0.9.0"'
+        fs[backup.."/locked.tmp"] = "nie usuwac"
+        if mode == "backup-collision" then
+            fs[backup.."-"..os.date("%Y%m%d-%H%M%S").."-001"] = true
+        end
+    end
     local staged = {}
     for path, content in pairs(fs) do
         if path:sub(1,#staging) == staging then staged[path] = content; fs[path] = nil end
@@ -51,7 +59,14 @@ local function scenario(mode)
         local chunk, err = loadfile(plugin.."/"..relative..".lua")
         assert(chunk, err); return chunk()
     end
-    os.remove = function(path) fs[path]=nil; return true end
+    os.remove = function(path)
+        if (mode == "old-backup-locked" or mode == "backup-collision")
+            and path == backup.."/locked.tmp" then
+            return nil, "Windows: plik zajety"
+        end
+        fs[path]=nil
+        return true
+    end
     os.rename = function(source, target)
         if (mode == "backup" and target == backup)
             or (mode == "install" and source == staging)
@@ -94,9 +109,22 @@ local function scenario(mode)
     emit("sysUnzipDone")
     local reload = le.config.update.reload_timer
     if reload then timers[reload]() end
-    if mode == "success" then
+    if mode == "success" or mode == "old-backup-locked" or mode == "backup-collision" then
         assert(le.version == "1.0.1" and le.sample == "new")
-        assert(fs[backup.."/version.lua"] == 'le.version = "1.0.0"')
+        if mode == "success" then
+            assert(fs[backup.."/version.lua"] == 'le.version = "1.0.0"')
+        else
+            -- Istniejacej kopii nie wolno usuwac, nawet gdy jest zablokowana.
+            assert(fs[backup.."/version.lua"] == 'le.version = "0.9.0"')
+            assert(fs[backup.."/locked.tmp"] == "nie usuwac")
+            local prefix = backup.."-"..os.date("%Y%m%d-%H%M%S")
+            local selected = mode == "backup-collision" and prefix.."-002" or prefix.."-001"
+            assert(fs[selected.."/version.lua"] == 'le.version = "1.0.0"', "brak nowej kopii")
+            assert(fs[selected.."/obsolete.lua"] == "old extra file")
+            if mode == "backup-collision" then
+                assert(fs[prefix.."-001"] == true, "kolizja nazwy nadpisala poprzedni katalog")
+            end
+        end
         assert(fs[plugin.."/obsolete.lua"] == nil)
     elseif mode == "rollback" then
         assert(fs[backup.."/version.lua"] == 'le.version = "1.0.0"')
@@ -113,7 +141,7 @@ local function scenario(mode)
     end
     assert(not le.config.update.installing)
 end
-for _, mode in ipairs({"syntax", "missing", "version", "manifest", "backup", "install", "runtime", "rollback", "success"}) do
+for _, mode in ipairs({"syntax", "missing", "version", "manifest", "backup", "install", "runtime", "rollback", "success", "old-backup-locked", "backup-collision"}) do
     scenario(mode)
 end
-print("OK: staging validation, directory replacement, reload failure, rollback and retained recovery copy")
+print("OK: staging validation, directory replacement, rollback and locked/occupied backup preservation")
