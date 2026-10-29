@@ -12,7 +12,7 @@ Niezależna konfiguracja i zestaw pluginów dla Mudleta.
 Po udostępnieniu repozytorium wykonaj w Mudlecie:
 
 ```text
-/zainstaluj_plugin https://raw.githubusercontent.com/gnomidlo/Arka/main/dist/UNICORN.zip?version=0.8.5
+/zainstaluj_plugin https://raw.githubusercontent.com/gnomidlo/Arka/main/dist/UNICORN.zip?version=0.8.6
 ```
 
 Po instalacji sprawdź listę pluginów:
@@ -30,7 +30,7 @@ Po pierwszej instalacji pliki sa juz na dysku, ale plugin moze nie byc jeszcze w
 Zmiana nazwy pluginu wymaga jednorazowego usuniecia starego katalogu. Zamknij Mudlet, usun katalog `plugins/Arka`, uruchom Mudlet i zainstaluj nowa paczke:
 
 ```text
-/zainstaluj_plugin https://raw.githubusercontent.com/gnomidlo/Arka/main/dist/UNICORN.zip?version=0.8.5
+/zainstaluj_plugin https://raw.githubusercontent.com/gnomidlo/Arka/main/dist/UNICORN.zip?version=0.8.6
 ```
 
 Od wersji `0.2.0` plugin jest instalowany i wyswietlany na liscie jako `UNICORN`. Paczka ma pliki bezposrednio w katalogu glownym ZIP-a, zgodnie z formatem instalatora Arkadii.
@@ -82,6 +82,10 @@ Komendy wyswietlane w pomocy modulow sa klikalne. Szablony wymagajace parametrow
 ### Synchronizacja czasu
 
 Moduł nie wysyła żadnych komend. Gdy użytkownik wpisze w grze `czas`, moduł odczytuje odpowiedź i synchronizuje lub aktualizuje zegar właściwej domeny. Obsługiwane są zarówno dokładne godziny i numery dni, jak i starszy format opisowy — dla pór Starszego Ludu, miesięcy Kalendarza Imperialnego oraz jednodniowych świąt/okresów takich jak Mitterherbst, Geheimnistag czy Sonnenstill. Świeża odpowiedź `czas`, zmiana domeny i dane GMCP odświeżają panel natychmiast; moduł potrafi też odtworzyć zatrzymany timer animujący zegar po przeładowaniu lub wznowieniu skryptów.
+
+### Pływający panel zegara
+
+Zegar, pasek tygodniowego online oraz panel najbliższego wydarzenia (poniżej zegara) są umieszczone w jednym przesuwanym `Geyser.UserWindow` z przezroczystym tłem powierzchni okna. Można przeciągać je za systemowy pasek tytułu; jego położenie jest zachowywane podczas przeładowania i przywracane przez Mudlet. Na Windows pasek tytułu i ramka są rysowane przez system operacyjny i nie muszą być przezroczyste. Jeśli klient nie obsługuje `Geyser.UserWindow`, moduł używa dotychczasowych etykiet nad konsolą.
 
 ### Tygodniowy czas online
 
@@ -151,7 +155,7 @@ Sprawdzanie wersji uruchamia sie automatycznie 6 sekund po zaladowaniu pluginu i
 
 ## Budowanie paczki UNICORN
 
-Aktualna wersja: **0.8.5**
+Aktualna wersja: **0.8.6**
 
 Zbuduj paczkę `dist/UNICORN.zip` zawierającą aktualne pliki źródłowe:
 - `init.lua`
@@ -161,6 +165,11 @@ Zbuduj paczkę `dist/UNICORN.zip` zawierającą aktualne pliki źródłowe:
 ## Mini patch notes
 
 Każde wydanie UNICORN zmieniające kod lub zachowanie pluginu ma krótki wpis w `le/patchnotes.lua`. To stały element procesu wydawniczego, nie opcjonalny changelog. Patch notes skupiają się na tym, co użytkownik faktycznie zauważy: nowe funkcje, poprawki zachowania i istotne zmiany interfejsu.
+
+Dla 0.8.6:
+- zegar, tygodniowy pasek online oraz kalendarz najbliższego wydarzenia we wspólnym, przesuwanym oknie `Geyser.UserWindow`,
+- przezroczyste tło obszaru okna, zachowanie jego położenia i awaryjne starsze etykiety, gdy `UserWindow` nie jest dostępny,
+- komunikaty zleceń oraz innych modułów nie sklejają się z tekstem NPC.
 
 Dla 0.8.5:
 - oznaczenia wymagają koloru i słowa opisującego wypowiedź,
@@ -212,6 +221,8 @@ Panel boczny nie używa ikon ani pełnych ramek. Moduły rozpoznaje się po kolo
 - stonowany koral — krzyk.
 
 Zegar pokazuje dużą, pogrubioną godzinę, domenę, porę roku i okres kalendarza oraz odliczanie do najbliższego świtu albo zmierzchu. Panel najbliższego wydarzenia pokazuje też jego domenę.
+
+Wspólna funkcja komunikatów najpierw przesuwa kursor na koniec bufora, dlatego belki `▎` zleceń, czasu i innych modułów nie pojawiają się w tej samej linii co przetwarzana właśnie wypowiedź NPC.
 
 Zwarty panel zleceń pokazuje wyłącznie przedmiot, ilość i pozostały czas. Kliknięcie dostawy rozwija odbiorcę, miejsce oraz tekstowe akcje `PROWADŹ` i `USUŃ`.
 

@@ -6,6 +6,12 @@ le.czas.UI = le.czas.UI or {}
 le.czas.Online = le.czas.Online or {}
 
 le.czas.config = {
+    -- Osobne okno zamiast nakladki na glowna konsole Mudleta.
+    hud = {
+        name = "LeCzasHudWindow", titleText = "UNICORN · zegar",
+        x = "65%", y = "10%", width = "280px", height = "246px",
+        dockPosition = "floating", autoDock = false, restoreLayout = true,
+    },
     clock = { name = "LeCzasClockLabel", x = "-280px", y = "-790px", width = "260px", height = "158px" },
     event = { name = "LeCzasEventLabel", x = "-280px", y = "-628px", width = "260px", height = "64px" },
     online = {
@@ -1373,8 +1379,72 @@ function le.czas.cleanup()
     if le.czas.aliases then
         for _, id in pairs(le.czas.aliases) do pcall(killAlias, id) end
     end
-    if le.czas.UI.clock then le.czas.UI.clock:hide(); le.czas.UI.clock = nil end
-    if le.czas.UI.event then le.czas.UI.event:hide(); le.czas.UI.event = nil end
+    -- Usun dzieci przed natywnym oknem; zachowaj polozenie przy reloadzie.
+    for _, key in ipairs({ "clock", "event" }) do
+        local label = le.czas.UI[key]
+        if label then
+            if type(label.delete) == "function" then
+                pcall(label.delete, label)
+            elseif type(label.hide) == "function" then
+                pcall(label.hide, label)
+            end
+            le.czas.UI[key] = nil
+        end
+    end
+    local window = le.czas.UI.window
+    if window then
+        if type(saveWindowLayout) == "function" then pcall(saveWindowLayout) end
+        if type(window.type_delete) == "function" then
+            pcall(window.type_delete, window)
+        elseif type(window.delete) == "function" then
+            pcall(window.delete, window)
+        end
+        le.czas.UI.window = nil
+    end
+end
+
+-- UserWindow ma wlasna powierzchnie rysowania. Nie zaslaniamy glownego
+-- bufora MUD-a etykietami. Alfa dotyczy tla, a nie systemowej ramki okna.
+function le.czas.UI.create()
+    local supported = Geyser and Geyser.UserWindow
+        and type(Geyser.UserWindow.new) == "function"
+    if supported then
+        local ok, err = pcall(function()
+            le.czas.UI.window = Geyser.UserWindow:new(le.czas.config.hud)
+            assert(le.czas.UI.window, "brak uchwytu UserWindow")
+            if type(setBackgroundColor) == "function" then
+                pcall(setBackgroundColor, le.czas.config.hud.name, 0, 0, 0, 0)
+            end
+            le.czas.UI.clock = Geyser.Label:new({
+                name = le.czas.config.clock.name,
+                x = "0px", y = "0px", width = "100%", height = "158px",
+            }, le.czas.UI.window)
+            le.czas.UI.event = Geyser.Label:new({
+                name = le.czas.config.event.name,
+                x = "0px", y = "162px", width = "100%", height = "74px",
+            }, le.czas.UI.window)
+        end)
+        if not ok then
+            le.czas.log("rejected", "Nie udalo sie otworzyc HUD-a: " .. tostring(err))
+            for _, key in ipairs({ "clock", "event" }) do
+                local label = le.czas.UI[key]
+                if label and type(label.delete) == "function" then pcall(label.delete, label) end
+                le.czas.UI[key] = nil
+            end
+            if le.czas.UI.window and type(le.czas.UI.window.type_delete) == "function" then
+                pcall(le.czas.UI.window.type_delete, le.czas.UI.window)
+            end
+            le.czas.UI.window = nil
+            supported = false
+        end
+    end
+    if not supported then
+        -- Fallback dla starszych klientow bez Geyser.UserWindow.
+        le.czas.UI.clock = Geyser.Label:new(le.czas.config.clock)
+        le.czas.UI.event = Geyser.Label:new(le.czas.config.event)
+    end
+    le.czas.UI.clock:setStyleSheet(le.czas.config.clock_style)
+    le.czas.UI.event:setStyleSheet(le.czas.config.event_style)
 end
 
 function le.czas.init()
@@ -1385,10 +1455,7 @@ function le.czas.init()
     le.czas.seed_ishtar_sun()
     le.czas.save()
 
-    le.czas.UI.clock = Geyser.Label:new(le.czas.config.clock)
-    le.czas.UI.clock:setStyleSheet(le.czas.config.clock_style)
-    le.czas.UI.event = Geyser.Label:new(le.czas.config.event)
-    le.czas.UI.event:setStyleSheet(le.czas.config.event_style)
+    le.czas.UI.create()
 
     le.czas.setup_aliases()
     le.czas.time_trigger = tempRegexTrigger(
