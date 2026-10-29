@@ -6,6 +6,11 @@ le.patchnotes = le.patchnotes or {}
 -- To jest źródło prawdy dla mini patch notes. Każde wydanie zmieniające kod
 -- lub zachowanie pluginu musi dostać tutaj krótki, użytkowy opis zmian.
 le.patchnotes.notes = {
+    ["0.8.5"] = {
+        "Belki mowy wymagają teraz zgodnego koloru i słowa opisującego wypowiedź przed dwukropkiem.",
+        "Opisy walki i umiejętności nie otrzymują belek tylko dlatego, że mają ten sam kolor.",
+        "Mowa, szept i krzyk mają właściwy rodzaj belki także przy wspólnym kolorze gry.",
+    },
     ["0.8.4"] = {
         "Oznaczanie mowy odczytuje Twoje kolory po ręcznym wpisaniu kolory w grze.",
         "Moduł nie zmienia kolorów w grze; zachowuje dwie dotychczasowe belki.",

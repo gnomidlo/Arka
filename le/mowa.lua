@@ -1,4 +1,4 @@
--- le.mowa: minimalistyczne oznaczanie mowy, szeptu i krzyku wyłącznie po kolorach ANSI.
+-- le.mowa: minimalistyczne oznaczanie mowy, szeptu i krzyku po kolorach ANSI i opisie wypowiedzi.
 
 le = le or {}
 le.mowa = le.mowa or {}
@@ -127,11 +127,30 @@ function le.mowa.read_colors(text)
     le.mowa.refresh_colors()
 end
 
+-- Szukamy pełnych słów wyłącznie w opisie przed pierwszym dwukropkiem.
+-- Treść wypowiedzi nie może zmienić klasyfikacji (np. "mowi: on krzyczy").
+local speech_words = {
+    mowisz = "mowa", mowi = "mowa", syczy = "mowa", huczy = "mowa",
+    burczy = "mowa", skrzypi = "mowa", skrzeczy = "mowa", spiewa = "mowa",
+    nuci = "mowa", grzmi = "mowa",
+    szepczesz = "szept", szepcze = "szept",
+    krzyczysz = "krzyk", krzyczy = "krzyk",
+}
+
+local function speech_kind(text)
+    local description = text:match("^([^:]+):")
+    if not description then return nil end
+    for word in description:lower():gmatch("%S+") do
+        if speech_words[word] then return speech_words[word] end
+    end
+end
+
 function le.mowa.on_color(kind)
     -- Niezależnie od kolejności triggerów próbki ustawień nie są wypowiedziami.
     local text = plain_line(line)
     if le.mowa.color_read or text:match("^%*.-%*")
         or text == "Twoje ustawienia kolorow sa nastepujace:" then return end
+    if speech_kind(text) ~= kind then return end
     local definition = type_definition(kind)
     if not definition then return end
 
@@ -201,6 +220,7 @@ end
 function le.mowa.show_help()
     output("Pomoc · mowa")
     note("Wypowiedzi zachowują treść i kolor gry oraz otrzymują dwie belki ▎▎.")
+    note("Belki wymagają zgodnego koloru i słowa mowy, szeptu lub krzyku w opisie przed dwukropkiem.")
     note("Wpisz ręcznie w grze kolory, aby odczytać ustawienia mowy, szeptu i krzyku.")
     note("Moduł nie wysyła komend ani nie zmienia kolorów w grze.")
     note("Przed pierwszym odczytem: 153/160/117. Brak lub błędny kolor po odczycie wyłącza oznaczanie.")
