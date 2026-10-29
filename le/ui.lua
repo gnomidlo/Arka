@@ -50,9 +50,13 @@ function le.ui.prefix(module_name, ensure_line_break)
     -- konca linii) — wstaw znak nowej linii tylko wtedy, gdy kursor nie jest
     -- juz na jej poczatku, zeby belka nigdy nie doklejala sie do tekstu gry.
     if ensure_line_break ~= false then
-        local ok, column = pcall(getColumnNumber)
-        if ok and column and column > 0 then
-            echo("\n")
+        -- Trigger Mudleta ustawia kursor na poczatku przetwarzanej linii.
+        -- Sama kolumna zwracala wtedy zero, mimo ze tekst NPC byl juz widoczny.
+        -- Dopiero koniec bufora pokazuje, czy trzeba dodac nowa linie.
+        if type(moveCursorEnd) == "function" then pcall(moveCursorEnd) end
+        if type(getColumnNumber) == "function" then
+            local ok, column = pcall(getColumnNumber)
+            if ok and column and column > 0 then echo("\n") end
         end
     end
     decho(le.ui.dc(module.accent, "▎"))
