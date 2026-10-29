@@ -27,7 +27,8 @@ function insertText(text)
     inserted = inserted:sub(1, cursor) .. text .. inserted:sub(cursor + 1)
     cursor = cursor + #text
 end
-function setFgColor() end
+local accents = {}
+function setFgColor(r, g, b) accents[#accents + 1] = string.format("%02X%02X%02X", r, g, b) end
 function resetFormat() end
 local function count(kind)
     local n = 0
@@ -111,7 +112,7 @@ for i = 1, 5 do
     assert(count("ansi") == 3)
 end
 inserted = ""
-feed("Glosna wypowiedz.", 41, true)
+feed("Elf krzyczy: Glosna wypowiedz.", 41, true)
 assert(inserted == "▎▎ ") -- wspólny kolor: jedna para
 header()
 for i = 1, 121 do feed("") end
@@ -128,6 +129,63 @@ feed("\t* mowa * (18)")
 feed("Elf mowi: Witaj.")
 finish()
 check(7, false, false)
+-- Ustawienia z raportu testera: kolory komunikacji pokrywają się z innymi.
+header()
+feed("\t* mowa * (12)")
+feed("\t* szept * (153)")
+feed("\t* krzyk * (123)")
+finish()
+local words = {
+    mowa = {"mowisz", "mowi", "syczy", "huczy", "burczy", "skrzypi", "skrzeczy", "spiewa", "nuci", "grzmi"},
+    szept = {"szepczesz", "szepcze"}, krzyk = {"krzyczysz", "krzyczy"},
+}
+local colors = { mowa = 11, szept = 152, krzyk = 122 }
+local expected_accents = { mowa = "7FAFC0", szept = "A39CBC", krzyk = "C88478" }
+for kind, verbs in pairs(words) do
+    for _, verb in ipairs(verbs) do
+        for _, first in ipairs({true, false}) do
+            local text = "Wysoki siwy elf " .. verb .. " do ciebie: Witaj!"
+            if verb == "mowisz" or verb == "szepczesz" or verb == "krzyczysz" then
+                text = verb:sub(1, 1):upper() .. verb:sub(2) .. ": Witaj!"
+            end
+            inserted, accents = "", {}
+            feed(text, colors[kind], first)
+            assert(inserted == "▎▎ ", text)
+            assert(accents[2] == expected_accents[kind])
+            inserted = ""
+            feed(text, 200, first)
+            assert(inserted == "", "Wrong color must not match")
+        end
+    end
+end
+local negatives = {
+    "skradanie sie: znakomicie [9/10]", "walka dwiema bronmi: dobrze [6/10]",
+    "wspinaczka: dobrze [6/10] (+lina)",
+    "[2/6] Lekko ranisz wielkiego gorskiego trolla.",
+    "Wielki gorski troll jest ciezko ranny.", "Pelnym gracji zwodem odskakujesz.",
+    "W oddali grzmi.", "Drzwi skrzypiace na wietrze: zamkniete.",
+    "Opis: elf mowi do ciebie.", "Elf przemowi: Witaj.",
+    "Elf mowiacy: Witaj.", "mowi!", "Elf szepcze: on mowi i krzyczy.",
+}
+for _, text in ipairs(negatives) do
+    inserted = ""
+    feed(text, 11, true)
+    assert(inserted == "", text)
+end
+inserted = ""
+feed("Elf mowi: on szepcze i krzyczy.", 152, false)
+assert(inserted == "", "Body must not select whisper")
+-- Wspólny kolor: rodzaj belki zależy od słowa, nie kolejności triggerów.
+le.mowa.colors = {mowa = 153, szept = 153, krzyk = 153}
+le.mowa.refresh_colors()
+assert(dofile("le/mowa.lua"))
+for kind, verbs in pairs(words) do
+    for _, first in ipairs({true, false}) do
+        inserted, accents = "", {}
+        feed("Elf " .. verbs[#verbs] .. ": Test.", 152, first)
+        assert(inserted == "▎▎ " and accents[2] == expected_accents[kind])
+    end
+end
 le.mowa.show_help()
 le.mowa.preview()
 assert(le.mowa.configure_game_colors == nil)

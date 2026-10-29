@@ -12,7 +12,7 @@ Niezależna konfiguracja i zestaw pluginów dla Mudleta.
 Po udostępnieniu repozytorium wykonaj w Mudlecie:
 
 ```text
-/zainstaluj_plugin https://raw.githubusercontent.com/gnomidlo/Arka/main/dist/UNICORN.zip?version=0.8.4
+/zainstaluj_plugin https://raw.githubusercontent.com/gnomidlo/Arka/main/dist/UNICORN.zip?version=0.8.5
 ```
 
 Po instalacji sprawdź listę pluginów:
@@ -30,7 +30,7 @@ Po pierwszej instalacji pliki sa juz na dysku, ale plugin moze nie byc jeszcze w
 Zmiana nazwy pluginu wymaga jednorazowego usuniecia starego katalogu. Zamknij Mudlet, usun katalog `plugins/Arka`, uruchom Mudlet i zainstaluj nowa paczke:
 
 ```text
-/zainstaluj_plugin https://raw.githubusercontent.com/gnomidlo/Arka/main/dist/UNICORN.zip?version=0.8.4
+/zainstaluj_plugin https://raw.githubusercontent.com/gnomidlo/Arka/main/dist/UNICORN.zip?version=0.8.5
 ```
 
 Od wersji `0.2.0` plugin jest instalowany i wyswietlany na liscie jako `UNICORN`. Paczka ma pliki bezposrednio w katalogu glownym ZIP-a, zgodnie z formatem instalatora Arkadii.
@@ -122,11 +122,18 @@ Informacje o posiadanych ziolach pochodza z globalnej bazy `herbs.counts`, budow
 
 ## Mowa
 
-Moduł dodaje oryginalne dwie belki `▎▎` przed wypowiedzią, zachowując jej tekst i kolor. Rozpoznaje mowę, szept i krzyk po kolorach ANSI 256.
+Moduł dodaje oryginalne dwie belki `▎▎` przed wypowiedzią, zachowując jej tekst i kolor. Rozpoznaje mowę, szept i krzyk po zgodności koloru ANSI 256 oraz pełnego słowa w opisie przed pierwszym dwukropkiem (np. `Elf szepcze do ciebie: Witaj.`). Wielkość liter nie ma znaczenia; słowa w treści po dwukropku są ignorowane.
+
+Obsługiwane słowa:
+- mowa: `mowisz`, `mowi`, `syczy`, `huczy`, `burczy`, `skrzypi`, `skrzeczy`, `spiewa`, `nuci`, `grzmi`;
+- szept: `szepczesz`, `szepcze`;
+- krzyk: `krzyczysz`, `krzyczy`.
+
+Sam kolor umiejętności lub opisu walki nie wystarcza do dodania belek. Linie bez rozpoznanego słowa przed dwukropkiem (również osobne linie kontynuacji wypowiedzi) nie są oznaczane.
 
 Wpisz ręcznie `kolory` w grze. UNICORN pasywnie odczyta sekcję `Komunikacja` po nagłówku `Twoje ustawienia kolorow sa nastepujace:` i zastosuje ustawienia po dojściu do `* emocje do mnie *` lub kolejnej sekcji. Nie wysyła żadnych komend i nie zmienia ustawień gry; dawne `/le.mowa ustaw` zostało usunięte.
 
-Przed pierwszym odczytem obowiązuje fallback: mowa 153, szept 160, krzyk 117. Numer gry z zakresu 1–256 jest mapowany na `tempAnsiColorTrigger(game_color - 1, -1, ...)`. Brakujący, pusty lub nieprawidłowy kolor wyłącza oznaczanie danego rodzaju wypowiedzi do kolejnego odczytu. Przerwany wydruk bez końca sekcji nie zastępuje ostatniego mapowania. Kolejne odczyty zastępują triggery bez duplikatów; przeładowanie zachowuje mapowanie w bieżącej sesji, a restart przywraca fallback. Przy wspólnym kolorze kilku rodzajów dodawana jest tylko jedna para belek; sam kolor nie pozwala rozróżnić rodzaju wypowiedzi.
+Przed pierwszym odczytem obowiązuje fallback: mowa 153, szept 160, krzyk 117. Numer gry z zakresu 1–256 jest mapowany na `tempAnsiColorTrigger(game_color - 1, -1, ...)`. Brakujący, pusty lub nieprawidłowy kolor wyłącza oznaczanie danego rodzaju wypowiedzi do kolejnego odczytu. Przerwany wydruk bez końca sekcji nie zastępuje ostatniego mapowania. Kolejne odczyty zastępują triggery bez duplikatów; przeładowanie zachowuje mapowanie w bieżącej sesji, a restart przywraca fallback. Przy wspólnym kolorze kilku rodzajów dodawana jest tylko jedna para belek; rodzaj belki wybiera słowo w opisie wypowiedzi.
 
 `/le.mowa` pokazuje pomoc, a `/le.mowa podglad` bieżące mapowanie. Próbki kolorów w wydruku ustawień nie otrzymują dodatkowych belek.
 
@@ -144,7 +151,7 @@ Sprawdzanie wersji uruchamia sie automatycznie 6 sekund po zaladowaniu pluginu i
 
 ## Budowanie paczki UNICORN
 
-Aktualna wersja: **0.8.4**
+Aktualna wersja: **0.8.5**
 
 Zbuduj paczkę `dist/UNICORN.zip` zawierającą aktualne pliki źródłowe:
 - `init.lua`
@@ -154,6 +161,11 @@ Zbuduj paczkę `dist/UNICORN.zip` zawierającą aktualne pliki źródłowe:
 ## Mini patch notes
 
 Każde wydanie UNICORN zmieniające kod lub zachowanie pluginu ma krótki wpis w `le/patchnotes.lua`. To stały element procesu wydawniczego, nie opcjonalny changelog. Patch notes skupiają się na tym, co użytkownik faktycznie zauważy: nowe funkcje, poprawki zachowania i istotne zmiany interfejsu.
+
+Dla 0.8.5:
+- oznaczenia wymagają koloru i słowa opisującego wypowiedź,
+- brak fałszywych belek na umiejętnościach i walce o tym samym kolorze,
+- właściwy rodzaj belki przy wspólnym kolorze mowy, szeptu i krzyku.
 
 Dla 0.8.4:
 - pasywny odczyt kolorów mowy, szeptu i krzyku po ręcznej komendzie `kolory`,
