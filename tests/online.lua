@@ -306,3 +306,53 @@ local special_sec = le.czas.get_game_sec("imperium", now)
 local expected_special_sec = (267 - 1) * 2880 + 20 * 120 + 43 * 2
 assert(special_sec == expected_special_sec, "Mitterherbst nie poprawil kotwicy zegara")
 print("OK: specjalne dni Kalendarza Imperialnego i synchronizacja Mitterherbst")
+
+-- Osobne pływające okno: zegar i najbliższe wydarzenie to jego dzieci.
+-- Testujemy rowniez sprzatanie po hot reloadzie (bez prawdziwego GUI Qt).
+local original_label_new = Geyser.Label.new
+function Geyser.Label:new(config, parent)
+    local label = original_label_new(self, config)
+    label.parent = parent
+    label.delete = function(self) self.deleted = true end
+    return label
+end
+local windows, saved_layouts, transparent_calls = {}, 0, 0
+Geyser.UserWindow = {}
+function Geyser.UserWindow:new(config)
+    local window = {
+        config = config,
+        type_delete = function(self) self.deleted = true end,
+    }
+    windows[#windows + 1] = window
+    return window
+end
+setBackgroundColor = function(name, r, g, b, alpha)
+    assert(name == "LeCzasHudWindow" and alpha == 0)
+    transparent_calls = transparent_calls + 1
+end
+saveWindowLayout = function() saved_layouts = saved_layouts + 1 end
+
+dofile("le/czas.lua")
+local first_window = le.czas.UI.window
+local first_clock = le.czas.UI.clock
+local first_event = le.czas.UI.event
+assert(first_window and not first_window.deleted, "nie utworzono pływającego okna")
+assert(first_window.config.restoreLayout == true and first_window.config.autoDock == false)
+assert(first_clock.parent == first_window and first_event.parent == first_window,
+    "zegar i kalendarz musza pozostac we wspolnym oknie")
+le.czas.data.domain = "ishtar"
+le.czas.data.anchors.ishtar = { game_sec = 3600, real_ts = now }
+le.czas.UI.update()
+assert(first_clock.html:find("font-size:40px", 1, true),
+    "brak duzej godziny w nowym HUD-zie")
+assert(first_event.html:find("NAJBLIŻSZE WYDARZENIE", 1, true),
+    "zniknal kalendarz pod zegarem")
+
+dofile("le/czas.lua")
+assert(first_window.deleted and first_clock.deleted and first_event.deleted,
+    "gorace przeladowanie pozostawilo stare widzety")
+assert(saved_layouts > 0 and transparent_calls >= 2,
+    "nie zapisano ukladu lub nie ustawiono przezroczystosci")
+assert(#windows == 2 and le.czas.UI.window ~= first_window,
+    "ponowna inicjalizacja utworzyla bledna liczbe okien")
+print("OK: pływające UserWindow, zachowany zegar i kalendarz, transparentność i cleanup")
