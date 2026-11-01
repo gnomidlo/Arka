@@ -261,7 +261,7 @@ end
 function le.config.showHelp()
     log("UNICORN " .. tostring(le.version or "") .. " · pomoc")
     if le.ui and le.ui.note then
-        le.ui.note("config", "Kliknij komendę, aby ją uruchomić.")
+        le.ui.note("config", "Pomoc: /le.config, /le.pomoc, /le.help lub /le?. Kliknij komendę, aby ją uruchomić.")
         le.ui.output("config", "MODUŁY")
     end
 
@@ -509,7 +509,7 @@ end
 function le.config.setupAliases()
     le.config.cleanup()
 
-    le.config.aliases.help = tempAlias([[^/le\.config$]], le.config.showHelp)
+    le.config.aliases.help = tempAlias([[^/le(?:\.(?:config|pomoc|help)|\?)$]], le.config.showHelp)
     le.config.aliases.version = tempAlias([[^/le\.config wersja$]], le.config.showVersion)
     le.config.aliases.check = tempAlias([[^/le\.config aktualizacja$]], le.config.checkUpdate)
     le.config.aliases.install = tempAlias([[^/le\.config aktualizuj$]], le.config.installUpdate)

@@ -12,7 +12,7 @@ Niezależna konfiguracja i zestaw pluginów dla Mudleta.
 Po udostępnieniu repozytorium wykonaj w Mudlecie:
 
 ```text
-/zainstaluj_plugin https://raw.githubusercontent.com/gnomidlo/Arka/main/dist/UNICORN.zip?version=0.9.1
+/zainstaluj_plugin https://raw.githubusercontent.com/gnomidlo/Arka/main/dist/UNICORN.zip?version=0.9.2
 ```
 
 Po instalacji sprawdź listę pluginów:
@@ -30,7 +30,7 @@ Po pierwszej instalacji pliki sa juz na dysku, ale plugin moze nie byc jeszcze w
 Zmiana nazwy pluginu wymaga jednorazowego usuniecia starego katalogu. Zamknij Mudlet, usun katalog `plugins/Arka`, uruchom Mudlet i zainstaluj nowa paczke:
 
 ```text
-/zainstaluj_plugin https://raw.githubusercontent.com/gnomidlo/Arka/main/dist/UNICORN.zip?version=0.9.1
+/zainstaluj_plugin https://raw.githubusercontent.com/gnomidlo/Arka/main/dist/UNICORN.zip?version=0.9.2
 ```
 
 Od wersji `0.2.0` plugin jest instalowany i wyswietlany na liscie jako `UNICORN`. Paczka ma pliki bezposrednio w katalogu glownym ZIP-a, zgodnie z formatem instalatora Arkadii.
@@ -59,7 +59,7 @@ Od wersji `0.2.0` plugin jest instalowany i wyswietlany na liscie jako `UNICORN`
 /le.kamienie lista
 ```
 
-- `/le.config` — pomoc konfiguracji `le.conf`,
+- `/le.config`, `/le.pomoc`, `/le.help`, `/le?` — ta sama domyślna pomoc UNICORN,
 - `/le.config wersja` — pokazuje wersję lokalną i krótkie patch notes dla tej wersji,
 - `/le.config aktualizacja` — sprawdza nowsza wersje na GitHubie,
 - `/le.config aktualizuj` — pobiera aktualizację, sprawdza pliki, instaluje ją i przeładowuje moduły UNICORN bez restartu Mudleta,
@@ -157,7 +157,7 @@ Sprawdzanie wersji uruchamia sie automatycznie 6 sekund po zaladowaniu pluginu i
 
 ## Budowanie paczki UNICORN
 
-Aktualna wersja: **0.9.1**
+Aktualna wersja: **0.9.2**
 
 Zbuduj paczkę `dist/UNICORN.zip` zawierającą aktualne pliki źródłowe:
 - `init.lua`
@@ -167,6 +167,9 @@ Zbuduj paczkę `dist/UNICORN.zip` zawierającą aktualne pliki źródłowe:
 ## Mini patch notes
 
 Każde wydanie UNICORN zmieniające kod lub zachowanie pluginu ma krótki wpis w `le/patchnotes.lua`. To stały element procesu wydawniczego, nie opcjonalny changelog. Patch notes skupiają się na tym, co użytkownik faktycznie zauważy: nowe funkcje, poprawki zachowania i istotne zmiany interfejsu.
+
+Dla 0.9.2:
+- dodano aliasy `/le.pomoc`, `/le.help` i `/le?` do domyślnej pomocy UNICORN.
 
 Dla 0.9.1:
 - dodanie dostawy ponownie otwiera natywne okno; błędy pokazania są ponawiane, a `/le.zlecenia okno` przywraca położenie na ekranie,
