@@ -356,3 +356,51 @@ assert(saved_layouts > 0 and transparent_calls >= 2,
 assert(#windows == 2 and le.czas.UI.window ~= first_window,
     "ponowna inicjalizacja utworzyla bledna liczbe okien")
 print("OK: pływające UserWindow, zachowany zegar i kalendarz, transparentność i cleanup")
+
+-- Tester regression: Kaltezeit, 05:59 local estimate at daylight transition.
+le.czas.save = function() return true end
+local c = le.czas
+local before = "Jest w przyblizeniu piata nad ranem, przed wschodem slonca w Koenigstag, jedenasty dzien miesiaca  Kaltezeit (wczesna zima) wedlug Kalendarza Imperialnego."
+local after = "Jest w przyblizeniu szosta nad ranem, po wschodzie slonca w Koenigstag, jedenasty dzien miesiaca  Kaltezeit (wczesna zima) wedlug Kalendarza Imperialnego."
+local domain, day, hour, minute = c.parse_time_text(before)
+assert(domain == "imperium" and day == 311 and hour == 5 and minute == nil)
+c.data.anchors.imperium = {game_sec=(311-1)*2880+5*120+118, real_ts=now}
+c.data.hour_marks.imperium = now-118
+c.data.sun.imperium.Kaltezeit = nil
+c.last_daylight = {imperium=false}
+c.last_event_at = {}
+c.pending_sun = {}
+gmcp = {room={info={map={domain="Imperium"}}, time={daylight=true}}}
+c.on_room_time()
+assert(c.get_game_sec("imperium") == (311-1)*2880+6*120, "05:59 must round to 06:00, not 05:00")
+assert(c.pending_sun.imperium and not c.data.sun.imperium.Kaltezeit,
+    "Unconfirmed local hour must not pollute sunrise samples")
+now = now + 6
+assert(c.on_time_text(after))
+assert(c.get_game_sec("imperium") == (311-1)*2880+6*120+6, "Keep 3 game minutes since transition")
+assert(c.data.sun.imperium.Kaltezeit.sunrise[1].minute == 360)
+assert(not c.pending_sun.imperium)
+c.on_time_text(after)
+assert(#c.data.sun.imperium.Kaltezeit.sunrise == 1, "No duplicate sample")
+-- A text response can also correct an entire uncertain hour before saving the event.
+c.data.anchors.imperium = {game_sec=(311-1)*2880+5*120+6, real_ts=now}
+c.pending_sun.imperium = {kind="sunrise", real_ts=now-6}
+c.on_time_text(before)
+assert(c.pending_sun.imperium, "A pre-sunrise text cannot confirm sunrise")
+c.on_time_text(after)
+assert(c.data.sun.imperium.Kaltezeit.sunrise[2].minute == 360)
+c.pending_sun.imperium = {kind="sunrise", real_ts=now-121}
+c.on_time_text(after)
+assert(#c.data.sun.imperium.Kaltezeit.sunrise == 2, "Old pending observation must expire")
+-- Repeat just after a boundary, at midnight, and without an old phase mark.
+c.data.anchors.imperium = {game_sec=6*120+2, real_ts=now}
+c.on_hour_boundary("imperium", now)
+assert(c.get_game_sec("imperium") == 6*120)
+c.data.anchors.imperium = {game_sec=2880-2, real_ts=now}
+c.on_hour_boundary("imperium", now)
+assert(c.get_game_sec("imperium") == 2880)
+c.data.hour_marks.imperium = nil
+c.data.anchors.imperium = {game_sec=5*120+6, real_ts=now}
+c.on_hour_boundary("imperium", now)
+assert(c.get_game_sec("imperium") == 6*120)
+print("OK: Kaltezeit 05:59 boundary, 06:03 phase, confirmed sun samples and expired observations")

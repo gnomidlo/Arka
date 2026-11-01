@@ -626,6 +626,7 @@ function le.czas.on_time_text(raw_text)
         le.czas.log("saved", string.format(
             "Synchronizacja %s: dzien %d, %02d:%02d.", domain, day, synced_hour, synced_minute))
     end
+    le.czas.confirm_sun_observation(domain, raw_text)
     le.czas.refresh_ui()
     return true
 end
@@ -726,7 +727,7 @@ end
 
 -- Kalibracja na dokładnej granicy godziny wykrytej przez GMCP daylight.
 -- Pierwsza obserwacja zaokrągla przybliżony zegar w górę; następne używają
--- już znanej fazy i zaokrąglają w dół, tak jak rozwiązanie msmudlet.
+-- najblizszej granicy: 05:59 nie moze zostac cofniete do 05:00.
 function le.czas.on_hour_boundary(domain, now)
     now = tonumber(now) or epoch()
     local old_mark = tonumber(le.czas.data.hour_marks[domain])
@@ -736,7 +737,7 @@ function le.czas.on_hour_boundary(domain, now)
     if current then
         local rounded
         if old_mark and old_mark > 0 then
-            rounded = math.floor(current / 120) * 120
+            rounded = math.floor(current / 120 + 0.5) * 120
         else
             rounded = math.ceil(current / 120) * 120
         end
@@ -867,6 +868,24 @@ function le.czas.store_sun(domain, period, kind, minute)
     le.czas.log("saved", string.format("Zapisano %s: %s, okres %s, %s.", kind_label, domain, period, game_clock(minute)))
 end
 
+le.czas.pending_sun = le.czas.pending_sun or {}
+
+function le.czas.confirm_sun_observation(domain, raw_text)
+    local observation = le.czas.pending_sun[domain]
+    if not observation then return end
+    local text = normalize_game_text(raw_text)
+    if observation.kind == "sunrise" and text:find("przed wschodem", 1, true) then return end
+    if observation.kind == "sunset" and text:find("przed zachodem", 1, true) then return end
+    le.czas.pending_sun[domain] = nil
+    local elapsed = epoch() - observation.real_ts
+    -- An hour-only answer cannot safely date an old transition.
+    if elapsed < 0 or elapsed >= 120 then return end
+    local current = le.czas.get_game_sec(domain)
+    if not current then return end
+    local day, hour, minute = sec_to_date(current - elapsed, domain)
+    le.czas.store_sun(domain, calendar_period_name(domain, day), observation.kind, hour * 60 + minute)
+end
+
 le.czas.last_event_at = le.czas.last_event_at or {}
 le.czas.last_daylight = le.czas.last_daylight or {}
 
@@ -928,10 +947,10 @@ function le.czas.on_room_time()
     le.czas.on_hour_boundary(domain)
     le.czas.last_event_at[domain .. kind] = epoch()
 
-    local game_sec = le.czas.get_game_sec(domain)
-    local day, hour, minute = sec_to_date(game_sec, domain)
-    local period = calendar_period_name(domain, day)
-    le.czas.store_sun(domain, period, kind, hour * 60 + minute)
+    -- GMCP supplies daylight, not an absolute hour. Keep the event timestamp
+    -- until a fresh textual answer confirms the clock (no automatic game command).
+    le.czas.pending_sun[domain] = { kind = kind, real_ts = epoch() }
+    le.czas.log("detected", "Wykryto " .. kind_label .. "; wpisz czas, aby potwierdzic godzine obserwacji.")
     le.czas.refresh_ui()
 end
 
@@ -1452,6 +1471,7 @@ function le.czas.init()
     le.czas.load()
     le.czas.Online.load()
     le.czas.last_daylight = {}
+    le.czas.pending_sun = {}
     le.czas.seed_ishtar_sun()
     le.czas.save()
 
