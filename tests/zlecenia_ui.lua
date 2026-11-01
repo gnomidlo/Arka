@@ -4,6 +4,7 @@ local next_id = 0
 local function id() next_id = next_id + 1; return next_id end
 getMudletHomeDir = function() return "memory" end
 getPlayerRoom = function() return "test" end
+getRoomName = function() return "las" end
 tempTimer = id; tempAlias = id; tempRegexTrigger = id; registerAnonymousEventHandler = id
 killTimer = noop; killAlias = noop; killTrigger = noop; killAnonymousEventHandler = noop
 io.exists = function() return false end
@@ -12,7 +13,15 @@ cecho = noop; decho = function(text) output[#output+1] = text end; echo = noop
 dechoLink = function(text, fn) links[#links+1] = {text=text, click=fn} end
 local resized = 0
 resizeWindow = function() resized = resized + 1 end
-showWindow = noop; hideWindow = noop
+local native_visible, opens, fail_show = false, 0, false
+openUserWindow = function(name, restore, autoDock)
+    assert(name == "LeZleceniaWindow" and restore == false and autoDock == false)
+    opens = opens + 1
+    native_visible = true
+end
+showWindow = function() if fail_show then return false end; native_visible = true end
+hideWindow = function() native_visible = false end
+windowVisible = function() return native_visible end
 le = { ui = { output = noop, prefix = noop }, storage = { write_json = function() return true end } }
 
 local windows, labels, backgrounds, layouts = {}, {}, 0, 0
@@ -47,6 +56,28 @@ local z = le.zlecenia
 assert(z.UI.window and z.UI.mode == "window")
 assert(z.UI.header.parent == z.UI.window and z.UI.pool[1].parent == z.UI.window)
 assert(not z.UI.header.visible and not z.UI.window.visible)
+-- Real tester dialogue: completed parsing must explicitly reopen the native dock.
+z.new_order_core("Czarnowlosy stary elf", "ziola", "osmiu sztuk konwalii")
+z.order_time_core("siedem dni")
+assert(z.UI.slotOrder[1].what == "8 sztuk konwalii")
+assert(z.data.orders.test.completionAt and z.UI.window.visible)
+local recovered
+z.UI.window.move = function(_, x, y) recovered = x == "45%" and y == "15%" end
+z.UI.recover_window()
+assert(recovered)
+native_visible = false -- native close does not update the Lua visibility cache
+local previous_opens = opens
+z.UI.rebuild()
+assert(native_visible and opens == previous_opens + 1)
+fail_show = true
+z.UI.rebuild(true)
+assert(z.UI.visible == nil, "Failed native visibility must not be cached as success")
+fail_show = false
+z.UI.rebuild()
+assert(z.UI.visible and native_visible)
+z.data.orders = {}
+z.UI.rebuild()
+assert(not native_visible)
 local now = os.time()
 for i = 1, 8 do
     z.data.orders[tostring(i)] = {npc="NPC", what=i.." sztuk laku", roomName="Miejsce <&>", roomID=i, completionAt=now+i*100}

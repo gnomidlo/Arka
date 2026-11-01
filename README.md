@@ -12,7 +12,7 @@ Niezależna konfiguracja i zestaw pluginów dla Mudleta.
 Po udostępnieniu repozytorium wykonaj w Mudlecie:
 
 ```text
-/zainstaluj_plugin https://raw.githubusercontent.com/gnomidlo/Arka/main/dist/UNICORN.zip?version=0.9.0
+/zainstaluj_plugin https://raw.githubusercontent.com/gnomidlo/Arka/main/dist/UNICORN.zip?version=0.9.1
 ```
 
 Po instalacji sprawdź listę pluginów:
@@ -30,7 +30,7 @@ Po pierwszej instalacji pliki sa juz na dysku, ale plugin moze nie byc jeszcze w
 Zmiana nazwy pluginu wymaga jednorazowego usuniecia starego katalogu. Zamknij Mudlet, usun katalog `plugins/Arka`, uruchom Mudlet i zainstaluj nowa paczke:
 
 ```text
-/zainstaluj_plugin https://raw.githubusercontent.com/gnomidlo/Arka/main/dist/UNICORN.zip?version=0.9.0
+/zainstaluj_plugin https://raw.githubusercontent.com/gnomidlo/Arka/main/dist/UNICORN.zip?version=0.9.1
 ```
 
 Od wersji `0.2.0` plugin jest instalowany i wyswietlany na liscie jako `UNICORN`. Paczka ma pliki bezposrednio w katalogu glownym ZIP-a, zgodnie z formatem instalatora Arkadii.
@@ -82,6 +82,8 @@ Komendy wyswietlane w pomocy modulow sa klikalne. Szablony wymagajace parametrow
 ### Synchronizacja czasu
 
 Moduł nie wysyła żadnych komend. Gdy użytkownik wpisze w grze `czas`, moduł odczytuje odpowiedź i synchronizuje lub aktualizuje zegar właściwej domeny. Obsługiwane są zarówno dokładne godziny i numery dni, jak i starszy format opisowy — dla pór Starszego Ludu, miesięcy Kalendarza Imperialnego oraz jednodniowych świąt/okresów takich jak Mitterherbst, Geheimnistag czy Sonnenstill. Świeża odpowiedź `czas`, zmiana domeny i dane GMCP odświeżają panel natychmiast; moduł potrafi też odtworzyć zatrzymany timer animujący zegar po przeładowaniu lub wznowieniu skryptów.
+
+Przy świcie/zmierzchu skalibrowany zegar wybiera najbliższą granicę godziny: 05:59 przechodzi do 06:00, nie 05:00. Sama zmiana GMCP daylight nie zawiera godziny. Nowa próbka świtu/zmierzchu jest zapisywana dopiero po wpisaniu `czas` przed upływem 120 sekund rzeczywistych od zdarzenia; odpowiedź wskazująca, że zdarzenie jeszcze nie nastąpiło, nie potwierdza próbki. Moduł nie wysyła komendy sam. Starsze obserwacje pozostają zachowane.
 
 ### Pływający panel zegara
 
@@ -155,7 +157,7 @@ Sprawdzanie wersji uruchamia sie automatycznie 6 sekund po zaladowaniu pluginu i
 
 ## Budowanie paczki UNICORN
 
-Aktualna wersja: **0.9.0**
+Aktualna wersja: **0.9.1**
 
 Zbuduj paczkę `dist/UNICORN.zip` zawierającą aktualne pliki źródłowe:
 - `init.lua`
@@ -165,6 +167,10 @@ Zbuduj paczkę `dist/UNICORN.zip` zawierającą aktualne pliki źródłowe:
 ## Mini patch notes
 
 Każde wydanie UNICORN zmieniające kod lub zachowanie pluginu ma krótki wpis w `le/patchnotes.lua`. To stały element procesu wydawniczego, nie opcjonalny changelog. Patch notes skupiają się na tym, co użytkownik faktycznie zauważy: nowe funkcje, poprawki zachowania i istotne zmiany interfejsu.
+
+Dla 0.9.1:
+- dodanie dostawy ponownie otwiera natywne okno; błędy pokazania są ponawiane, a `/le.zlecenia okno` przywraca położenie na ekranie,
+- poprawiono zaokrąglanie przy świcie/zmierzchu i potwierdzanie nowych obserwacji odpowiedzią `czas`.
 
 Dla 0.9.0:
 - stałe okno 260 × 178 px: dokładnie trzy sloty, strony ‹/› i kolejność od najkrótszego pozostałego czasu,
@@ -239,7 +245,7 @@ Zegar pokazuje dużą, pogrubioną godzinę, domenę, porę roku i okres kalenda
 
 Wspólna funkcja komunikatów najpierw przesuwa kursor na koniec bufora, dlatego belki `▎` zleceń, czasu i innych modułów nie pojawiają się w tej samej linii co przetwarzana właśnie wypowiedź NPC.
 
-Panel wariantu C pokazuje trzy stałe sloty: ilość i przedmiot, a poniżej czas i skrócone miejsce. Strzałki ‹/› zmieniają stronę bez zmiany rozmiaru. Puste sloty pozostają widoczne na ostatniej stronie. Kliknięcie dostawy wypisuje pełny opis, odbiorcę, miejsce oraz klikalne `PROWADŹ`/`ZATRZYMAJ` i `USUŃ` w głównej konsoli. Nagłówek wypisuje całą listę.
+Panel wariantu C pokazuje trzy stałe sloty: ilość i przedmiot, a poniżej czas i skrócone miejsce. Strzałki ‹/› zmieniają stronę bez zmiany rozmiaru. Puste sloty pozostają widoczne na ostatniej stronie. Kliknięcie dostawy wypisuje pełny opis, odbiorcę, miejsce oraz klikalne `PROWADŹ`/`ZATRZYMAJ` i `USUŃ` w głównej konsoli. Nagłówek wypisuje całą listę. Jeśli okno zostało zamknięte lub zapisane poza ekranem, `/le.zlecenia okno` ponownie je pokazuje i przywraca położenie. Przy braku aktywnych zleceń pozostaje ukryte.
 
 Od wersji 0.8.8 panel jest samodzielnym `Geyser.UserWindow`, z zapamiętaniem położenia; nie przykrywa głównego wyjścia tekstowego Mudleta. Bez aktywnych zleceń całe okno jest ukryte, także po wygaśnięciu ostatniego terminu. Każdy hot reload usuwa etykiety, tworzy je ponownie i przywraca działające kliknięcia. Tło natywnego okna nie musi być przezroczyste nawet przy zerowej alfie konsoli, dlatego najlepiej umieścić je obok tekstu gry lub na drugim monitorze.
 

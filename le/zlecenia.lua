@@ -446,7 +446,7 @@ function le.zlecenia.order_time_core(timePhrase)
         dc(le.zlecenia.urgency_color(remaining), le.zlecenia.duration(remaining))
     ))
     le.zlecenia.temp = nil
-    le.zlecenia.UI.rebuild()
+    le.zlecenia.UI.rebuild(true)
 end
 
 function le.zlecenia.handle_order_time()
@@ -564,6 +564,7 @@ function le.zlecenia.show_help()
     le.zlecenia.output("Panel: 3 sloty, strony ‹/›. Kliknij dostawę po szczegóły i akcje w konsoli.")
     if le.ui and le.ui.note then
         le.ui.note("zlec", "Kliknij komendę, aby ją uruchomić.")
+        le.ui.command("zlec", "/le.zlecenia okno", "/le.zlecenia okno", "przywroc okno zlecen na ekran", false)
         le.ui.command("zlec", "/le.zlecenia lista", "/le.zlecenia lista", "aktywne dostawy i szczegóły", false)
         le.ui.command("zlec", "/le.zlecenia sprawdz", "/le.zlecenia sprawdz", "zapytaj NPC o nowe zlecenie", false)
         le.ui.command("zlec", "/le.zlecenia usun <nr>", "/le.zlecenia usun ", "usuń dostawę z listy", true)
@@ -785,7 +786,7 @@ function le.zlecenia.UI.toggle_route(order)
     le.zlecenia.UI.rebuild()
 end
 
-function le.zlecenia.UI.rebuild()
+function le.zlecenia.UI.rebuild(force_show)
     if not (Geyser and Geyser.Label) then return end
     le.zlecenia.UI.ensure_pool()
     local ui, p = le.zlecenia.UI, le.zlecenia.config.panel
@@ -794,12 +795,27 @@ function le.zlecenia.UI.rebuild()
     ui.page = math.max(1, math.min(ui.page or 1, ui.pages))
     local visible = #orders > 0
     local action = visible and "show" or "hide"
-    if ui.window and ui.visible ~= visible then
+    local needs_visibility = ui.visible ~= visible or (visible and force_show)
+    if visible and type(windowVisible) == "function" then
+        local ok, shown = pcall(windowVisible, p.window.name)
+        if ok and shown == false then needs_visibility = true end
+    end
+    local visibility_ok = true
+    if ui.window and needs_visibility then
+        -- Reopen the existing native dock without restoring a stale saved layout.
+        if visible and type(openUserWindow) == "function" then
+            local ok, result = pcall(openUserWindow, p.window.name, false, false)
+            visibility_ok = ok and result ~= false
+        end
         if type(ui.window[action]) == "function" then pcall(ui.window[action], ui.window) end
         local native = visible and showWindow or hideWindow
-        if type(native) == "function" then pcall(native, p.window.name) end
+        if type(native) == "function" then
+            local ok, result = pcall(native, p.window.name)
+            visibility_ok = visibility_ok and ok and result ~= false
+        end
     end
-    ui.visible = visible
+    -- Failed native calls must be retried by the next refresh.
+    if visibility_ok then ui.visible = visible else ui.visible = nil end
     ui.header:echo(string.format("<span style='color:%s'>ZLECENIA <b>%d</b></span>",
         le.zlecenia.config.colors.accent, #orders))
     ui.header[action](ui.header)
@@ -814,6 +830,19 @@ function le.zlecenia.UI.rebuild()
             tostring((ui.mode == "window" and 0 or p.top) + p.headerHeight + (i - 1) * p.itemHeight) .. "px")
         label:echo(ui.order_html(order))
         label[action](label)
+    end
+end
+
+-- Explicit recovery for a saved off-screen/closed native window.
+function le.zlecenia.UI.recover_window()
+    if #le.zlecenia.active_orders_sorted() == 0 then
+        le.zlecenia.output("Brak aktywnych zlecen; okno pozostaje ukryte.")
+        return
+    end
+    le.zlecenia.UI.rebuild(true)
+    local window = le.zlecenia.UI.window
+    if window and type(window.move) == "function" then
+        pcall(window.move, window, "45%", "15%")
     end
 end
 
@@ -871,6 +900,7 @@ end
 function le.zlecenia.setup_aliases()
     le.zlecenia.aliases = le.zlecenia.aliases or {}
     le.zlecenia.aliases.help = tempAlias("^/le\\.zlecenia$", [[le.zlecenia.show_help()]])
+    le.zlecenia.aliases.window = tempAlias("^/le\\.zlecenia okno$", [[le.zlecenia.UI.recover_window()]])
     le.zlecenia.aliases.list = tempAlias("^/le\\.zlecenia lista$", [[le.zlecenia.show_list()]])
     le.zlecenia.aliases.check = tempAlias("^/le\\.zlecenia sprawdz$", [[
         send("zapytaj mezczyzne o zlecenie", false)

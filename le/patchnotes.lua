@@ -6,6 +6,11 @@ le.patchnotes = le.patchnotes or {}
 -- To jest źródło prawdy dla mini patch notes. Każde wydanie zmieniające kod
 -- lub zachowanie pluginu musi dostać tutaj krótki, użytkowy opis zmian.
 le.patchnotes.notes = {
+    ["0.9.1"] = {
+        "Dodanie dostawy ponownie otwiera okno zlecen; /le.zlecenia okno przywraca je na ekran.",
+        "Swit i zmierzch nie cofaja juz zegara z konca godziny do jej poczatku.",
+        "Nowa obserwacja slonca czeka na potwierdzenie odpowiedzia czas, zamiast zapisywac przyblizona godzine.",
+    },
     ["0.9.0"] = {
         "Panel zleceń ma trzy stałe sloty i strony ‹/›, uporządkowane od najkrótszego czasu.",
         "Przy czasie widać miejsce; kliknięcie dostawy pokazuje szczegóły i akcje w konsoli.",
