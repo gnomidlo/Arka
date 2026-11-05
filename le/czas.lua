@@ -1327,8 +1327,10 @@ end
 function le.czas.setup_aliases()
     le.czas.aliases = le.czas.aliases or {}
 
+    le.czas.aliases.window = tempAlias([[^/le\.czas okno$]], le.czas.UI.recover_window)
     le.czas.aliases.help = tempAlias("^/le\\.czas$", function()
         if le.ui and le.ui.output then
+            le.ui.command("czas", "/le.czas okno", "/le.czas okno", "przywroc zegar na ekran", false)
             le.ui.output("czas", "Zegar synchronizuje się automatycznie po komendzie: czas")
             le.ui.command("kal", "/le.kal [liczba]", "/le.kal", "najbliższe wydarzenia", false)
             le.ui.command("kal", "/le.kal tydzien", "/le.kal tydzien", "agenda na najbliższe 7 dni", false)
@@ -1381,6 +1383,31 @@ function le.czas.ensure_timer(force)
     return true
 end
 
+function le.czas.UI.destroy()
+    -- Usun dzieci przed natywnym oknem; zachowaj polozenie przy reloadzie.
+    for _, key in ipairs({ "clock", "event" }) do
+        local label = le.czas.UI[key]
+        if label then
+            if type(label.delete) == "function" then
+                pcall(label.delete, label)
+            elseif type(label.hide) == "function" then
+                pcall(label.hide, label)
+            end
+            le.czas.UI[key] = nil
+        end
+    end
+    local window = le.czas.UI.window
+    if window then
+        if type(saveWindowLayout) == "function" then pcall(saveWindowLayout) end
+        if type(window.delete) == "function" then
+            window:delete()
+        elseif type(window.type_delete) == "function" then
+            window:type_delete()
+        end
+        le.czas.UI.window = nil
+    end
+end
+
 function le.czas.cleanup()
     if le.czas.Online.loaded then le.czas.Online.flush() end
     if le.czas.timer then pcall(killTimer, le.czas.timer); le.czas.timer = nil end
@@ -1398,38 +1425,20 @@ function le.czas.cleanup()
     if le.czas.aliases then
         for _, id in pairs(le.czas.aliases) do pcall(killAlias, id) end
     end
-    -- Usun dzieci przed natywnym oknem; zachowaj polozenie przy reloadzie.
-    for _, key in ipairs({ "clock", "event" }) do
-        local label = le.czas.UI[key]
-        if label then
-            if type(label.delete) == "function" then
-                pcall(label.delete, label)
-            elseif type(label.hide) == "function" then
-                pcall(label.hide, label)
-            end
-            le.czas.UI[key] = nil
-        end
-    end
-    local window = le.czas.UI.window
-    if window then
-        if type(saveWindowLayout) == "function" then pcall(saveWindowLayout) end
-        if type(window.type_delete) == "function" then
-            pcall(window.type_delete, window)
-        elseif type(window.delete) == "function" then
-            pcall(window.delete, window)
-        end
-        le.czas.UI.window = nil
-    end
+    le.czas.UI.destroy()
 end
 
 -- UserWindow ma wlasna powierzchnie rysowania. Nie zaslaniamy glownego
 -- bufora MUD-a etykietami. Alfa dotyczy tla, a nie systemowej ramki okna.
-function le.czas.UI.create()
+function le.czas.UI.create(recover)
     local supported = Geyser and Geyser.UserWindow
         and type(Geyser.UserWindow.new) == "function"
     if supported then
         local ok, err = pcall(function()
-            le.czas.UI.window = Geyser.UserWindow:new(le.czas.config.hud)
+            local options = {}
+            for key, value in pairs(le.czas.config.hud) do options[key] = value end
+            if recover then options.restoreLayout = false; options.x = 80; options.y = 80 end
+            le.czas.UI.window = Geyser.UserWindow:new(options)
             assert(le.czas.UI.window, "brak uchwytu UserWindow")
             if type(setBackgroundColor) == "function" then
                 pcall(setBackgroundColor, le.czas.config.hud.name, 0, 0, 0, 0)
@@ -1450,8 +1459,9 @@ function le.czas.UI.create()
                 if label and type(label.delete) == "function" then pcall(label.delete, label) end
                 le.czas.UI[key] = nil
             end
-            if le.czas.UI.window and type(le.czas.UI.window.type_delete) == "function" then
-                pcall(le.czas.UI.window.type_delete, le.czas.UI.window)
+            if le.czas.UI.window then
+                local destroy = le.czas.UI.window.delete or le.czas.UI.window.type_delete
+                if type(destroy) == "function" then pcall(destroy, le.czas.UI.window) end
             end
             le.czas.UI.window = nil
             supported = false
@@ -1464,6 +1474,23 @@ function le.czas.UI.create()
     end
     le.czas.UI.clock:setStyleSheet(le.czas.config.clock_style)
     le.czas.UI.event:setStyleSheet(le.czas.config.event_style)
+end
+
+function le.czas.UI.recover_window()
+    local ok, err = pcall(function()
+        le.czas.UI.destroy()
+        le.czas.UI.create(true)
+        le.czas.UI.update()
+    end)
+    if ok then
+        ok, err = le.ui.restore_window(le.czas.UI.window, le.czas.config.hud.name, 280, 246)
+    end
+    if not ok then
+        le.czas.log("rejected", "Nie udalo sie przywrocic zegara: " .. tostring(err))
+        return false
+    end
+    le.czas.log("info", "Przywrocono okno zegara na ekran.")
+    return true
 end
 
 function le.czas.init()

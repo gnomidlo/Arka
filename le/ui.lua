@@ -107,3 +107,40 @@ function le.ui.transparent_panel_style(accent, padding)
         font-family: 'DejaVu Sans Mono', 'Consolas', monospace;
     ]], accent, padding or "2px 8px")
 end
+
+-- Explicit recovery must reset both native dock geometry and Geyser visibility.
+-- Only call this on the user's request, never from periodic refresh.
+function le.ui.restore_window(window, name, width, height)
+    if not window then return false, "nie utworzono UserWindow" end
+    local function call(fn, ...)
+        if type(fn) ~= "function" then return false, "brak wymaganego API okna" end
+        local ok, result, err = pcall(fn, ...)
+        if not ok then return false, tostring(result) end
+        if result == false or (result == nil and err ~= nil) then return false, tostring(err or "API zwrocilo false") end
+        return true
+    end
+    local ok, err = call(openUserWindow, name, false, false, "floating")
+    if not ok then return false, "openUserWindow: " .. err end
+    local root = window.rootContainer
+    if root and type(root.show) == "function" then
+        ok, err = call(root.show, root)
+        if not ok then return false, "kontener: " .. err end
+    end
+    if type(window.show) == "function" then
+        -- Clear inherited hiding separately from explicit hiding.
+        ok, err = call(window.show, window, true)
+        if ok then ok, err = call(window.show, window) end
+        if not ok then return false, "Geyser.show: " .. err end
+    end
+    for _, operation in ipairs({
+        {moveWindow, name, 80, 80}, {resizeWindow, name, width, height}, {showWindow, name},
+    }) do
+        ok, err = call(unpack(operation))
+        if not ok then return false, err end
+    end
+    if type(windowVisible) == "function" then
+        local checked, visible = pcall(windowVisible, name)
+        if not checked or visible ~= true then return false, "Mudlet nadal raportuje niewidoczne okno" end
+    end
+    return true
+end

@@ -404,3 +404,24 @@ c.data.anchors.imperium = {game_sec=5*120+6, real_ts=now}
 c.on_hour_boundary("imperium", now)
 assert(c.get_game_sec("imperium") == 6*120)
 print("OK: Kaltezeit 05:59 boundary, 06:03 phase, confirmed sun samples and expired observations")
+
+-- Explicit clock recovery rebuilds only UI, preserving the clock and timer.
+local state = le
+le = {}; dofile("le/ui.lua")
+local restore_window = le.ui.restore_window
+le = state; le.ui.restore_window = restore_window
+local native_shown, native_moved, native_size
+openUserWindow = function(name, restore, dock, position)
+    assert(name == "LeCzasHudWindow" and not restore and not dock and position == "floating")
+end
+moveWindow = function(_, x, y) native_moved = x == 80 and y == 80 end
+resizeWindow = function(_, w, h) native_size = w == 280 and h == 246 end
+showWindow = function() native_shown=true end
+windowVisible = function() return native_shown end
+local old_window, data, timer = c.UI.window, c.data, c.timer
+old_window.delete = function(self) self.unregistered=true; self:type_delete() end
+assert(c.UI.recover_window())
+assert(old_window.deleted and old_window.unregistered and c.UI.window ~= old_window)
+assert(c.data == data and c.timer == timer and native_shown and native_moved and native_size)
+assert(c.UI.window.config.restoreLayout == false and c.config.hud.restoreLayout == true)
+print("OK: clock recovery rebuilds UI, preserves data/timer and restores native geometry")
