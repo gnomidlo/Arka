@@ -693,9 +693,12 @@ function le.zlecenia.UI.ensure_pool()
     if Geyser and Geyser.UserWindow and type(Geyser.UserWindow.new) == "function" then
         local options = {}
         for key, value in pairs(p.window) do options[key] = value end
-        options.hidden = true
+        options.hidden = not ui.recovering
+        if ui.recovering then options.restoreLayout = false; options.x = 80; options.y = 80 end
         local ok, window = pcall(function() return Geyser.UserWindow:new(options) end)
+        if not ok then ui.window_error = tostring(window) end
         if ok and window then
+            ui.window_error = nil
             ui.window = window
             parent = window
             if type(resizeWindow) == "function" then pcall(resizeWindow, p.window.name, 260, 178) end
@@ -705,6 +708,10 @@ function le.zlecenia.UI.ensure_pool()
                 pcall(setBackgroundColor, p.window.name, 0, 0, 0, 0)
             end
         end
+    end
+    if not parent and Geyser and Geyser.UserWindow then
+        ui.window_error = ui.window_error or "konstruktor UserWindow nie zwrocil okna"
+        le.zlecenia.output("Nie mozna utworzyc okna zlecen: " .. ui.window_error)
     end
     ui.pool, ui.routeBtn, ui.deleteBtn, ui.slotOrder = {}, {}, {}, {}
     ui.mode = parent and "window" or "legacy"
@@ -839,11 +846,19 @@ function le.zlecenia.UI.recover_window()
         le.zlecenia.output("Brak aktywnych zlecen; okno pozostaje ukryte.")
         return
     end
-    le.zlecenia.UI.rebuild(true)
-    local window = le.zlecenia.UI.window
-    if window and type(window.move) == "function" then
-        pcall(window.move, window, "45%", "15%")
+    local ui = le.zlecenia.UI
+    ui.recovering = true
+    local ok, err = pcall(function() ui.destroy(); ui.rebuild(true) end)
+    ui.recovering = nil
+    if ok then
+        ok, err = le.ui.restore_window(ui.window, le.zlecenia.config.panel.window.name, 260, 178)
     end
+    if not ok then
+        le.zlecenia.output("Nie udalo sie przywrocic okna zlecen: " .. tostring(err))
+        return false
+    end
+    le.zlecenia.output("Przywrocono okno zlecen na ekran.")
+    return true
 end
 
 -- Triggery gry --------------------------------------------------------------
@@ -922,11 +937,7 @@ end
 
 -- Cykl życia ----------------------------------------------------------------
 
-function le.zlecenia.cleanup()
-    if le.zlecenia.timer then pcall(killTimer, le.zlecenia.timer); le.zlecenia.timer = nil end
-    if le.zlecenia.exit_handler then pcall(killAnonymousEventHandler, le.zlecenia.exit_handler); le.zlecenia.exit_handler = nil end
-    if le.zlecenia.aliases then for _, id in pairs(le.zlecenia.aliases) do pcall(killAlias, id) end end
-    if le.zlecenia.triggers then for _, id in pairs(le.zlecenia.triggers) do pcall(killTrigger, id) end end
+function le.zlecenia.UI.destroy()
     -- Zwykle hide() nie niszczy etykiet ani ich natywnych callbackow.
     -- Po aktualizacji skryptu powodowalo to martwe/zaslaniajace klikniecia.
     local ui = le.zlecenia.UI
@@ -945,15 +956,23 @@ function le.zlecenia.cleanup()
     end
     if ui.window then
         if type(saveWindowLayout) == "function" then pcall(saveWindowLayout) end
-        if type(ui.window.type_delete) == "function" then
-            pcall(ui.window.type_delete, ui.window)
-        elseif type(ui.window.delete) == "function" then
-            pcall(ui.window.delete, ui.window)
+        if type(ui.window.delete) == "function" then
+            ui.window:delete()
+        elseif type(ui.window.type_delete) == "function" then
+            ui.window:type_delete()
         end
     end
     ui.header, ui.footer, ui.window = nil, nil, nil
     ui.pool, ui.routeBtn, ui.deleteBtn, ui.slotOrder = nil, nil, nil, nil
     ui.mode, ui.visible, ui.nav = nil, nil, nil
+end
+
+function le.zlecenia.cleanup()
+    if le.zlecenia.timer then pcall(killTimer, le.zlecenia.timer); le.zlecenia.timer = nil end
+    if le.zlecenia.exit_handler then pcall(killAnonymousEventHandler, le.zlecenia.exit_handler); le.zlecenia.exit_handler = nil end
+    if le.zlecenia.aliases then for _, id in pairs(le.zlecenia.aliases) do pcall(killAlias, id) end end
+    if le.zlecenia.triggers then for _, id in pairs(le.zlecenia.triggers) do pcall(killTrigger, id) end end
+    le.zlecenia.UI.destroy()
     if le.zlecenia.UI.routingKey then pcall(alias_func_prowadz_stop) end
     le.zlecenia.UI.routingKey = nil
     end

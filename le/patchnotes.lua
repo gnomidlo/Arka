@@ -6,6 +6,11 @@ le.patchnotes = le.patchnotes or {}
 -- To jest źródło prawdy dla mini patch notes. Każde wydanie zmieniające kod
 -- lub zachowanie pluginu musi dostać tutaj krótki, użytkowy opis zmian.
 le.patchnotes.notes = {
+    ["0.9.3"] = {
+        "Nowa komenda /le.czas okno przywraca zegar na ekran.",
+        "Komenda /le.zlecenia okno odtwarza panel, zamiast ponownie pokazywac stare kontrolki.",
+        "Przeladowanie sprzata kontenery Geysera; bledy przywracania okien sa widoczne w konsoli.",
+    },
     ["0.9.2"] = {
         "Pomoc UNICORN otworzysz także przez /le.pomoc, /le.help i /le?.",
         "Nowe skróty pokazują tę samą pomoc co /le.config.",

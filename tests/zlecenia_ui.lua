@@ -24,11 +24,17 @@ hideWindow = function() native_visible = false end
 windowVisible = function() return native_visible end
 le = { ui = { output = noop, prefix = noop }, storage = { write_json = function() return true end } }
 
+local state = le
+le = {}; dofile("le/ui.lua")
+local restore_window = le.ui.restore_window
+le = state; le.ui.restore_window = restore_window
+local moved
+moveWindow = function(name, x, y) moved = name == "LeZleceniaWindow" and x == 80 and y == 80 end
 local windows, labels, backgrounds, layouts = {}, {}, 0, 0
 Geyser = { Label = {}, UserWindow = {} }
 function Geyser.UserWindow:new(config)
     local window = { config = config, type_delete = function(self) self.deleted = true end,
-        get_width = function() return 260 end, show=function(self) self.visible=true end, hide=function(self) self.visible=false end }
+        delete = function(self) self.unregistered=true; self:type_delete() end, get_width = function() return 260 end, show=function(self) self.visible=true end, hide=function(self) self.visible=false end }
     windows[#windows+1] = window
     return window
 end
@@ -61,10 +67,11 @@ z.new_order_core("Czarnowlosy stary elf", "ziola", "osmiu sztuk konwalii")
 z.order_time_core("siedem dni")
 assert(z.UI.slotOrder[1].what == "8 sztuk konwalii")
 assert(z.data.orders.test.completionAt and z.UI.window.visible)
-local recovered
-z.UI.window.move = function(_, x, y) recovered = x == "45%" and y == "15%" end
-z.UI.recover_window()
-assert(recovered)
+local replaced = z.UI.window
+local data = z.data
+assert(z.UI.recover_window())
+assert(replaced.deleted and replaced.unregistered and z.UI.window ~= replaced)
+assert(z.UI.window.config.restoreLayout == false and moved and z.data == data)
 native_visible = false -- native close does not update the Lua visibility cache
 local previous_opens = opens
 z.UI.rebuild()
@@ -123,6 +130,14 @@ for _, label in ipairs(z.UI.pool) do assert(not label.visible) end
 z.data.orders.unknown = {what="2 ziola", roomName="las"}
 z.UI.rebuild()
 assert(z.UI.window.visible and z.UI.pool[1].html:find("?:??",1,true))
+local constructor = Geyser.UserWindow.new
+local messages = {}
+le.zlecenia.output = function(text) messages[#messages+1]=text end
+Geyser.UserWindow.new = function() error("test constructor failure") end
+assert(z.UI.recover_window() == false)
+assert(table.concat(messages):find("test constructor failure",1,true))
+Geyser.UserWindow.new = constructor
+assert(z.UI.recover_window(), "Recovery must retry a prior constructor failure")
 z.cleanup()
 Geyser.UserWindow = nil
 z.UI.rebuild()
